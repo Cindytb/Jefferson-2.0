@@ -1,0 +1,83 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <CudaCompile Include="main.cu">
+      <Filter>Source</Filter>
+    </CudaCompile>
+    <CudaCompile Include="hrtf_signals.cu">
+      <Filter>Source</Filter>
+    </CudaCompile>
+    <CudaCompile Include="graphics.cu">
+      <Filter>Source</Filter>
+    </CudaCompile>
+    <CudaCompile Include="cudaPart.cu">
+      <Filter>Source</Filter>
+    </CudaCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="Source">
+      <UniqueIdentifier>{da2406e9-27f9-4cb3-b03d-4471ff9a2953}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Headers">
+      <UniqueIdentifier>{54758f27-eb69-4487-b35f-0f1fbd0d5de2}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="mat_vect.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="object.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="texture.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="hrtf_signals.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="load_3ds.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="load_bmp.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="mat_matr.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="hrtf_signals.cuh">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="main.cuh">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="Universal.cuh">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="cudaPart.cuh">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="graphics.cuh">
+      <Filter>Headers</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="mat_matr.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="mat_vect.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="object.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="texture.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="hrtf_signals.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="load_3ds.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+  </ItemGroup>
+</Project>
