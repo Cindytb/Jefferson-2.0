@@ -1,72 +1,80 @@
 #include "cudaPart.cuh"
 
-void cudaFFT(int argc, char **argv, Data *p){
-	findCudaDevice(argc, (const char **)argv);
-	int SIGNAL_SIZE = 0, FILTER_KERNEL_SIZE = 0;
-	
-	/*SNDFILE SETUP & READING FILES*/
-	SF_INFO isfinfo, rsfinfo;
-	SNDFILE *isndfile, *rsndfile;
-	char *input = "Vltava.wav";
-	char *reverb = "s1_r1_b_441_mono.wav";
-	/*if (argc == 1) {
-		input = argv[1];
+int readFile(char *name, float **buf, int &numCh) {
+	SF_INFO info;
+	SNDFILE *sndfile;
+	memset(&info, 0, sizeof(info));
+	info.format = 0;
+	sndfile = sf_open(name, SFM_READ, &info);
+	if (sndfile == NULL) {
+		fprintf(stderr, "ERROR. Cannot open %s\n", name);
+		exit(1);
 	}
+
+	int size = info.frames;
+	numCh = info.channels;
+
+	*buf = (float*)malloc(sizeof(float) * size);
+
+	if (info.channels == 1) {
+		sf_read_float(sndfile, *buf, size);
+	}
+
+	else {
+		/*Sum into mono & do RMS*/
+		if (info.channels == 2) {
+			/*Allocate temporary memory for wave file*/
+			float *temp_buf = (float*)malloc(sizeof(float) * info.frames * 2);
+
+			/*Read wave file into temporary memory*/
+			sf_read_float(sndfile, temp_buf, info.frames * 2);
+
+			/*Sum R & L*/
+			for (int i = 0; i < info.frames; i++) {
+				*buf[i] = temp_buf[i * 2] / 2.0 + temp_buf[i * 2 + 1] / 2.0;
+			}
+
+			free(temp_buf);
+
+		}
+		else {
+			fprintf(stderr, "ERROR: %s : Only mono or stereo accepted", name);
+		}
+	}
+	sf_close(sndfile);
+	return size;
+}
+
+void cudaFFT(int argc, char **argv, Data *p) {
+
+	char *input = "Taiklatalvi.wav";
+	char *reverb = "s1_r1_b_441_mono.wav";
 	if (argc == 2) {
+		if (argv[1][1] != '>')
+			input = argv[1];
+	}
+	if (argc == 3) {
 		input = argv[1];
 		reverb = argv[2];
-	}*/
+	}
 
-	/*Buffers for wave files*/
 	float *ibuf, *rbuf;
-	memset(&isfinfo, 0, sizeof(isfinfo));
-	memset(&rsfinfo, 0, sizeof(rsfinfo));
+	int SIGNAL_SIZE = 0, FILTER_KERNEL_SIZE = 0;
 
-	/*Open input file*/
-	isfinfo.format = 0;
-	isndfile = sf_open(input, SFM_READ, &isfinfo);
-	if (isndfile == NULL) {
-		fprintf(stderr, "ERROR. Cannot open %s\n", input);
-		exit(1);
-	}
-	if (isfinfo.channels != 1) {
-		printf("ERROR: Only mono sources accepted");
+	fprintf(stderr, "Reading input file\n");
+	int inputCh;
+	SIGNAL_SIZE = readFile(input, &ibuf, inputCh);
+
+	fprintf(stderr, "Reading reverb file\n");
+	FILTER_KERNEL_SIZE = readFile(reverb, &rbuf, inputCh);
+	if (inputCh != 1) {
+		fprintf(stderr, "ERROR: Only mono reverb sources accepted");
 		exit(2);
 	}
-	if (isfinfo.samplerate != 44100) {
-		printf("ERROR: Only 44.1k SR accepted");
-		exit(3);
-	}
-	/*Open reverb file*/
-	rsfinfo.format = 0;
-	rsndfile = sf_open(reverb, SFM_READ, &rsfinfo);
-	if (rsndfile == NULL) {
-		printf("ERROR. Cannot open %s\n", reverb);
-		exit(1);
-	}
-	if (rsfinfo.channels != 1) {
-		printf("ERROR: Only mono sources accepted");
-		exit(2);
-	}
-	if (rsfinfo.samplerate != 44100) {
-		printf("ERROR: Only 44.1k SR accepted");
-		exit(3);
-	}
-	
 
-	/*Setup buffer sizes*/
-	SIGNAL_SIZE = (int)(isfinfo.channels * isfinfo.frames);
-	FILTER_KERNEL_SIZE = (int)(rsfinfo.channels * rsfinfo.frames);
+	findCudaDevice(argc, (const char **)argv);
 
-	/*Allocate buffers*/
-	ibuf = (float*)malloc(sizeof(float) * SIGNAL_SIZE);
-	rbuf = (float*)malloc(sizeof(float) * FILTER_KERNEL_SIZE);
-
-	/*Read buffers*/
-	sf_read_float(isndfile, ibuf, SIGNAL_SIZE);
-	sf_read_float(rsndfile, rbuf, FILTER_KERNEL_SIZE);
-	printf("First data: %f\n", ibuf[0] * rbuf[0]);
-
+	fprintf(stderr, "Doing GPU Convolution\n");
 	/*Pad signal and filter kernel to same length*/
 	float *h_padded_signal;
 	float *h_padded_filter_kernel;
@@ -96,16 +104,18 @@ void cudaFFT(int argc, char **argv, Data *p){
 	/*FIND RMS OF ORIGINAL SIGNAL*/
 	/*Convert raw float pointer into a thrust device pointer*/
 	thrust::device_ptr<float> thrust_d_signal(d_signal);
+
 	/*Declare thrust operators*/
 	square<float> unary_op;
 	thrust::plus<float> binary_op;
+
 	/*Perform thrust reduction to find rms*/
 	float rms = std::sqrt(thrust::transform_reduce(thrust_d_signal, thrust_d_signal + new_size, unary_op, 0.0f, binary_op) / new_size);
-	
+
 	///////////////////////////////////////////////////////////////////////////////
 	/*GPU PROCESSING*/
 	///////////////////////////////////////////////////////////////////////////////
-	
+
 	// CUFFT plan simple API
 	cufftHandle plan;
 	checkCudaErrors(cufftPlan1d(&plan, new_size, CUFFT_R2C, 1));
@@ -148,14 +158,17 @@ void cudaFFT(int argc, char **argv, Data *p){
 
 	/*Scale resulting signal according to input signal*/
 	MyFloatScale << < numBlocks, blockSize >> > (d_signal, new_size, rms / rms2);
-	
+
 	/*MOVE BACK TO CPU & STORE IN STRUCT*/
 	float *obuf = (float*)malloc(sizeof(float) * new_size);
 	checkCudaErrors(cudaMemcpy(obuf, d_signal, new_size * sizeof(float), cudaMemcpyDeviceToHost));
 	p->buf = obuf;
 	p->length = new_size;
 
+	/*Store pointer to pointer of signal on device in struct*/
+	//p->d_buf = &d_signal;
 
+	fprintf(stderr, "Samples: %i\nTotal Bytes: %i\nTotal KB: %f3\nTotal MB: %f3\n\n\n", new_size, mem_size, mem_size / (float)1024, mem_size / (float)1024 / (float)1024);
 	////////////////////////////////////////////////////////////////////////////////
 	///*NOTE: GPU Convolution was not fast enough because of the large overhead
 	//of FFT and IFFT. Keeping the code here for future purposes*/
@@ -164,19 +177,15 @@ void cudaFFT(int argc, char **argv, Data *p){
 	//p->dbuf = d_signal;
 	////////////////////////////////////////////////////////////////////////////////
 
+	/*Write reverberated sound file*/
+	//SndfileHandle file = SndfileHandle("output.wav", SFM_WRITE, isfinfo.format, isfinfo.channels, isfinfo.samplerate);
+	//file.write(obuf, new_size);
+
 	/*Destroy CUFFT context*/
 	checkCudaErrors(cufftDestroy(plan));
 	checkCudaErrors(cufftDestroy(outplan));
-	isfinfo.seekable = 1;
-
-	/*Write sound file*/
-	SndfileHandle file = SndfileHandle("output.wav", SFM_WRITE, isfinfo.format, isfinfo.channels, isfinfo.samplerate);
-	file.write(obuf, new_size);
-
 
 	/*Free memory*/
-	sf_close(isndfile);
-	sf_close(rsndfile);
 
 	free(ibuf);
 	free(rbuf);

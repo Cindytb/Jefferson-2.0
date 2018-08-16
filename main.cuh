@@ -16,8 +16,5 @@ static int paCallback(const void *inputBuffer, void *outputBuffer,
 	PaStreamCallbackFlags statusFlags,
 	void *userData);
 
-//Value of 0 allows everything
-//Value of 1 is graphics-only debugging
-//Value of 2 is audio-only debugging
-#define DEBUGMODE 0
+
 #endif

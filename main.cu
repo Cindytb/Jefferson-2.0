@@ -1,8 +1,8 @@
 #include "main.cuh"
 
 int main(int argc, char *argv[]){
-	if (argc < 1) {
-		printf("Usage: %s input.wav reverb.wav", argv[0]);
+	if (argc > 3 ) {
+		fprintf(stderr, "Usage: %s input.wav reverb.wav", argv[0]);
 		return 0;
 	}
 	/*Initialize data structure*/
@@ -24,19 +24,24 @@ int main(int argc, char *argv[]){
 	//
 	//checkCudaErrors(cudaMalloc((void**)&p->d_x, HRTF_LEN - 1 + FRAMES_PER_BUFFER));
 	////////////////////////////////////////////////////////////////////////////////
-	/*Open & read hrtf files*/
-	if (read_hrtf_signals() != 0) {
-		exit(EXIT_FAILURE);
-	}
-	p->hrtf_idx = 0;
-	for (int i = 0; i < sizeof(p->x) / sizeof(*p->x); i++) {
-		p->x[i] = 0.0;
-	}
-	p->osfinfo.channels = 2;
-	p->osfinfo.samplerate = 44100;
-	p->osfinfo.format = test1.format;
-	p->sndfile = sf_open("ofile.wav", SFM_WRITE, &p->osfinfo);
-	sf_close(test);
+	
+		fprintf(stderr, "Opening and Reading HRTF signals\n");
+		/*Open & read hrtf files*/
+
+		if (read_hrtf_signals() != 0) {
+			exit(EXIT_FAILURE);
+		}
+		p->hrtf_idx = 0;
+		for (int i = 0; i < sizeof(p->x) / sizeof(*p->x); i++) {
+			p->x[i] = 0.0;
+		}
+
+		fprintf(stderr, "Opening output file\n");
+		p->osfinfo.channels = 2;
+		p->osfinfo.samplerate = 44100;
+		p->osfinfo.format = test1.format;
+		p->sndfile = sf_open("ofile.wav", SFM_WRITE, &p->osfinfo);
+		sf_close(test);
 	#endif
 
 	PaStream *stream = NULL;
@@ -44,6 +49,7 @@ int main(int argc, char *argv[]){
 	
 
 #if(DEBUGMODE != 1)
+	fprintf(stderr, "\n\n\n\nInitializing PortAudio\n\n\n\n");
 	PaStreamParameters outputParams;
 	PaStreamParameters inputParams;
 	
@@ -94,7 +100,7 @@ int main(int argc, char *argv[]){
 		exit(1);
 	}
 
-	printf("Starting playout\n");
+	printf("\n\n\n\nStarting playout\n");
 
 #endif
 	///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -170,6 +176,11 @@ static int paCallback(const void *inputBuffer, void *outputBuffer,
 	/*convolve with HRTF on CPU*/
 	convolve_hrtf(&p->x[HRTF_LEN], p->hrtf_idx, output, framesPerBuffer, p->gain);
 	
+	/*Enable pausing of audio*/
+	if (p->pauseStatus == true) {
+		memset((float*)output, 0.0f, framesPerBuffer * 2);
+		return 0;
+	}
 	
 	////////////////////////////////////////////////////////////////////////////////
 	////////////////////////////////////////////////////////////////////////////////

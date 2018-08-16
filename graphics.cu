@@ -1,14 +1,3 @@
-////////////////////////////////////////////////////////////////////////////
-//
-// Copyright 1993-2015 NVIDIA Corporation.  All rights reserved.
-//
-// Please refer to the NVIDIA end user license agreement (EULA) associated
-// with this source code for terms and conditions that govern your use of
-// this software. Any use, reproduction, disclosure, or distribution of
-// this software and related documentation outside the terms of the EULA
-// is strictly prohibited.
-//
-////////////////////////////////////////////////////////////////////////////
 #include "graphics.cuh"
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -18,9 +7,6 @@ GLuint vbo;
 struct cudaGraphicsResource *cuda_vbo_resource;
 void *d_vbo_buffer = NULL;
 
-//test VBO
-GLuint vbo1;
-float3 graph[2000];
 
 double tan40 = tan(40.0 * PI / 180);
 StopWatchInterface *timer = NULL;
@@ -38,8 +24,7 @@ int mouse_buttons = 0;
 float rotate_x = 0.0, rotate_y = 0.0;
 
 float translate_z = -3.0;
-
-//Cartoon character shit
+float translate_x = 0;
 
 // Absolute rotation values (0-359 degrees) and rotation increments for each frame
 double rotation_x = 0, rotation_x_increment = 0.1;
@@ -61,8 +46,6 @@ GLfloat mat_diffuse[] = { -0.2f, -0.2f, -0.2f, -0.0f };
 GLfloat mat_specular[] = { -0.2f, -0.2f, -0.2f, -0.0f };
 GLfloat mat_shininess[] = { 0.01f };
 
-
-
 // Auto-Verification Code
 int fpsCount = 0;        // FPS count for averaging
 int fpsLimit = 1;        // FPS limit for sampling
@@ -80,6 +63,38 @@ std::stringstream s;
 PaStream *stream;
 PaError err;
 
+
+VBO **obj;
+
+int numObj;
+__global__ void myNewKernel(int id, float4 *pos, float *d_buf, unsigned int size, double ratio, int magicNumber) {
+	/*My version of the kernel*/
+	unsigned long modNum = blockIdx.x * blockDim.x + threadIdx.x;
+	unsigned long samp_num = modNum + (id * magicNumber);
+	if (modNum < size && samp_num > id * magicNumber && samp_num < (id + 1) * magicNumber) {
+		float x = (float)samp_num * ratio;
+		float y = d_buf[samp_num];
+		/*Flat 2D waveform for testing*/
+		pos[modNum] = make_float4(x, y, 0, 1.0f);
+	}
+}
+
+void launch_new_kernel(int id, float4 *pos, float *buf, unsigned int size, int magicNumber) {
+	unsigned const int numThreads = 1024;
+	int numBlocks;
+	if (size == magicNumber) {
+		numBlocks = 1280;
+	}
+	else {
+		numBlocks = size / numThreads + 1;
+	}
+	myNewKernel << < numBlocks, numThreads >> > (id, pos, buf, size, ratio, magicNumber);
+	checkCudaErrors(cudaGetLastError());
+	checkCudaErrors(cudaDeviceSynchronize());
+	fprintf(stderr, "Kernel launch successful\n\n");
+	// unmap buffer object
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 //! Simple kernel to modify vertex positions in sine wave pattern
 //! @param data  data in global memory
@@ -92,8 +107,8 @@ __global__ void simple_vbo_kernel(float4 *pos, unsigned int width, unsigned int 
 	// calculate uv coordinates
 	float u = x / (float)width;
 	float v = y / (float)height;
-	u = u*2.0f - 1.0f;
-	v = v*2.0f - 1.0f;
+	u = u * 2.0f - 1.0f;
+	v = v * 2.0f - 1.0f;
 
 	// calculate simple sine wave pattern
 	float freq = 4.0f;
@@ -109,7 +124,7 @@ void launch_kernel(float4 *pos, unsigned int mesh_width,
 	// execute the kernel
 	dim3 block(8, 8, 1);
 	dim3 grid(mesh_width / block.x, mesh_height / block.y, 1);
-	simple_vbo_kernel << < grid, block >> >(pos, mesh_width, mesh_height, time);
+	simple_vbo_kernel << < grid, block >> > (pos, mesh_width, mesh_height, time);
 }
 
 bool checkHW(char *name, const char *gpuType, int dev)
@@ -182,7 +197,12 @@ int findGraphicsGPU(char *name)
 
 	return nGraphicsGPU;
 }
-
+void initVboArray(int magicNumber) {
+	for (int i = 0; i < numObj; i++) {
+		obj[i]->init();
+		obj[i]->create(magicNumber);
+	}
+}
 ////////////////////////////////////////////////////////////////////////////////
 // Program main
 ////////////////////////////////////////////////////////////////////////////////
@@ -194,6 +214,8 @@ int graphicsMain(int argc, char **argv, Data *p, PaError err2, PaStream *stream2
 	stream = stream2;
 	pArgc = &argc;
 	pArgv = argv;
+
+
 
 #if defined(__linux__)
 	setenv("DISPLAY", ":0", 0);
@@ -213,7 +235,7 @@ int graphicsMain(int argc, char **argv, Data *p, PaError err2, PaStream *stream2
 	printf("\n");
 
 	runTest(argc, argv, ref_file);
-	
+
 	printf("%s completed, returned %s\n", sSDKsample, (g_TotalErrors == 0) ? "OK" : "ERROR!");
 	//exit(g_TotalErrors == 0 ? EXIT_SUCCESS : EXIT_FAILURE);
 	return 0;
@@ -269,7 +291,6 @@ bool initGL(int *argc, char **argv)
 	float blue = 229.0f / 256.0f;
 	glClearColor(red, green, blue, 1.0);
 
-
 	// viewport
 	glViewport(0, 0, window_width, window_height);
 
@@ -314,69 +335,76 @@ bool initGL(int *argc, char **argv)
 	ObjLoad("letter.3ds");
 	printf("...Loading hat\n");
 	ObjLoad("hat.3ds");
+	glewInit();
 	SDK_CHECK_ERROR_GL();
 
 	return true;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 //! Run a simple test for CUDA
 ////////////////////////////////////////////////////////////////////////////////
 bool runTest(int argc, char **argv, char *ref_file)
 {
-	
+
 	// Create the CUTIL timer
 	sdkCreateTimer(&timer);
-
-	// command line mode only
-	if (ref_file != NULL)
+	// First initialize OpenGL context, so we can properly set the GL for CUDA.
+	// This is necessary in order to achieve optimal performance with OpenGL/CUDA interop.
+	if (false == initGL(&argc, argv))
 	{
-		// This will pick the best possible CUDA capable device
-		int devID = findCudaDevice(argc, (const char **)argv);
-
-		// create VBO
-		checkCudaErrors(cudaMalloc((void **)&d_vbo_buffer, mesh_width*mesh_height * 4 * sizeof(float)));
-
-		// run the cuda part
-		runAutoTest(devID, argv, ref_file);
-
-		// check result of Cuda step
-		checkResultCuda(argc, argv, vbo);
-
-		cudaFree(d_vbo_buffer);
-		d_vbo_buffer = NULL;
+		return false;
 	}
-	else
-	{
-		// First initialize OpenGL context, so we can properly set the GL for CUDA.
-		// This is necessary in order to achieve optimal performance with OpenGL/CUDA interop.
-		if (false == initGL(&argc, argv))
-		{
-			return false;
-		}
-
-		// register callbacks
-		glutDisplayFunc(display);
-		glutKeyboardFunc(keyboard);
-		glutMouseFunc(mouse);
-		glutMotionFunc(motion);
-		glutSpecialFunc(specialKeys);
+	// register callbacks
+	glutDisplayFunc(display);
+	glutKeyboardFunc(keyboard);
+	glutMouseFunc(mouse);
+	glutMotionFunc(motion);
+	glutSpecialFunc(specialKeys);
 #if defined (__APPLE__) || defined(MACOSX)
-		atexit(cleanup);
+	atexit(cleanup);
 #else
-		glutCloseFunc(cleanup);
+	glutCloseFunc(cleanup);
 #endif
-
-		// create VBO
-		createVBO(&vbo, &cuda_vbo_resource, cudaGraphicsMapFlagsWriteDiscard);
-
-		// run the cuda part
-		runCuda(&cuda_vbo_resource);
-
-		// start rendering mainloop
-		glutMainLoop();
+	const unsigned int magicNumber = 1310720;
+	if (GP->length <= magicNumber) {
+		numObj = 1;
 	}
+	else {
+		numObj = GP->length / magicNumber + 1;
+	}
+
+	/*MOVING SIGNAL TO GPU*/
+	// Allocate device memory for signal
+	float *d_signal;
+	checkCudaErrors(cudaMalloc((void **)&d_signal, GP->length * sizeof(float)));
+
+	// Copy signal from host to device
+	checkCudaErrors(cudaMemcpy(d_signal, GP->buf, GP->length * sizeof(float),
+		cudaMemcpyHostToDevice));
+
+	obj = new VBO *[numObj];
+	for (int i = 0; i < numObj; i++) {
+		obj[i] = new VBO(&d_signal, &translate_x);
+	}
+	for (int i = 0; i < numObj; i++) {
+		obj[i]->id = i;
+		if (i == numObj - 1) {
+			obj[i]->numSamples = GP->length - i * magicNumber;
+		}
+		else {
+			obj[i]->numSamples = magicNumber;
+		}
+	}
+	initVboArray(magicNumber);
+	// create sine wave VBO
+	createVBO(&vbo, &cuda_vbo_resource, cudaGraphicsMapFlagsWriteDiscard);
+
+	// run the cuda part
+	runCuda(&cuda_vbo_resource);
+
+	// start rendering mainloop
+	glutMainLoop();
 
 	return true;
 }
@@ -392,12 +420,6 @@ void runCuda(struct cudaGraphicsResource **vbo_resource)
 	size_t num_bytes;
 	checkCudaErrors(cudaGraphicsResourceGetMappedPointer((void **)&dptr, &num_bytes,
 		*vbo_resource));
-	//printf("CUDA mapped VBO: May access %ld bytes\n", num_bytes);
-
-	// execute the kernel
-	//    dim3 block(8, 8, 1);
-	//    dim3 grid(mesh_width / block.x, mesh_height / block.y, 1);
-	//    kernel<<< grid, block>>>(dptr, mesh_width, mesh_height, g_fAnim);
 
 	launch_kernel(dptr, mesh_width, mesh_height, g_fAnim);
 
@@ -477,36 +499,6 @@ void createVBO(GLuint *vbo, struct cudaGraphicsResource **vbo_res,
 	//SDK_CHECK_ERROR_GL();
 }
 
-void createMyVbo(GLuint *vbo) {
-	
-	// calculate simple sine wave pattern
-	float freq = 4.0f;
-	for (int i = 0; i < 2000; i++) {
-
-		float u = i / (float)mesh_width;
-		float v = i / (float)mesh_height;
-		u = u*2.0f - 1.0f;
-		v = v*2.0f - 1.0f;
-		float w = sinf(u*freq) * cosf(v*freq) * 0.5f;
-
-		// write output vertex
-		//graph[i] = make_float4(u, w, v, 1.0f);
-	}
-	assert(vbo);
-
-	// create buffer object
-	glGenBuffers(1, vbo);
-	glBindBuffer(GL_ARRAY_BUFFER, *vbo);
-
-	// initialize buffer object
-	//unsigned int size = mesh_width * mesh_height * 4 * sizeof(float);
-	glBufferData(GL_ARRAY_BUFFER, 2000 * sizeof(float), graph, GL_DYNAMIC_DRAW);
-
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
-	//glEnableVertexAttribArray();
-//	SDK_CHECK_ERROR_GL();
-
-}
 ////////////////////////////////////////////////////////////////////////////////
 //! Delete VBO
 ////////////////////////////////////////////////////////////////////////////////
@@ -521,7 +513,12 @@ void deleteVBO(GLuint *vbo, struct cudaGraphicsResource *vbo_res)
 
 	*vbo = 0;
 }
-
+void moveBar(Data p) {
+	if (p.pauseStatus == true) {
+		return;
+	}
+	translate_x = (float)p.count * -ratio;
+}
 ////////////////////////////////////////////////////////////////////////////////
 //! Display callback
 ////////////////////////////////////////////////////////////////////////////////
@@ -544,11 +541,17 @@ void display()
 	/*Rotating around the mesh's axis*/
 	glRotatef(rotate_x, 1.0, 0.0, 0.0);
 	glRotatef(rotate_y, 0.0, 1.0, 0.0);
-	
+
+	moveBar(*GP);
+	for (int i = 0; i < numObj; i++) {
+		obj[i]->draw();
+	}
+
 	// render from the vbo
 	glBindBuffer(GL_ARRAY_BUFFER, vbo);
 	glVertexPointer(4, GL_FLOAT, 0, 0);
 	glEnableClientState(GL_VERTEX_ARRAY);
+
 	/*SINE WAVE COLORS*/
 	glColor3f( 47.0f/256.0f, 63.0f/256.0f, 45.0f/256.0f );
 	glDrawArrays(GL_POINTS, 0, mesh_width * mesh_height);
@@ -565,7 +568,7 @@ void display()
 	/*IT'S JEFFERSON*/
 	for (int i = 0; i<obj_qty; i++)
 	{
-
+		//glTranslatef(0.0, 0.0, 0.0);
 		if(i == 0) glColor3f(60.0f / 256.0f, 52.0f / 256.0f, 96.0f / 256.0f);
 		else if (i == 1) glColor3f(0.0f, 1.0f, 1.0f);
 		else if (i == 4) glColor3f(0.0f, 0.0f, 0.0f);
@@ -637,47 +640,47 @@ void display()
 	float blue = 131.0f / 256.0f;
 	glColor3f(red, green, blue);
 	glPushMatrix();
-	glTranslatef(0.0, 0.0, 0.0);
+	glTranslatef(ball_x, ball_y, ball_z);
 	gluSphere(quadric, 0.1, 20, 50);
 	glPopMatrix();
 #if(DEBUGMODE != 1)
 	/*Calculate the radius, distance, elevation, and azimuth*/
 	float r = std::sqrt(ball_x * ball_x + ball_z * ball_z + ball_y * ball_y);
 	float horizR = std::sqrt(ball_x * ball_x + ball_z * ball_z);
-	float ele = (float) atan(-ball_y / horizR) * 180.0f / PI;
+	float ele = (float)atan(ball_y / horizR) * 180.0f / PI;
 	//s.str(std::string());
-	float obj_azi = (float) atan2(-ball_x / r, ball_z / r) * 180.0f / PI;
+	float obj_azi = (float)atan2(ball_x / r, ball_z / r) * 180.0f / PI;
 	/*s << "Azimuth: " << obj_azi;
 	s << "Elevation: " << ele;
 	s << "Radius: " << r;*/
 	GP->hrtf_idx = pick_hrtf(ele, obj_azi);
 	float newR = r / 100 + 1;
-	GP->gain = 1/pow(newR, 2);
+	GP->gain = 1 / pow(newR, 2);
 	printf("HRTF_IDX: %i\n", pick_hrtf(ele, obj_azi));
 #endif
 
 	/*GL Setup to display text onto the screen for debugging purposes*/
-	//glMatrixMode(GL_PROJECTION);
-	//glPushMatrix();
-	//glLoadIdentity();
-	//glMatrixMode(GL_MODELVIEW);
-	//glPushMatrix();
-	//glLoadIdentity();
-	//glDisable(GL_DEPTH_TEST);
+	glMatrixMode(GL_PROJECTION);
+	glPushMatrix();
+	glLoadIdentity();
+	glMatrixMode(GL_MODELVIEW);
+	glPushMatrix();
+	glLoadIdentity();
+	glDisable(GL_DEPTH_TEST);
 
-	//glColor3f(255, 255, 255);
-	//glRasterPos2f(0,0);
-	//std::string temp = s.str();
-	//int len = (int) temp.length();
-	//for (int i = 0; i < len; i++) {
-	//	glutBitmapCharacter(GLUT_BITMAP_TIMES_ROMAN_24, temp.at(i));
-	//}
-	//glEnable(GL_DEPTH_TEST); // Turn depth testing back on
+	glColor3f(255, 255, 255);
+	glRasterPos2f(0,0);
+	std::string temp = s.str();
+	int len = (int) temp.length();
+	for (int i = 0; i < len; i++) {
+		glutBitmapCharacter(GLUT_BITMAP_TIMES_ROMAN_24, temp.at(i));
+	}
+	glEnable(GL_DEPTH_TEST); // Turn depth testing back on
 
-	//glMatrixMode(GL_PROJECTION);
-	//glPopMatrix(); // revert back to the matrix I had before.
-	//glMatrixMode(GL_MODELVIEW);
-	//glPopMatrix();
+	glMatrixMode(GL_PROJECTION);
+	glPopMatrix(); // revert back to the matrix I had before.
+	glMatrixMode(GL_MODELVIEW);
+	glPopMatrix();
 
 	/*Step up the phase for the sinusoidal waves*/
 	g_fAnim += 0.01f;
@@ -703,6 +706,35 @@ void cleanup()
 	{
 		deleteVBO(&vbo, cuda_vbo_resource);
 	}
+#if(DEBUGMODE == 1)
+	/*Close output file*/
+	sf_close(GP->sndfile);
+
+	/* Stop stream */
+	err = Pa_StopStream(stream);
+	if (err != paNoError) {
+		printf("PortAudio error: stop stream: %s\n", Pa_GetErrorText(err));
+		printf("\nExiting.\n");
+		exit(1);
+	}
+
+	/* Close stream */
+	err = Pa_CloseStream(stream);
+	if (err != paNoError) {
+		printf("PortAudio error: close stream: %s\n", Pa_GetErrorText(err));
+		printf("\nExiting.\n");
+		exit(1);
+	}
+
+	/* Terminate PortAudio */
+	err = Pa_Terminate();
+	if (err != paNoError) {
+		printf("PortAudio error: terminate: %s\n", Pa_GetErrorText(err));
+		printf("\nExiting.\n");
+		exit(1);
+	}
+
+#endif
 }
 ////////////////////////////////////////////////////////////////////////////////
 //! Keyboard events handler
@@ -722,8 +754,8 @@ void keyboard(unsigned char key, int /*x*/, int /*y*/)
 		ball_z = 0.0;
 		break;
 	case('w'):
-		 //value is 40 degrees in radians
-		if(ball_y <= 0 || ball_y > 0 && (atan(ball_y/ dist) < 0.6981317))
+		//value is 40 degrees in radians
+		if (ball_y <= 0 || ball_y > 0 && (atan(ball_y / dist) < 0.6981317))
 			ball_y += temp;
 		break;
 	case('s'):
@@ -739,35 +771,6 @@ void keyboard(unsigned char key, int /*x*/, int /*y*/)
 		break;
 	case (27):
 		printf("Finished playout\n");
-#if(DEBUGMODE == 1)
-		/*Close output file*/
-		sf_close(GP->sndfile);
-
-		/* Stop stream */
-		err = Pa_StopStream(stream);
-		if (err != paNoError) {
-			printf("PortAudio error: stop stream: %s\n", Pa_GetErrorText(err));
-			printf("\nExiting.\n");
-			exit(1);
-		}
-
-		/* Close stream */
-		err = Pa_CloseStream(stream);
-		if (err != paNoError) {
-			printf("PortAudio error: close stream: %s\n", Pa_GetErrorText(err));
-			printf("\nExiting.\n");
-			exit(1);
-		}
-
-		/* Terminate PortAudio */
-		err = Pa_Terminate();
-		if (err != paNoError) {
-			printf("PortAudio error: terminate: %s\n", Pa_GetErrorText(err));
-			printf("\nExiting.\n");
-			exit(1);
-		}
-
-#endif
 #if defined(__APPLE__) || defined(MACOSX)
 		exit(EXIT_SUCCESS);
 #else
@@ -777,7 +780,7 @@ void keyboard(unsigned char key, int /*x*/, int /*y*/)
 	}
 }
 void specialKeys(int key, int x, int y) {
-	
+
 	switch (key) {
 	case GLUT_KEY_LEFT:
 		if (ball_y <= 0 || ball_y > 0 && (atan(ball_y / std::sqrt(pow(ball_x - temp, 2) + pow(ball_z, 2)) < tan40)))
@@ -788,7 +791,7 @@ void specialKeys(int key, int x, int y) {
 			ball_x += temp;
 		break;
 	case GLUT_KEY_UP:
-		if (ball_y <= 0 || ball_y > 0 && (atan(ball_y /  std::sqrt(pow(ball_x, 2) + pow(ball_z - temp, 2)) < tan40)))
+		if (ball_y <= 0 || ball_y > 0 && (atan(ball_y / std::sqrt(pow(ball_x, 2) + pow(ball_z - temp, 2)) < tan40)))
 			ball_z -= temp;
 		break;
 	case GLUT_KEY_DOWN:
@@ -843,38 +846,68 @@ void motion(int x, int y)
 	mouse_old_y = y;
 }
 
-////////////////////////////////////////////////////////////////////////////////
-//! Check if the result is correct or write data to file for external
-//! regression testing
-////////////////////////////////////////////////////////////////////////////////
-void checkResultCuda(int argc, char **argv, const GLuint &vbo)
+
+VBO::VBO(float **a, float *b)
+	: d_buf(a), translate_x(b)
 {
-	if (!d_vbo_buffer)
-	{
-		checkCudaErrors(cudaGraphicsUnregisterResource(cuda_vbo_resource));
+}
+void VBO::init() {
+	assert(&vbo);
 
-		// map buffer object
-		glBindBuffer(GL_ARRAY_BUFFER, vbo);
-		float *data = (float *)glMapBuffer(GL_ARRAY_BUFFER, GL_READ_ONLY);
+	// create buffer object
+	glGenBuffers(1, &vbo);
+	glBindBuffer(GL_ARRAY_BUFFER, vbo);
+	vboSize = numSamples * sizeof(float4);
+	// initialize buffer object
+	glBufferData(GL_ARRAY_BUFFER, vboSize, 0, GL_DYNAMIC_DRAW);
 
-		// check result
-		if (checkCmdLineFlag(argc, (const char **)argv, "regression"))
-		{
-			// write file for regression test
-			sdkWriteFile<float>("./data/regression.dat",
-				data, mesh_width * mesh_height * 3, 0.0, false);
-		}
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
 
-		// unmap GL buffer object
-		if (!glUnmapBuffer(GL_ARRAY_BUFFER))
-		{
-			fprintf(stderr, "Unmap buffer failed.\n");
-			fflush(stderr);
-		}
+	// register this buffer object with CUDA
+	checkCudaErrors(cudaGraphicsGLRegisterBuffer(&cuda_vbo_resource, vbo, cudaGraphicsMapFlagsWriteDiscard));
+	printf("ID: %i, VBO: %i\n", id, vbo);
+	fprintf(stderr, "ID: %i, VBO: %i\n", id, vbo);
+	SDK_CHECK_ERROR_GL();
+}
+void VBO::create(int magicNumber) {
+	// map OpenGL buffer object for writing from CUDA
+	float4 *dptr;
+	checkCudaErrors(cudaGraphicsMapResources(1, &cuda_vbo_resource, 0));
+	size_t num_bytes;
+	checkCudaErrors(cudaGraphicsResourceGetMappedPointer((void **)&dptr, &num_bytes,
+		cuda_vbo_resource));
+	printf("CUDA mapped VBO: May access %ld bytes\n", num_bytes);
 
-		checkCudaErrors(cudaGraphicsGLRegisterBuffer(&cuda_vbo_resource, vbo,
-			cudaGraphicsMapFlagsWriteDiscard));
+	fprintf(stderr, "\n\n\nLaunching Kernel: id: %d, number of samples: %d\n", id, numSamples);
+	launch_new_kernel(id, dptr, *d_buf, numSamples, magicNumber);
 
-		//SDK_CHECK_ERROR_GL();
-	}
+	// unmap buffer object
+	checkCudaErrors(cudaGraphicsUnmapResources(1, &cuda_vbo_resource, 0));
+}
+void VBO::draw() {
+	glPushMatrix();
+	glTranslatef(*translate_x, 0.0, 0.0);
+	// render from the vbo
+
+	glBindBuffer(GL_ARRAY_BUFFER, vbo);
+	glVertexPointer(4, GL_FLOAT, 0, 0);
+
+	glEnableClientState(GL_VERTEX_ARRAY);
+	glColor3f(1.0, 1.0, 1.0);
+	glDrawArrays(GL_POINTS, 0, vboSize);
+	glDisableClientState(GL_VERTEX_ARRAY);
+
+	glPopMatrix();
+}
+
+
+VBO::~VBO() {
+	checkCudaErrors(cudaFree(*d_buf));
+	// unregister this buffer object with CUDA
+	checkCudaErrors(cudaGraphicsUnregisterResource(cuda_vbo_resource));
+
+	glBindBuffer(1, vbo);
+	glDeleteBuffers(1, &vbo);
+
+	vbo = 0;
 }

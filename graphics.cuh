@@ -106,7 +106,6 @@ void keyboard(unsigned char key, int /*x*/, int /*y*/);
 void specialKeys(int key, int x, int y);
 void mouse(int button, int state, int x, int y);
 void motion(int x, int y);
-void checkResultCuda(int argc, char **argv, const GLuint &vbo);
 const unsigned int window_width = 1920;
 const unsigned int window_height = 1080;
 
@@ -115,6 +114,27 @@ const unsigned int mesh_height = 1024;
 #ifndef PI
 #define PI 3.14159265358979323846264338327950288
 #endif
+
+__global__ void myNewKernel(int id, float4 *pos, float *d_buf, unsigned int size, double ratio, int magicNumber);
+void launch_new_kernel(int id, float4 *pos, float* buf, unsigned int size, int magicNumber);
+class VBO {
+public:
+	
+	unsigned int numSamples = 1310720;
+	int id;
+	float **d_buf;
+	float *translate_x;
+
+	VBO::VBO(float **a, float *b);
+	void init();
+	void create(int magicNumber);
+	void draw();
+	~VBO();
+private:
+	GLuint vbo;
+	struct cudaGraphicsResource *cuda_vbo_resource;
+	unsigned int vboSize;
+};
 
 
 #endif

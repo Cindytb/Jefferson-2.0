@@ -11,6 +11,11 @@
 #define FRAMES_PER_BUFFER 512  //buffer in portaudio i/o buffer
 #define HRTF_CHN    2
 
+//Value of 0 allows everything
+//Value of 1 is graphics-only debugging
+//Value of 2 is audio-only debugging
+#define DEBUGMODE 0
+
 struct Data_tag {
 	int hrtf_idx;
 	SNDFILE *sndfile;
@@ -23,7 +28,7 @@ struct Data_tag {
 	int length;
 	float gain;
 	float ele;
-	
+	bool pauseStatus = false;
 	////////////////////////////////////////////////////////////////////////////////
 	///*NOTE: GPU Convolution was not fast enough because of the large overhead
 	//of FFT and IFFT. Keeping the code here for future purposes*/
@@ -35,4 +40,7 @@ struct Data_tag {
 	////////////////////////////////////////////////////////////////////////////////
 };
 typedef struct Data_tag Data;
+
+
+const float ratio = 1 / (float)44100;
 #endif
