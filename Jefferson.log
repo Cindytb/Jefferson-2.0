@@ -1,10 +1,10 @@
 Reading input file
 Reading reverb file
 Doing GPU Convolution
-Samples: 16392894
-Total Bytes: 65571576
-Total KB: 64034.7421883
-Total MB: 62.5339283
+Samples: 425814
+Total Bytes: 1703256
+Total KB: 1663.3359383
+Total MB: 1.6243523
 
 
 Opening and Reading HRTF signals
@@ -75,10 +75,10 @@ PinNew: Default sample rate = 48000 Hz
 Failed PinQueryNotificationSupport
 PinNew: Finding topology pin...
 FindStartConnectionFrom: Startpin 0, Checking 4 connections...
-FindStartConnectionFrom: returning 0000026EAB4CE3A8
+FindStartConnectionFrom: returning 00000165B6F64648
 GetConnectedPin: count=1, forward=0, muxPosition=-1
-GetConnectionFrom: Checking 4 connections... (pTo = 0000026EAB4CE3A8)
-GetConnectionFrom: Returning 0000026EAB4CE398
+GetConnectionFrom: Checking 4 connections... (pTo = 00000165B6F64648)
+GetConnectionFrom: Returning 00000165B6F64638
 PinNew: Getting physical connection...
 PinNew: Physical connection found!
 PinNew: Creating topology filter '\\?\INTELAUDIO#FUNC_01&VEN_10EC&DEV_0295&SUBSYS_1025121C&REV_1000#4&4985fee&2&0001#{6994ad04-93ef-11d0-a3cc-00a0c9223196}\RtMicInSSTTopo'
@@ -94,16 +94,16 @@ DumpConnectionsAndNodes: connections=4, nodes=3
   Node: 2 - {02B223C0-C557-11D0-8A2B-00A0C9255AC1}
 PinNew: Opening topology filter...PinNew: Checking for input endpoint pin id (0)...
 FindStartConnectionFrom: Startpin 0, Checking 4 connections...
-FindStartConnectionFrom: returning 0000026EAB4CE3F8
+FindStartConnectionFrom: returning 00000165B6F63D88
 GetConnectedPin: count=3, forward=0, muxPosition=0
-GetConnectionFrom: Checking 4 connections... (pTo = 0000026EAB4CE3F8)
-GetConnectionFrom: Returning 0000026EAB4CE3E8
+GetConnectionFrom: Checking 4 connections... (pTo = 00000165B6F63D88)
+GetConnectionFrom: Returning 00000165B6F63D78
 GetConnectedPin: count=3, forward=0, muxPosition=0
-GetConnectionFrom: Checking 4 connections... (pTo = 0000026EAB4CE3E8)
-GetConnectionFrom: Returning 0000026EAB4CE3D8
+GetConnectionFrom: Checking 4 connections... (pTo = 00000165B6F63D78)
+GetConnectionFrom: Returning 00000165B6F63D68
 GetConnectedPin: count=3, forward=0, muxPosition=0
-GetConnectionFrom: Checking 4 connections... (pTo = 0000026EAB4CE3D8)
-GetConnectionFrom: Returning 0000026EAB4CE3C8
+GetConnectionFrom: Checking 4 connections... (pTo = 00000165B6F63D68)
+GetConnectionFrom: Returning 00000165B6F63D58
 PinNew: Found endpoint pin id 1
 PinNew: Input friendly name 'Microphone Array'
 PinNew: Releasing topology filter...
@@ -120,24 +120,24 @@ PinNew: Default sample rate = 16000 Hz
 Failed PinQueryNotificationSupport
 PinNew: Finding topology pin...
 FindStartConnectionFrom: Startpin 2, Checking 4 connections...
-FindStartConnectionFrom: returning 0000026EAB4CE378
+FindStartConnectionFrom: returning 00000165B6F64618
 GetConnectedPin: count=1, forward=0, muxPosition=-1
-GetConnectionFrom: Checking 4 connections... (pTo = 0000026EAB4CE378)
-GetConnectionFrom: Returning 0000026EAB4CE398
+GetConnectionFrom: Checking 4 connections... (pTo = 00000165B6F64618)
+GetConnectionFrom: Returning 00000165B6F64638
 PinNew: Getting physical connection...
 PinNew: Physical connection found!
 PinNew: Opening topology filter...PinNew: Checking for input endpoint pin id (0)...
 FindStartConnectionFrom: Startpin 0, Checking 4 connections...
-FindStartConnectionFrom: returning 0000026EAB4CE3F8
+FindStartConnectionFrom: returning 00000165B6F63D88
 GetConnectedPin: count=3, forward=0, muxPosition=0
-GetConnectionFrom: Checking 4 connections... (pTo = 0000026EAB4CE3F8)
-GetConnectionFrom: Returning 0000026EAB4CE3E8
+GetConnectionFrom: Checking 4 connections... (pTo = 00000165B6F63D88)
+GetConnectionFrom: Returning 00000165B6F63D78
 GetConnectedPin: count=3, forward=0, muxPosition=0
-GetConnectionFrom: Checking 4 connections... (pTo = 0000026EAB4CE3E8)
-GetConnectionFrom: Returning 0000026EAB4CE3D8
+GetConnectionFrom: Checking 4 connections... (pTo = 00000165B6F63D78)
+GetConnectionFrom: Returning 00000165B6F63D68
 GetConnectedPin: count=3, forward=0, muxPosition=0
-GetConnectionFrom: Checking 4 connections... (pTo = 0000026EAB4CE3D8)
-GetConnectionFrom: Returning 0000026EAB4CE3C8
+GetConnectionFrom: Checking 4 connections... (pTo = 00000165B6F63D68)
+GetConnectionFrom: Returning 00000165B6F63D58
 PinNew: Found endpoint pin id 1
 PinNew: Input friendly name 'Microphone Array'
 PinNew: Releasing topology filter...
@@ -151,24 +151,24 @@ PinNew: Default sample rate = 16000 Hz
 Failed PinQueryNotificationSupport
 PinNew: Finding topology pin...
 FindStartConnectionFrom: Startpin 3, Checking 4 connections...
-FindStartConnectionFrom: returning 0000026EAB4CE388
+FindStartConnectionFrom: returning 00000165B6F64628
 GetConnectedPin: count=1, forward=0, muxPosition=-1
-GetConnectionFrom: Checking 4 connections... (pTo = 0000026EAB4CE388)
-GetConnectionFrom: Returning 0000026EAB4CE398
+GetConnectionFrom: Checking 4 connections... (pTo = 00000165B6F64628)
+GetConnectionFrom: Returning 00000165B6F64638
 PinNew: Getting physical connection...
 PinNew: Physical connection found!
 PinNew: Opening topology filter...PinNew: Checking for input endpoint pin id (0)...
 FindStartConnectionFrom: Startpin 0, Checking 4 connections...
-FindStartConnectionFrom: returning 0000026EAB4CE3F8
+FindStartConnectionFrom: returning 00000165B6F63D88
 GetConnectedPin: count=3, forward=0, muxPosition=0
-GetConnectionFrom: Checking 4 connections... (pTo = 0000026EAB4CE3F8)
-GetConnectionFrom: Returning 0000026EAB4CE3E8
+GetConnectionFrom: Checking 4 connections... (pTo = 00000165B6F63D88)
+GetConnectionFrom: Returning 00000165B6F63D78
 GetConnectedPin: count=3, forward=0, muxPosition=0
-GetConnectionFrom: Checking 4 connections... (pTo = 0000026EAB4CE3E8)
-GetConnectionFrom: Returning 0000026EAB4CE3D8
+GetConnectionFrom: Checking 4 connections... (pTo = 00000165B6F63D78)
+GetConnectionFrom: Returning 00000165B6F63D68
 GetConnectedPin: count=3, forward=0, muxPosition=0
-GetConnectionFrom: Checking 4 connections... (pTo = 0000026EAB4CE3D8)
-GetConnectionFrom: Returning 0000026EAB4CE3C8
+GetConnectionFrom: Checking 4 connections... (pTo = 00000165B6F63D68)
+GetConnectionFrom: Returning 00000165B6F63D58
 PinNew: Found endpoint pin id 1
 PinNew: Input friendly name 'Microphone Array'
 PinNew: Releasing topology filter...
@@ -192,10 +192,10 @@ PinNew: Default sample rate = 48000 Hz
 Failed PinQueryNotificationSupport
 PinNew: Finding topology pin...
 FindStartConnectionFrom: Startpin 0, Checking 2 connections...
-FindStartConnectionFrom: returning 0000026EB00D8B08
+FindStartConnectionFrom: returning 00000165B8417F68
 GetConnectedPin: count=1, forward=0, muxPosition=-1
-GetConnectionFrom: Checking 2 connections... (pTo = 0000026EB00D8B08)
-GetConnectionFrom: Returning 0000026EB00D8AF8
+GetConnectionFrom: Checking 2 connections... (pTo = 00000165B8417F68)
+GetConnectionFrom: Returning 00000165B8417F58
 PinNew: Getting physical connection...
 PinNew: Physical connection found!
 PinNew: Creating topology filter '\\?\INTELAUDIO#FUNC_01&VEN_10EC&DEV_0295&SUBSYS_1025121C&REV_1000#4&4985fee&2&0001#{6994ad04-93ef-11d0-a3cc-00a0c9223196}\RtStereoMixTopo'
@@ -209,13 +209,13 @@ DumpConnectionsAndNodes: connections=3, nodes=2
   Node: 1 - {02B223C0-C557-11D0-8A2B-00A0C9255AC1}
 PinNew: Opening topology filter...PinNew: Checking for input endpoint pin id (0)...
 FindStartConnectionFrom: Startpin 0, Checking 3 connections...
-FindStartConnectionFrom: returning 0000026EA5FE2E48
+FindStartConnectionFrom: returning 00000165ACE135C8
 GetConnectedPin: count=2, forward=0, muxPosition=0
-GetConnectionFrom: Checking 3 connections... (pTo = 0000026EA5FE2E48)
-GetConnectionFrom: Returning 0000026EA5FE2E38
+GetConnectionFrom: Checking 3 connections... (pTo = 00000165ACE135C8)
+GetConnectionFrom: Returning 00000165ACE135B8
 GetConnectedPin: count=2, forward=0, muxPosition=0
-GetConnectionFrom: Checking 3 connections... (pTo = 0000026EA5FE2E38)
-GetConnectionFrom: Returning 0000026EA5FE2E28
+GetConnectionFrom: Checking 3 connections... (pTo = 00000165ACE135B8)
+GetConnectionFrom: Returning 00000165ACE135A8
 PinNew: Found endpoint pin id 1
 PinNew: Input friendly name 'Stereo Mix'
 PinNew: Releasing topology filter...
@@ -252,11 +252,11 @@ PinNew: Default sample rate = 44100 Hz
 Failed PinQueryNotificationSupport
 PinNew: Finding topology pin...
 FindStartConnectionTo: Startpin 0, Checking 5 connections...
-FindStartConnectionTo: returning 0000026EAFA8A578
+FindStartConnectionTo: returning 00000165B89756F8
 GetConnectedPin: count=2, forward=1, muxPosition=-1
-GetConnectionTo: Checking 5 connections... (pFrom = 0000026EAFA8A578)GetConnectionTo: Returning 0000026EAFA8A568
+GetConnectionTo: Checking 5 connections... (pFrom = 00000165B89756F8)GetConnectionTo: Returning 00000165B89756E8
 GetConnectedPin: count=2, forward=1, muxPosition=-1
-GetConnectionTo: Checking 5 connections... (pFrom = 0000026EAFA8A568)GetConnectionTo: Returning 0000026EAFA8A5A8
+GetConnectionTo: Checking 5 connections... (pFrom = 00000165B89756E8)GetConnectionTo: Returning 00000165B8975728
 PinNew: Getting physical connection...
 PinNew: Physical connection found!
 PinNew: Creating topology filter '\\?\INTELAUDIO#FUNC_01&VEN_10EC&DEV_0295&SUBSYS_1025121C&REV_1000#4&4985fee&2&0001#{6994ad04-93ef-11d0-a3cc-00a0c9223196}\RearLineOutTopoSST'
@@ -272,13 +272,13 @@ DumpConnectionsAndNodes: connections=4, nodes=3
   Node: 2 - {E88C9BA0-C557-11D0-8A2B-00A0C9255AC1}
 PinNew: Opening topology filter...PinNew: Checking for output endpoint pin id...
 FindStartConnectionTo: Startpin 0, Checking 4 connections...
-FindStartConnectionTo: returning 0000026EAB4CF958
+FindStartConnectionTo: returning 00000165B6F63DF8
 GetConnectedPin: count=3, forward=1, muxPosition=-1
-GetConnectionTo: Checking 4 connections... (pFrom = 0000026EAB4CF958)GetConnectionTo: Returning 0000026EAB4CF968
+GetConnectionTo: Checking 4 connections... (pFrom = 00000165B6F63DF8)GetConnectionTo: Returning 00000165B6F63E08
 GetConnectedPin: count=3, forward=1, muxPosition=-1
-GetConnectionTo: Checking 4 connections... (pFrom = 0000026EAB4CF968)GetConnectionTo: Returning 0000026EAB4CF978
+GetConnectionTo: Checking 4 connections... (pFrom = 00000165B6F63E08)GetConnectionTo: Returning 00000165B6F63E18
 GetConnectedPin: count=3, forward=1, muxPosition=-1
-GetConnectionTo: Checking 4 connections... (pFrom = 0000026EAB4CF978)GetConnectionTo: Returning 0000026EAB4CF988
+GetConnectionTo: Checking 4 connections... (pFrom = 00000165B6F63E18)GetConnectionTo: Returning 00000165B6F63E28
 PinNew: Found endpoint pin id 1
 GetNameFromCategory: USB GUID 0301 -> 'Speakers'
 PinNew: Pin name 'Speakers'
@@ -298,22 +298,22 @@ PinNew: Default sample rate = 44100 Hz
 Failed PinQueryNotificationSupport
 PinNew: Finding topology pin...
 FindStartConnectionTo: Startpin 2, Checking 5 connections...
-FindStartConnectionTo: returning 0000026EAFA8A588
+FindStartConnectionTo: returning 00000165B8975708
 GetConnectedPin: count=2, forward=1, muxPosition=-1
-GetConnectionTo: Checking 5 connections... (pFrom = 0000026EAFA8A588)GetConnectionTo: Returning 0000026EAFA8A568
+GetConnectionTo: Checking 5 connections... (pFrom = 00000165B8975708)GetConnectionTo: Returning 00000165B89756E8
 GetConnectedPin: count=2, forward=1, muxPosition=-1
-GetConnectionTo: Checking 5 connections... (pFrom = 0000026EAFA8A568)GetConnectionTo: Returning 0000026EAFA8A5A8
+GetConnectionTo: Checking 5 connections... (pFrom = 00000165B89756E8)GetConnectionTo: Returning 00000165B8975728
 PinNew: Getting physical connection...
 PinNew: Physical connection found!
 PinNew: Opening topology filter...PinNew: Checking for output endpoint pin id...
 FindStartConnectionTo: Startpin 0, Checking 4 connections...
-FindStartConnectionTo: returning 0000026EAB4CF958
+FindStartConnectionTo: returning 00000165B6F63DF8
 GetConnectedPin: count=3, forward=1, muxPosition=-1
-GetConnectionTo: Checking 4 connections... (pFrom = 0000026EAB4CF958)GetConnectionTo: Returning 0000026EAB4CF968
+GetConnectionTo: Checking 4 connections... (pFrom = 00000165B6F63DF8)GetConnectionTo: Returning 00000165B6F63E08
 GetConnectedPin: count=3, forward=1, muxPosition=-1
-GetConnectionTo: Checking 4 connections... (pFrom = 0000026EAB4CF968)GetConnectionTo: Returning 0000026EAB4CF978
+GetConnectionTo: Checking 4 connections... (pFrom = 00000165B6F63E08)GetConnectionTo: Returning 00000165B6F63E18
 GetConnectedPin: count=3, forward=1, muxPosition=-1
-GetConnectionTo: Checking 4 connections... (pFrom = 0000026EAB4CF978)GetConnectionTo: Returning 0000026EAB4CF988
+GetConnectionTo: Checking 4 connections... (pFrom = 00000165B6F63E18)GetConnectionTo: Returning 00000165B6F63E28
 PinNew: Found endpoint pin id 1
 GetNameFromCategory: USB GUID 0301 -> 'Speakers'
 PinNew: Pin name 'Speakers'
@@ -331,10 +331,10 @@ PinNew: Default sample rate = 48000 Hz
 Failed PinQueryNotificationSupport
 PinNew: Finding topology pin...
 FindStartConnectionFrom: Startpin 3, Checking 5 connections...
-FindStartConnectionFrom: returning 0000026EAFA8A598
+FindStartConnectionFrom: returning 00000165B8975718
 GetConnectedPin: count=2, forward=0, muxPosition=-1
-GetConnectionFrom: Checking 5 connections... (pTo = 0000026EAFA8A598)
-GetConnectionFrom: Returning 0000026EAFA8A578
+GetConnectionFrom: Checking 5 connections... (pTo = 00000165B8975718)
+GetConnectionFrom: Returning 00000165B89756F8
 PinNew: Getting physical connection...
 PinNew: No physical connection! Getting the pin name
 Pin created successfully
@@ -345,90 +345,9 @@ ID: 0, VBO: 1
 
 
 
-Launching Kernel: id: 0, number of samples: 1310720
+Launching Kernel: id: 0, number of samples: 425814
 Kernel launch successful
 
-ID: 1, VBO: 2
-
-
-
-Launching Kernel: id: 1, number of samples: 1310720
-Kernel launch successful
-
-ID: 2, VBO: 3
-
-
-
-Launching Kernel: id: 2, number of samples: 1310720
-Kernel launch successful
-
-ID: 3, VBO: 4
-
-
-
-Launching Kernel: id: 3, number of samples: 1310720
-Kernel launch successful
-
-ID: 4, VBO: 5
-
-
-
-Launching Kernel: id: 4, number of samples: 1310720
-Kernel launch successful
-
-ID: 5, VBO: 6
-
-
-
-Launching Kernel: id: 5, number of samples: 1310720
-Kernel launch successful
-
-ID: 6, VBO: 7
-
-
-
-Launching Kernel: id: 6, number of samples: 1310720
-Kernel launch successful
-
-ID: 7, VBO: 8
-
-
-
-Launching Kernel: id: 7, number of samples: 1310720
-Kernel launch successful
-
-ID: 8, VBO: 9
-
-
-
-Launching Kernel: id: 8, number of samples: 1310720
-Kernel launch successful
-
-ID: 9, VBO: 10
-
-
-
-Launching Kernel: id: 9, number of samples: 1310720
-Kernel launch successful
-
-ID: 10, VBO: 11
-
-
-
-Launching Kernel: id: 10, number of samples: 1310720
-Kernel launch successful
-
-ID: 11, VBO: 12
-
-
-
-Launching Kernel: id: 11, number of samples: 1310720
-Kernel launch successful
-
-ID: 12, VBO: 13
-
-
-
-Launching Kernel: id: 12, number of samples: 664254
-Kernel launch successful
-
+WinMME StopStream: waiting for background thread.
+TerminateHostApis in 
+TerminateHostApis out

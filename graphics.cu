@@ -373,7 +373,7 @@ bool runTest(int argc, char **argv, char *ref_file)
 	else {
 		numObj = GP->length / magicNumber + 1;
 	}
-
+#if(DEBUGMODE != 1)
 	/*MOVING SIGNAL TO GPU*/
 	// Allocate device memory for signal
 	float *d_signal;
@@ -397,6 +397,7 @@ bool runTest(int argc, char **argv, char *ref_file)
 		}
 	}
 	initVboArray(magicNumber);
+#endif
 	// create sine wave VBO
 	createVBO(&vbo, &cuda_vbo_resource, cudaGraphicsMapFlagsWriteDiscard);
 
@@ -541,10 +542,30 @@ void display()
 	/*Rotating around the mesh's axis*/
 	glRotatef(rotate_x, 1.0, 0.0, 0.0);
 	glRotatef(rotate_y, 0.0, 1.0, 0.0);
-
 	moveBar(*GP);
+#if(DEBUGMODE != 1)
+	/*Calculate the radius, distance, elevation, and azimuth*/
+	float r = std::sqrt(ball_x * ball_x + ball_z * ball_z + ball_y * ball_y);
+	float horizR = std::sqrt(ball_x * ball_x + ball_z * ball_z);
+	float ele = (float)atan2(ball_y, horizR) * 180.0f / PI;
+	//s.str(std::string());
+	float obj_azi = (float)atan2(ball_x / r, ball_z / r) * 180.0f / PI;
+	/*s << "Azimuth: " << obj_azi;
+	s << "Elevation: " << ele;
+	s << "Radius: " << r;*/
+	GP->hrtf_idx = pick_hrtf(ele, obj_azi);
+	float newR = r / 100 + 1;
+	GP->gain = 1 / pow(newR, 2);
+	
+	float rotateVBO_y = (float)atan2(-ball_z, ball_x) * 180.0f / PI;
+
+	if (rotateVBO_y < 0) {
+		rotateVBO_y += 360;
+	}
+	//printf("x: %3f\ty: %3f\tz: %3f\tX: %3f\tY: %3f\tZ: %3f\n", ball_x, ball_y, ball_z, rotateVBO_x, rotateVBO_y, rotateVBO_z);
+#endif
 	for (int i = 0; i < numObj; i++) {
-		obj[i]->draw();
+		obj[i]->draw(rotateVBO_y, ele);
 	}
 
 	// render from the vbo
@@ -557,7 +578,7 @@ void display()
 	glDrawArrays(GL_POINTS, 0, mesh_width * mesh_height);
 	glDisableClientState(GL_VERTEX_ARRAY);
 
-	/*Draw the two spheres*/
+	
 	// Enable depth test
 	glEnable(GL_DEPTH_TEST);
 	GLUquadricObj *quadric;
@@ -575,7 +596,8 @@ void display()
 		else glColor3f(1.0f, 1.0f, 1.0f);
 		glPushMatrix(); // We save the current matrix
 		glScalef(0.5f, 0.5f, 0.5f);
-		glTranslatef(ball_x, ball_y, ball_z);
+		//glTranslatef(ball_x, ball_y, ball_z);
+		glTranslatef(0.0, 0.0, 0.0);
 		glMultMatrixf(&object[i].matrix[0][0]); // Now let's multiply the object matrix by the identity-first matrix
 
 		if (object[i].id_texture != -1)
@@ -643,44 +665,30 @@ void display()
 	glTranslatef(ball_x, ball_y, ball_z);
 	gluSphere(quadric, 0.1, 20, 50);
 	glPopMatrix();
-#if(DEBUGMODE != 1)
-	/*Calculate the radius, distance, elevation, and azimuth*/
-	float r = std::sqrt(ball_x * ball_x + ball_z * ball_z + ball_y * ball_y);
-	float horizR = std::sqrt(ball_x * ball_x + ball_z * ball_z);
-	float ele = (float)atan(ball_y / horizR) * 180.0f / PI;
-	//s.str(std::string());
-	float obj_azi = (float)atan2(ball_x / r, ball_z / r) * 180.0f / PI;
-	/*s << "Azimuth: " << obj_azi;
-	s << "Elevation: " << ele;
-	s << "Radius: " << r;*/
-	GP->hrtf_idx = pick_hrtf(ele, obj_azi);
-	float newR = r / 100 + 1;
-	GP->gain = 1 / pow(newR, 2);
-	printf("HRTF_IDX: %i\n", pick_hrtf(ele, obj_azi));
-#endif
+
 
 	/*GL Setup to display text onto the screen for debugging purposes*/
-	glMatrixMode(GL_PROJECTION);
-	glPushMatrix();
-	glLoadIdentity();
-	glMatrixMode(GL_MODELVIEW);
-	glPushMatrix();
-	glLoadIdentity();
-	glDisable(GL_DEPTH_TEST);
+	//glMatrixMode(GL_PROJECTION);
+	//glPushMatrix();
+	//glLoadIdentity();
+	//glMatrixMode(GL_MODELVIEW);
+	//glPushMatrix();
+	//glLoadIdentity();
+	//glDisable(GL_DEPTH_TEST);
 
-	glColor3f(255, 255, 255);
-	glRasterPos2f(0,0);
-	std::string temp = s.str();
-	int len = (int) temp.length();
-	for (int i = 0; i < len; i++) {
-		glutBitmapCharacter(GLUT_BITMAP_TIMES_ROMAN_24, temp.at(i));
-	}
-	glEnable(GL_DEPTH_TEST); // Turn depth testing back on
+	//glColor3f(255, 255, 255);
+	//glRasterPos2f(0,0);
+	//std::string temp = s.str();
+	//int len = (int) temp.length();
+	//for (int i = 0; i < len; i++) {
+	//	glutBitmapCharacter(GLUT_BITMAP_TIMES_ROMAN_24, temp.at(i));
+	//}
+	//glEnable(GL_DEPTH_TEST); // Turn depth testing back on
 
-	glMatrixMode(GL_PROJECTION);
-	glPopMatrix(); // revert back to the matrix I had before.
-	glMatrixMode(GL_MODELVIEW);
-	glPopMatrix();
+	//glMatrixMode(GL_PROJECTION);
+	//glPopMatrix(); // revert back to the matrix I had before.
+	//glMatrixMode(GL_MODELVIEW);
+	//glPopMatrix();
 
 	/*Step up the phase for the sinusoidal waves*/
 	g_fAnim += 0.01f;
@@ -690,8 +698,7 @@ void display()
 	sdkStopTimer(&timer);
 	computeFPS();
 }
-void timerEvent(int value)
-{
+void timerEvent(int value){
 	if (glutGetWindow())
 	{
 		glutPostRedisplay();
@@ -706,7 +713,7 @@ void cleanup()
 	{
 		deleteVBO(&vbo, cuda_vbo_resource);
 	}
-#if(DEBUGMODE == 1)
+#if(DEBUGMODE != 1)
 	/*Close output file*/
 	sf_close(GP->sndfile);
 
@@ -755,18 +762,19 @@ void keyboard(unsigned char key, int /*x*/, int /*y*/)
 		break;
 	case('w'):
 		//value is 40 degrees in radians
-		if (ball_y <= 0 || ball_y > 0 && (atan(ball_y / dist) < 0.6981317))
+		if (ball_y >= 0 || ball_y < 0 && (atan(ball_y / dist) < 0.6981317))
 			ball_y += temp;
 		break;
 	case('s'):
 		ball_y -= temp;
 		break;
+		/*TODO: Fix this logic*/
 	case('a'):
-		if (ball_y <= 0 || ball_y > 0 && (atan(ball_y / std::sqrt(pow(ball_x - temp, 2) + pow(ball_z, 2)) < tan40)))
+		if (ball_y >= 0 || ball_y < 0 && (atan(ball_y / std::sqrt(pow(ball_x - temp, 2) + pow(ball_z, 2)) < tan40)))
 			ball_x -= temp;
 		break;
 	case('d'):
-		if (ball_y <= 0 || ball_y > 0 && (atan(ball_y / std::sqrt(pow(ball_x + temp, 2) + pow(ball_z, 2)) < tan40)))
+		if (ball_y >= 0 || ball_y < 0 && (atan(ball_y / std::sqrt(pow(ball_x + temp, 2) + pow(ball_z, 2)) < tan40)))
 			ball_x += temp;
 		break;
 	case (27):
@@ -884,11 +892,14 @@ void VBO::create(int magicNumber) {
 	// unmap buffer object
 	checkCudaErrors(cudaGraphicsUnmapResources(1, &cuda_vbo_resource, 0));
 }
-void VBO::draw() {
+void VBO::update(
+void VBO::draw(float rotateVBO_y, float rotateVBO_z) {
 	glPushMatrix();
-	glTranslatef(*translate_x, 0.0, 0.0);
+	
 	// render from the vbo
-
+	glRotatef(rotateVBO_y, 0, 1.0, 0);
+	glRotatef(rotateVBO_z, 0, 0, 1.0);
+	glTranslatef(*translate_x, 0.0, 0.0);
 	glBindBuffer(GL_ARRAY_BUFFER, vbo);
 	glVertexPointer(4, GL_FLOAT, 0, 0);
 

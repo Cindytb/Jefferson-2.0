@@ -128,7 +128,7 @@ public:
 	VBO::VBO(float **a, float *b);
 	void init();
 	void create(int magicNumber);
-	void draw();
+	void VBO::draw(float rotateVBO_y, float rotateVBO_z);
 	~VBO();
 private:
 	GLuint vbo;

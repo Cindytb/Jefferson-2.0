@@ -11,37 +11,37 @@
   E:\Projects\OpenGL\Projects\Jefferson\Jefferson>"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v9.2\bin\nvcc.exe" -ccbin "C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Tools\MSVC\14.13.26128\bin\HostX86\x64" -x cu  -I"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v9.2\include" -I"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v9.2\include"  -G   --keep-dir x64\Debug -maxrregcount=0  --machine 64 --compile   -g   -DWIN32 -DWIN64 -D_DEBUG -D_CONSOLE -D_MBCS -Xcompiler "/EHsc /W3 /nologo /Od /FS /Zi /RTC1 /MDd " -o x64\Debug\main.cu.obj "E:\Projects\OpenGL\Projects\Jefferson\Jefferson\main.cu" -clean 
   main.cu
   Compiling CUDA source file cudaPart.cu...
-  Compiling CUDA source file hrtf_signals.cu...
-  Compiling CUDA source file main.cu...
   Compiling CUDA source file graphics.cu...
   
-  
-  
   E:\Projects\OpenGL\Projects\Jefferson\Jefferson>"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v9.2\bin\nvcc.exe" -gencode=arch=compute_30,code=\"sm_30,compute_30\" --use-local-env -ccbin "C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Tools\MSVC\14.13.26128\bin\HostX86\x64" -x cu  -I"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v9.2\include" -I"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v9.2\include"  -G   --keep-dir x64\Debug -maxrregcount=0  --machine 64 --compile -cudart static  -g   -DWIN32 -DWIN64 -D_DEBUG -D_CONSOLE -D_MBCS -Xcompiler "/EHsc /W3 /nologo /Od /FS /Zi /RTC1 /MDd " -o x64\Debug\cudaPart.cu.obj "E:\Projects\OpenGL\Projects\Jefferson\Jefferson\cudaPart.cu" 
-  E:\Projects\OpenGL\Projects\Jefferson\Jefferson>"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v9.2\bin\nvcc.exe" -gencode=arch=compute_30,code=\"sm_30,compute_30\" --use-local-env -ccbin "C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Tools\MSVC\14.13.26128\bin\HostX86\x64" -x cu  -I"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v9.2\include" -I"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v9.2\include"  -G   --keep-dir x64\Debug -maxrregcount=0  --machine 64 --compile -cudart static  -g   -DWIN32 -DWIN64 -D_DEBUG -D_CONSOLE -D_MBCS -Xcompiler "/EHsc /W3 /nologo /Od /FS /Zi /RTC1 /MDd " -o x64\Debug\main.cu.obj "E:\Projects\OpenGL\Projects\Jefferson\Jefferson\main.cu" 
-  E:\Projects\OpenGL\Projects\Jefferson\Jefferson>"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v9.2\bin\nvcc.exe" -gencode=arch=compute_30,code=\"sm_30,compute_30\" --use-local-env -ccbin "C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Tools\MSVC\14.13.26128\bin\HostX86\x64" -x cu  -I"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v9.2\include" -I"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v9.2\include"  -G   --keep-dir x64\Debug -maxrregcount=0  --machine 64 --compile -cudart static  -g   -DWIN32 -DWIN64 -D_DEBUG -D_CONSOLE -D_MBCS -Xcompiler "/EHsc /W3 /nologo /Od /FS /Zi /RTC1 /MDd " -o x64\Debug\hrtf_signals.cu.obj "E:\Projects\OpenGL\Projects\Jefferson\Jefferson\hrtf_signals.cu" 
   
   E:\Projects\OpenGL\Projects\Jefferson\Jefferson>"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v9.2\bin\nvcc.exe" -gencode=arch=compute_30,code=\"sm_30,compute_30\" --use-local-env -ccbin "C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Tools\MSVC\14.13.26128\bin\HostX86\x64" -x cu  -I"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v9.2\include" -I"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v9.2\include"  -G   --keep-dir x64\Debug -maxrregcount=0  --machine 64 --compile -cudart static  -g   -DWIN32 -DWIN64 -D_DEBUG -D_CONSOLE -D_MBCS -Xcompiler "/EHsc /W3 /nologo /Od /FS /Zi /RTC1 /MDd " -o x64\Debug\graphics.cu.obj "E:\Projects\OpenGL\Projects\Jefferson\Jefferson\graphics.cu" 
+  Compiling CUDA source file hrtf_signals.cu...
+  Compiling CUDA source file main.cu...
+  
+  E:\Projects\OpenGL\Projects\Jefferson\Jefferson>"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v9.2\bin\nvcc.exe" -gencode=arch=compute_30,code=\"sm_30,compute_30\" --use-local-env -ccbin "C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Tools\MSVC\14.13.26128\bin\HostX86\x64" -x cu  -I"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v9.2\include" -I"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v9.2\include"  -G   --keep-dir x64\Debug -maxrregcount=0  --machine 64 --compile -cudart static  -g   -DWIN32 -DWIN64 -D_DEBUG -D_CONSOLE -D_MBCS -Xcompiler "/EHsc /W3 /nologo /Od /FS /Zi /RTC1 /MDd " -o x64\Debug\hrtf_signals.cu.obj "E:\Projects\OpenGL\Projects\Jefferson\Jefferson\hrtf_signals.cu" 
+  
+  E:\Projects\OpenGL\Projects\Jefferson\Jefferson>"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v9.2\bin\nvcc.exe" -gencode=arch=compute_30,code=\"sm_30,compute_30\" --use-local-env -ccbin "C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Tools\MSVC\14.13.26128\bin\HostX86\x64" -x cu  -I"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v9.2\include" -I"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v9.2\include"  -G   --keep-dir x64\Debug -maxrregcount=0  --machine 64 --compile -cudart static  -g   -DWIN32 -DWIN64 -D_DEBUG -D_CONSOLE -D_MBCS -Xcompiler "/EHsc /W3 /nologo /Od /FS /Zi /RTC1 /MDd " -o x64\Debug\main.cu.obj "E:\Projects\OpenGL\Projects\Jefferson\Jefferson\main.cu" 
 E:/Projects/OpenGL/Projects/Jefferson/Jefferson/cudaPart.cu(50): warning : conversion from a string literal to "char *" is deprecated
 E:/Projects/OpenGL/Projects/Jefferson/Jefferson/cudaPart.cu(51): warning : conversion from a string literal to "char *" is deprecated
 E:/Projects/OpenGL/Projects/Jefferson/Jefferson/hrtf_signals.cu(14): warning : variable "count" was set but never used
   hrtf_signals.cu
-  main.cu
   graphics.cu
+  main.cu
 E:/Projects/OpenGL/Projects/Jefferson/Jefferson/hrtf_signals.cu(7): warning C4838: conversion from 'double' to 'float' requires a narrowing conversion
 E:/Projects/OpenGL/Projects/Jefferson/Jefferson/hrtf_signals.cu(7): warning C4305: 'initializing': truncation from 'double' to 'float'
 E:/Projects/OpenGL/Projects/Jefferson/Jefferson/hrtf_signals.cu(50): warning C4244: '=': conversion from 'sf_count_t' to 'int', possible loss of data
 E:/Projects/OpenGL/Projects/Jefferson/Jefferson/hrtf_signals.cu(51): warning C4244: '=': conversion from 'sf_count_t' to 'int', possible loss of data
 E:/Projects/OpenGL/Projects/Jefferson/Jefferson/hrtf_signals.cu(92): warning C4305: '=': truncation from 'double' to 'float'
 E:/Projects/OpenGL/Projects/Jefferson/Jefferson/hrtf_signals.cu(103): warning C4305: '=': truncation from 'double' to 'float'
+E:/Projects/OpenGL/Projects/Jefferson/Jefferson/graphics.cu(550): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
+E:/Projects/OpenGL/Projects/Jefferson/Jefferson/graphics.cu(552): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
+E:/Projects/OpenGL/Projects/Jefferson/Jefferson/graphics.cu(560): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
+E:/Projects/OpenGL/Projects/Jefferson/Jefferson/graphics.cu(887): warning C4477: 'printf' : format string '%ld' requires an argument of type 'long', but variadic argument 1 has type '::size_t'
+  E:/Projects/OpenGL/Projects/Jefferson/Jefferson/graphics.cu(887): note: consider using '%zd' in the format string
 E:/Projects/OpenGL/Projects/Jefferson/Jefferson/main.cu(12): warning C4305: '=': truncation from 'double' to 'float'
 E:/Projects/OpenGL/Projects/Jefferson/Jefferson/main.cu(169): warning C4018: '<': signed/unsigned mismatch
 E:/Projects/OpenGL/Projects/Jefferson/Jefferson/main.cu(181): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
-E:/Projects/OpenGL/Projects/Jefferson/Jefferson/graphics.cu(527): warning C4146: unary minus operator applied to unsigned type, result still unsigned
-E:/Projects/OpenGL/Projects/Jefferson/Jefferson/graphics.cu(661): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
-E:/Projects/OpenGL/Projects/Jefferson/Jefferson/graphics.cu(663): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
-E:/Projects/OpenGL/Projects/Jefferson/Jefferson/graphics.cu(890): warning C4477: 'printf' : format string '%ld' requires an argument of type 'long', but variadic argument 1 has type '::size_t'
-  E:/Projects/OpenGL/Projects/Jefferson/Jefferson/graphics.cu(890): note: consider using '%zd' in the format string
 E:/Projects/OpenGL/Projects/Jefferson/Jefferson/cudaPart.cu(50): warning : conversion from a string literal to "char *" is deprecated
 E:/Projects/OpenGL/Projects/Jefferson/Jefferson/cudaPart.cu(51): warning : conversion from a string literal to "char *" is deprecated
   cudaPart.cu
