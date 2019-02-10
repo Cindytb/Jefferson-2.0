@@ -1,0 +1,99 @@
+﻿  Compiling CUDA source file Audio.cu...
+  Compiling CUDA source file cudaPart.cu...
+  
+  D:\Projects\OpenGL\Projects\Jefferson\Jefferson>"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v10.0\bin\nvcc.exe" -gencode=arch=compute_60,code=\"sm_60,compute_60\" --use-local-env -ccbin "C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Tools\MSVC\14.16.27023\bin\HostX86\x64" -x cu  -I"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v10.0\include" -I"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v10.0\include"  -G   --keep-dir x64\Debug -maxrregcount=0  --machine 64 --compile -cudart static  -g   -DWIN32 -DWIN64 -D_DEBUG -D_CONSOLE -D_MBCS -Xcompiler "/EHsc /W3 /nologo /Od /Fdx64\Debug\vc141.pdb /FS /Zi /RTC1 /MDd " -o x64\Debug\Audio.cu.obj "D:\Projects\OpenGL\Projects\Jefferson\Jefferson\Audio.cu" 
+  Compiling CUDA source file main.cu...
+  
+  D:\Projects\OpenGL\Projects\Jefferson\Jefferson>"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v10.0\bin\nvcc.exe" -gencode=arch=compute_60,code=\"sm_60,compute_60\" --use-local-env -ccbin "C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Tools\MSVC\14.16.27023\bin\HostX86\x64" -x cu  -I"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v10.0\include" -I"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v10.0\include"  -G   --keep-dir x64\Debug -maxrregcount=0  --machine 64 --compile -cudart static  -g   -DWIN32 -DWIN64 -D_DEBUG -D_CONSOLE -D_MBCS -Xcompiler "/EHsc /W3 /nologo /Od /Fdx64\Debug\vc141.pdb /FS /Zi /RTC1 /MDd " -o x64\Debug\cudaPart.cu.obj "D:\Projects\OpenGL\Projects\Jefferson\Jefferson\cudaPart.cu" 
+  Compiling CUDA source file graphics.cu...
+  Compiling CUDA source file hrtf_signals.cu...
+  Compiling CUDA source file vbo.cu...
+  
+  D:\Projects\OpenGL\Projects\Jefferson\Jefferson>"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v10.0\bin\nvcc.exe" -gencode=arch=compute_60,code=\"sm_60,compute_60\" --use-local-env -ccbin "C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Tools\MSVC\14.16.27023\bin\HostX86\x64" -x cu  -I"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v10.0\include" -I"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v10.0\include"  -G   --keep-dir x64\Debug -maxrregcount=0  --machine 64 --compile -cudart static  -g   -DWIN32 -DWIN64 -D_DEBUG -D_CONSOLE -D_MBCS -Xcompiler "/EHsc /W3 /nologo /Od /Fdx64\Debug\vc141.pdb /FS /Zi /RTC1 /MDd " -o x64\Debug\graphics.cu.obj "D:\Projects\OpenGL\Projects\Jefferson\Jefferson\graphics.cu" 
+  
+  D:\Projects\OpenGL\Projects\Jefferson\Jefferson>"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v10.0\bin\nvcc.exe" -gencode=arch=compute_60,code=\"sm_60,compute_60\" --use-local-env -ccbin "C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Tools\MSVC\14.16.27023\bin\HostX86\x64" -x cu  -I"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v10.0\include" -I"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v10.0\include"  -G   --keep-dir x64\Debug -maxrregcount=0  --machine 64 --compile -cudart static  -g   -DWIN32 -DWIN64 -D_DEBUG -D_CONSOLE -D_MBCS -Xcompiler "/EHsc /W3 /nologo /Od /Fdx64\Debug\vc141.pdb /FS /Zi /RTC1 /MDd " -o x64\Debug\main.cu.obj "D:\Projects\OpenGL\Projects\Jefferson\Jefferson\main.cu" 
+  
+  D:\Projects\OpenGL\Projects\Jefferson\Jefferson>"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v10.0\bin\nvcc.exe" -gencode=arch=compute_60,code=\"sm_60,compute_60\" --use-local-env -ccbin "C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Tools\MSVC\14.16.27023\bin\HostX86\x64" -x cu  -I"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v10.0\include" -I"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v10.0\include"  -G   --keep-dir x64\Debug -maxrregcount=0  --machine 64 --compile -cudart static  -g   -DWIN32 -DWIN64 -D_DEBUG -D_CONSOLE -D_MBCS -Xcompiler "/EHsc /W3 /nologo /Od /Fdx64\Debug\vc141.pdb /FS /Zi /RTC1 /MDd " -o x64\Debug\hrtf_signals.cu.obj "D:\Projects\OpenGL\Projects\Jefferson\Jefferson\hrtf_signals.cu" 
+  
+  D:\Projects\OpenGL\Projects\Jefferson\Jefferson>"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v10.0\bin\nvcc.exe" -gencode=arch=compute_60,code=\"sm_60,compute_60\" --use-local-env -ccbin "C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Tools\MSVC\14.16.27023\bin\HostX86\x64" -x cu  -I"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v10.0\include" -I"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v10.0\include"  -G   --keep-dir x64\Debug -maxrregcount=0  --machine 64 --compile -cudart static  -g   -DWIN32 -DWIN64 -D_DEBUG -D_CONSOLE -D_MBCS -Xcompiler "/EHsc /W3 /nologo /Od /Fdx64\Debug\vc141.pdb /FS /Zi /RTC1 /MDd " -o x64\Debug\vbo.cu.obj "D:\Projects\OpenGL\Projects\Jefferson\Jefferson\vbo.cu" 
+D:/Projects/OpenGL/Projects/Jefferson/Jefferson/hrtf_signals.cu(14): warning : variable "count" was set but never used
+  hrtf_signals.cu
+  Audio.cu
+  main.cu
+  graphics.cu
+D:/Projects/OpenGL/Projects/Jefferson/Jefferson/hrtf_signals.cu(7): warning C4305: 'initializing': truncation from 'double' to 'float'
+D:/Projects/OpenGL/Projects/Jefferson/Jefferson/hrtf_signals.cu(51): warning C4244: '=': conversion from 'sf_count_t' to 'int', possible loss of data
+D:/Projects/OpenGL/Projects/Jefferson/Jefferson/Audio.cu(119): warning C4018: '<': signed/unsigned mismatch
+D:/Projects/OpenGL/Projects/Jefferson/Jefferson/hrtf_signals.cu(92): warning C4305: '=': truncation from 'double' to 'float'
+D:/Projects/OpenGL/Projects/Jefferson/Jefferson/hrtf_signals.cu(103): warning C4305: '=': truncation from 'double' to 'float'
+D:/Projects/OpenGL/Projects/Jefferson/Jefferson/main.cu(11): warning C4305: '=': truncation from 'double' to 'float'
+D:/Projects/OpenGL/Projects/Jefferson/Jefferson/graphics.cu(389): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
+D:/Projects/OpenGL/Projects/Jefferson/Jefferson/graphics.cu(391): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
+D:/Projects/OpenGL/Projects/Jefferson/Jefferson/graphics.cu(399): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
+  vbo.cu
+  cudaPart.cu
+D:/Projects/OpenGL/Projects/Jefferson/Jefferson/cudaPart.cu(14): warning C4244: 'initializing': conversion from 'sf_count_t' to 'int', possible loss of data
+D:/Projects/OpenGL/Projects/Jefferson/Jefferson/cudaPart.cu(34): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
+C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v10.0\include\thrust/system/cuda/detail/reduce.h(944): warning C4244: 'argument': conversion from 'Size' to 'int', possible loss of data
+          with
+          [
+              Size=size_type
+          ]
+  C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v10.0\include\thrust/system/cuda/detail/transform_reduce.h(58): note: see reference to function template instantiation 'T thrust::cuda_cub::reduce_n<thrust::cuda_cub::tag,transformed_iterator_t,size_type,T,ReduceOp>(thrust::cuda_cub::execution_policy<thrust::cuda_cub::tag> &,InputIt,Size,T,BinaryOp)' being compiled
+          with
+          [
+              T=float,
+              ReduceOp=thrust::plus<float>,
+              InputIt=transformed_iterator_t,
+              Size=size_type,
+              BinaryOp=thrust::plus<float>
+          ]
+  C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v10.0\include\thrust/detail/transform_reduce.inl(47): note: see reference to function template instantiation 'T thrust::cuda_cub::transform_reduce<thrust::cuda_cub::tag,InputIterator,UnaryFunction,OutputType,BinaryFunction>(thrust::cuda_cub::execution_policy<thrust::cuda_cub::tag> &,InputIt,InputIt,TransformOp,T,ReduceOp)' being compiled
+          with
+          [
+              T=float,
+              InputIterator=thrust::device_ptr<float>,
+              UnaryFunction=square<float>,
+              OutputType=float,
+              BinaryFunction=thrust::plus<float>,
+              InputIt=thrust::device_ptr<float>,
+              TransformOp=square<float>,
+              ReduceOp=thrust::plus<float>
+          ]
+  C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v10.0\include\thrust/detail/transform_reduce.inl(67): note: see reference to function template instantiation 'OutputType thrust::transform_reduce<DerivedPolicy,InputIterator,UnaryFunction,OutputType,BinaryFunction>(const thrust::detail::execution_policy_base<DerivedPolicy> &,InputIterator,InputIterator,UnaryFunction,OutputType,BinaryFunction)' being compiled
+          with
+          [
+              OutputType=float,
+              DerivedPolicy=thrust::cuda_cub::tag,
+              InputIterator=thrust::device_ptr<float>,
+              UnaryFunction=square<float>,
+              BinaryFunction=thrust::plus<float>
+          ]
+  D:/Projects/OpenGL/Projects/Jefferson/Jefferson/cudaPart.cu(113): note: see reference to function template instantiation 'OutputType thrust::transform_reduce<thrust::device_ptr<float>,square<float>,float,thrust::plus<float>>(InputIterator,InputIterator,UnaryFunction,OutputType,BinaryFunction)' being compiled
+          with
+          [
+              OutputType=float,
+              InputIterator=thrust::device_ptr<float>,
+              UnaryFunction=square<float>,
+              BinaryFunction=thrust::plus<float>
+          ]
+C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v10.0\include\thrust/system/cuda/detail/reduce.h(973): warning C4244: 'argument': conversion from 'Size' to 'int', possible loss of data
+          with
+          [
+              Size=size_type
+          ]
+  load_3ds.cpp
+d:\projects\opengl\projects\jefferson\jefferson\load_3ds.cpp(57): warning C4996: 'fopen': This function or variable may be unsafe. Consider using fopen_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+  c:\program files (x86)\windows kits\10\include\10.0.17763.0\ucrt\stdio.h(208): note: see declaration of 'fopen'
+d:\projects\opengl\projects\jefferson\jefferson\load_3ds.cpp(63): warning C4996: 'filelength': The POSIX name for this item is deprecated. Instead, use the ISO C and C++ conformant name: _filelength. See online help for details.
+  c:\program files (x86)\windows kits\10\include\10.0.17763.0\ucrt\corecrt_io.h(486): note: see declaration of 'filelength'
+  mat_matr.cpp
+  mat_vect.cpp
+  object.cpp
+d:\projects\opengl\projects\jefferson\jefferson\object.cpp(78): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
+  texture.cpp
+d:\projects\opengl\projects\jefferson\jefferson\texture.cpp(57): warning C4996: 'fopen': This function or variable may be unsafe. Consider using fopen_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+  c:\program files (x86)\windows kits\10\include\10.0.17763.0\ucrt\stdio.h(208): note: see declaration of 'fopen'
+  Generating Code...
+     Creating library D:\Projects\OpenGL\Projects\Jefferson\x64\Debug\Jefferson.lib and object D:\Projects\OpenGL\Projects\Jefferson\x64\Debug\Jefferson.exp
+  Jefferson.vcxproj -> D:\Projects\OpenGL\Projects\Jefferson\x64\Debug\Jefferson.exe
