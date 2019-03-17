@@ -22,17 +22,10 @@
 #include <thrust/execution_policy.h>
 #include <cmath>
 
+#include "kernels.cuh"
 __global__ void averagingKernel(float4 *pos, float *d_buf, unsigned int size, double ratio, int averageSize);
 void launch_new_kernel(float4 *pos, float* buf, unsigned int size, int averageNum, float ratio);
 
-struct is_negative {
-	__host__ __device__ bool operator()(float x) {
-		if (x < 0) {
-			return true;
-		}
-		return false;
-	}
-};
 
 class VBO {
 public:

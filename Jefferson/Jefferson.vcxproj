@@ -86,6 +86,7 @@
     <CudaCompile Include="cudaPart.cu" />
     <CudaCompile Include="graphics.cu" />
     <CudaCompile Include="hrtf_signals.cu" />
+    <CudaCompile Include="kernels.cu" />
     <CudaCompile Include="main.cu" />
     <CudaCompile Include="vbo.cu" />
   </ItemGroup>
@@ -94,6 +95,7 @@
     <ClInclude Include="cudaPart.cuh" />
     <ClInclude Include="graphics.cuh" />
     <ClInclude Include="hrtf_signals.cuh" />
+    <ClInclude Include="kernels.cuh" />
     <ClInclude Include="load_3ds.h" />
     <ClInclude Include="load_bmp.h" />
     <ClInclude Include="main.cuh" />

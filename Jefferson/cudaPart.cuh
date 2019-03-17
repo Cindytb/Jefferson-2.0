@@ -23,29 +23,14 @@
 #include <thrust/host_vector.h>
 #include <cmath>
 
+#include "kernels.cuh"
 // Complex data type
 typedef float2 Complex; 
 typedef struct Data_tag Data;
 
-template <typename T>
-struct square
-{
-	__host__ __device__
-		T operator()(const T& x) const
-	{
-		return x * x;
-	}
-};
+
 /*Forward Declarations*/
 void cudaFFT(int argc, char **argv, Data *p);
-int PadData(const float *signal, float **padded_signal, int signal_size,
-	const float *filter_kernel, float **padded_filter_kernel, int filter_kernel_size);
-
-static __device__ __host__ inline Complex ComplexScale(Complex, float);
-static __device__ __host__ inline Complex ComplexMul(Complex, Complex);
-static __global__ void ComplexPointwiseMulAndScale(Complex *a, const Complex *b, int size, float scale);
-static __global__ void MyFloatScale(float *a, int size, float scale);
-
 
 ////////////////////////////////////////////////////////////////////////////////
 ///*NOTE: GPU Convolution was not fast enough because of the large overhead
