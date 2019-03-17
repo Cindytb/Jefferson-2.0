@@ -6,6 +6,7 @@
 #include "hrtf_signals.cuh"
 #include "Audio.cuh"
 #include "vbo.cuh"
+#include "kernels.cuh"
 
 
 

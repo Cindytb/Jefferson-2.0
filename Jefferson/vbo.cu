@@ -80,32 +80,6 @@ VBO::~VBO() {
 	fprintf(stderr, "Freed the device audio buffer\n");
 }
 
-__global__ void averagingKernel(float4 *pos, float *d_buf, unsigned int size, double ratio, int averageSize) {
-
-	unsigned long modNum = blockIdx.x * blockDim.x + threadIdx.x;
-	unsigned long samp_num = modNum * averageSize;
-	if (samp_num < size) {
-
-		int end;
-		if (size < samp_num + averageSize - 1) {
-			end = size;
-		}
-		else {
-			end = samp_num + averageSize - 1;
-		}
-		thrust::negate<float> op;
-		thrust::transform_if(thrust::device, d_buf + samp_num, d_buf + end, d_buf + samp_num, op, is_negative());
-		float avg = thrust::reduce(thrust::device, d_buf + samp_num, d_buf + end, 0.0f, thrust::plus<float>());
-		avg /= (float)averageSize;
-
-		float x = (float)samp_num * ratio;
-		/*Flat 2D waveform for testing*/
-		pos[modNum * 2] = make_float4(x, avg, 0, 1.0f);
-		pos[modNum * 2 + 1] = make_float4(x, -avg, 0, 1.0f);
-
-	}
-}
-
 void launch_new_kernel(float4 *pos, float* buf, unsigned int size, int averageNum, float ratio) {
 	unsigned const int numThreads = 1024;
 	int numBlocks = size / numThreads + 1;
