@@ -55,7 +55,7 @@
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Console</SubSystem>
-      <AdditionalDependencies>cufft.lib;cudart_static.lib;glew64.lib;freeglut.lib;libsndfile-1.lib;portaudio_x64.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>cufft.lib;cudart_static.lib;glew64.lib;freeglut.lib;libsndfile-1.lib;portaudio_x64.lib;cuda.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <CudaCompile>
       <TargetMachinePlatform>64</TargetMachinePlatform>

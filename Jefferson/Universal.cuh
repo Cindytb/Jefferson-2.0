@@ -8,13 +8,15 @@
 #include <portaudio.h>
 
 #define HRTF_LEN	128
-#define FRAMES_PER_BUFFER 512  //buffer in portaudio i/o buffer
+#define FRAMES_PER_BUFFER 1024  //buffer in portaudio i/o buffer
 #define HRTF_CHN    2
+// const int COPY_AMT = FRAMES_PER_BUFFER - HRTF_LEN + 1;
+#define COPY_AMT  128 + 1024 -1
 
 //Value of 0 allows everything
 //Value of 1 is graphics-only debugging
 //Value of 2 is audio-only debugging
-#define DEBUGMODE 0
+#define DEBUGMODE 2
 
 struct Data_tag {
 	int hrtf_idx;
@@ -23,7 +25,7 @@ struct Data_tag {
 	/*Reverberated signal on host*/
 	float *buf;
 	/*Buffer for PA output on host*/
-	float x[HRTF_LEN - 1 + FRAMES_PER_BUFFER]; /* sound object buffer, mono */
+	float *x; /* sound object buffer, mono */
 	int count;
 	int length;
 	float gain;
@@ -32,11 +34,15 @@ struct Data_tag {
 	////////////////////////////////////////////////////////////////////////////////
 	///*NOTE: GPU Convolution was not fast enough because of the large overhead
 	//of FFT and IFFT. Keeping the code here for future purposes*/
-	//
-	///*Convolved signal on device*/
-	//float *dbuf;
-	///*Buffer for PA output on device*/
-	//float *d_x;
+	/*2019 version*/
+	/*Host data of the output*/
+	float *intermediate;
+	/*FRAMES_PER_BUFFER + HRTF_LEN - 1 sized for the input*/
+	float *d_input[5];
+	/*FRAMES_PER_BUFFER * 2 sized for the output*/
+	float *d_output[5];
+	int blockNo = 0;
+	cudaStream_t *streams;
 	////////////////////////////////////////////////////////////////////////////////
 };
 typedef struct Data_tag Data;

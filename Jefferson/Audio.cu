@@ -1,5 +1,5 @@
 #include "Audio.cuh"
-
+#include <cuda.h>
 PaStream *stream;
 
 void initializePA(int fs) {
@@ -111,62 +111,52 @@ static int paCallback(const void *inputBuffer, void *outputBuffer,
 	Data *p = (Data *)userData;
 	float *output = (float *)outputBuffer;
 	//float *input = (float *)inputBuffer; /* input not used in this code */
-	float *px;
-	unsigned int i;
-	float *buf = (float*)malloc(sizeof(float) * 2 * framesPerBuffer - HRTF_LEN);
-
-	/*CPU/RAM Copy data loop*/
-	for (int i = 0; i < framesPerBuffer; i++) {
-		p->x[HRTF_LEN - 1 + i] = p->buf[p->count];
-		p->count++;
-		if (p->count == p->length) {
-			p->count = 0;
-		}
+	/*for(int i = 0; i < 8; i++){
+		fprintf(stderr, "Stream No:%i - %s\n", i, cudaStreamQuery(p->streams[i]) ? "Not Finished" : "Finished");
 	}
-	/*convolve with HRTF on CPU*/
-	convolve_hrtf(&p->x[HRTF_LEN], p->hrtf_idx, output, framesPerBuffer, p->gain);
-
+	fprintf(stderr, "\n");*/
+	checkCudaErrors(cudaStreamSynchronize(p->streams[(p->blockNo - 2) % 3 * 2]));
+	/*Copy into p->x pinned memory*/
+	if (p->count + framesPerBuffer < p->length){
+		memcpy(p->x + HRTF_LEN - 1, p->buf + p->count, FRAMES_PER_BUFFER * sizeof(float));
+		p->count += FRAMES_PER_BUFFER;
+	}
+	else{
+		int rem = p->length - p->count;
+		memcpy(p->x + HRTF_LEN - 1, p->buf + p->count, rem * sizeof(float));
+		memcpy(p->x + HRTF_LEN - 1 + rem, p->buf, (framesPerBuffer - rem) * sizeof(float));
+		p->count = FRAMES_PER_BUFFER - rem;
+	}
+	// /*convolve with HRTF on CPU*/
+	// convolve_hrtf(&p->x[HRTF_LEN], p->hrtf_idx, output, framesPerBuffer, p->gain);
+	if (p->blockNo == 5) {
+		printf("%i\n", cuCtxPushCurrent(0));
+	}
+	fprintf(stderr, "Stream %i %s\n", p->blockNo % 5, cudaStreamQuery(p->streams[p->blockNo % 5 * 2]) ? "Unfinished":"Finished");
 	/*Enable pausing of audio*/
 	if (p->pauseStatus == true) {
-		for (i = 0; i < framesPerBuffer; i++) {
+		for (int i = 0; i < framesPerBuffer; i++) {
 			output[2 * i] = 0;
 			output[2 * i + 1] = 0;
 		}
 		return 0;
 	}
+	memcpy(output, p->intermediate, framesPerBuffer * 2 * sizeof(float));
+	fprintf(stderr, "%i %i %i %i %i\n", p->blockNo % 5, (p->blockNo - 1) % 5, (p->blockNo - 2) % 5, (p->blockNo - 3) % 5, (p->blockNo - 4) % 5);
+	/*Send*/
+	checkCudaErrors(cudaMemcpyAsync(p->d_input[p->blockNo % 5], p->x, COPY_AMT * sizeof(float), cudaMemcpyHostToDevice, p->streams[(p->blockNo) % 5 * 2]));
+	/*Process*/
+	GPUconvolve_hrtf(p->d_input[(p->blockNo - 1) % 5] + HRTF_LEN, p->hrtf_idx, p->d_output[0], FRAMES_PER_BUFFER, p->gain, &(p->streams[(p->blockNo - 1) % 5 * 2]));
+	/*Idle blockNo - 2*/
+	/*Idle blockNo - 3*/
+	/*Return & fill intermediate*/
+	checkCudaErrors(cudaMemcpyAsync(p->intermediate, p->d_output[(p->blockNo - 4) % 5], FRAMES_PER_BUFFER * 2 * sizeof(float), cudaMemcpyDeviceToHost, p->streams[(p->blockNo - 3) % 5 * 2]));
 
-	////////////////////////////////////////////////////////////////////////////////
-	////////////////////////////////////////////////////////////////////////////////
-	/*NOTE: GPU Convolution was not fast enough because of the large overhead
-	of FFT and IFFT. Keeping the code here for future purposes*/
-	/*CUDA Copy*/
-	//cudaThreadSynchronize();
-	//int blockSize = 256;
-	//int numBlocks = (framesPerBuffer + blockSize - 1) / blockSize;
-	//if(p->count + framesPerBuffer <= p->length) {
-	//	copyMe << < numBlocks, blockSize >> > (framesPerBuffer, p->d_x, &p->dbuf[p->count]);
-	//	cudaThreadSynchronize();
-	//	p->count += framesPerBuffer;
-	//}
-	//
-	//else {
-	//	int remainder = p->length - p->count - framesPerBuffer;
-	//	copyMe << < numBlocks, blockSize >> > (p->length - p->count, p->d_x, &p->dbuf[p->count]);
-	//	p->count = 0;
-	//	copyMe << < numBlocks, blockSize >> > (remainder, p->d_x, &p->dbuf[p->count]);
-	//	p->count += remainder;
-	//}
-	/*Convolve on GPU*/
-	//GPUconvolve_hrtf(p->d_x, framesPerBuffer, p->hrtf_idx, output, framesPerBuffer, p->gain);
-	////////////////////////////////////////////////////////////////////////////////
-	////////////////////////////////////////////////////////////////////////////////
+	
+	/*Overlap-save*/
+	memcpy(p->x, p->x + FRAMES_PER_BUFFER, (HRTF_LEN - 1) * sizeof(float));
+	p->blockNo++;
 
-
-	/* copy last HRTF_LEN-1 samples of x data to "history" part of x for use next time */
-	px = p->x;
-	for (i = 0; i<HRTF_LEN - 1; i++) {
-		px[i] = px[framesPerBuffer + i];
-	}
 	//sf_writef_float(p->sndfile, output, framesPerBuffer);
 	return 0;
 }
