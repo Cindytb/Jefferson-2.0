@@ -1,5 +1,8 @@
 #include "main.cuh"
-
+#include <chrono>
+#include <thread>
+#include <cuda.h>
+#include <cuda_profiler_api.h>
 int main(int argc, char *argv[]){
 	if (argc > 3 ) {
 		fprintf(stderr, "Usage: %s input.wav reverb.wav", argv[0]);
@@ -31,16 +34,113 @@ int main(int argc, char *argv[]){
 			exit(EXIT_FAILURE);
 		}
 		p->hrtf_idx = 0;
-		for (int i = 0; i < sizeof(p->x) / sizeof(*p->x); i++) {
-			p->x[i] = 0.0;
-		}
+
 
 		fprintf(stderr, "Opening output file\n");
 		p->osfinfo.channels = 2;
 		p->osfinfo.samplerate = 44100;
 		p->osfinfo.format = test1.format;
 		p->sndfile = sf_open("ofile.wav", SFM_WRITE, &p->osfinfo);
+		p->count = 0;
+		/*2019 version*/
+		p->streams = (cudaStream_t *)malloc(10 * sizeof(cudaStream_t));
+		for (int i = 0; i < 5; i++){
+			/*Allocating memory for the inputs*/
+			checkCudaErrors(cudaMalloc(&(p->d_input[i]), COPY_AMT * sizeof(float)));
+			/*Allocating memory for the outputs*/
+			checkCudaErrors(cudaMalloc(&(p->d_output[i]), FRAMES_PER_BUFFER * HRTF_CHN * sizeof(float)));
+			/*Creating the streams*/
+			checkCudaErrors(cudaStreamCreate(&(p->streams[i * 2])));
+			checkCudaErrors(cudaStreamCreate(&(p->streams[i * 2 + 1])));
+		}
+		/*Allocating pinned memory for incoming transfer*/
+		checkCudaErrors(cudaMallocHost(&(p->x), COPY_AMT * sizeof(float)));
+		/*Allocating pinned memory for outgoing transfer*/
+		checkCudaErrors(cudaMallocHost(&(p->intermediate), FRAMES_PER_BUFFER * HRTF_CHN * sizeof(float)));
+
+		/*Setting initial input to 0*/
+		for (int i = 0; i < HRTF_LEN - 1; i++){
+			p->x[i] = 0.0f;
+		}
+		p->blockNo = 0;
+		cudaProfilerStart();
+
+		/*ROUND 1*/
+		memcpy(p->x + HRTF_LEN - 1, p->buf + p->count, FRAMES_PER_BUFFER * sizeof(float));
+		p->count += FRAMES_PER_BUFFER;
+		/*Send B1*/
+		checkCudaErrors(cudaMemcpyAsync(p->d_input[p->blockNo], p->x, COPY_AMT * sizeof(float), cudaMemcpyHostToDevice, p->streams[p->blockNo]));
+
+		/*overlap-save*/
+		memcpy(p->x, p->x + FRAMES_PER_BUFFER, (HRTF_LEN - 1) * sizeof(float));
+		p->blockNo++;
+
+		/*ROUND 2*/
+		/*Copy new input chunk into pinned memory*/
+		memcpy(p->x + HRTF_LEN - 1, p->buf + p->count, FRAMES_PER_BUFFER * sizeof(float));
+		p->count += FRAMES_PER_BUFFER;
+		
+		/*Send B2*/
+		checkCudaErrors(cudaMemcpyAsync(p->d_input[p->blockNo], p->x, COPY_AMT * sizeof(float), cudaMemcpyHostToDevice, p->streams[p->blockNo * 2]));
+		/*Process B1*/
+		GPUconvolve_hrtf(p->d_input[p->blockNo - 1] + HRTF_LEN, p->hrtf_idx, p->d_output[0], FRAMES_PER_BUFFER, p->gain, &(p->streams[(p->blockNo - 1) * 2]));
+
+		/*overlap-save*/
+		memcpy(p->x, p->x + FRAMES_PER_BUFFER, (HRTF_LEN - 1) * sizeof(float));
+		p->blockNo++;
+
+		/*ROUND 3*/
+		/*Copy new input chunk into pinned memory*/
+		memcpy(p->x + HRTF_LEN - 1, p->buf + p->count, FRAMES_PER_BUFFER * sizeof(float));
+		p->count += FRAMES_PER_BUFFER;
+
+		/*Send B3*/
+		fprintf(stderr, "%i %i %i", p->blockNo, p->blockNo - 1, p->blockNo - 2);
+		checkCudaErrors(cudaMemcpyAsync(p->d_input[p->blockNo], p->x, COPY_AMT * sizeof(float), cudaMemcpyHostToDevice, p->streams[p->blockNo * 2]));
+		/*Process B2*/
+		GPUconvolve_hrtf(p->d_input[p->blockNo - 1] + HRTF_LEN, p->hrtf_idx, p->d_output[0], FRAMES_PER_BUFFER, p->gain, &(p->streams[(p->blockNo - 1) * 2]));
+		/*Idle B1*/
+
+		/*overlap-save*/
+		memcpy(p->x, p->x + FRAMES_PER_BUFFER, (HRTF_LEN - 1) * sizeof(float));
+		p->blockNo++;
+		
+		/*ROUND 4*/
+		/*Copy new input chunk into pinned memory*/
+		memcpy(p->x + HRTF_LEN - 1, p->buf + p->count, FRAMES_PER_BUFFER * sizeof(float));
+		p->count += FRAMES_PER_BUFFER;
+
+		/*Send B4*/
+		checkCudaErrors(cudaMemcpyAsync(p->d_input[p->blockNo % 5], p->x, COPY_AMT * sizeof(float), cudaMemcpyHostToDevice, p->streams[(p->blockNo) % 5 * 2]));
+		/*Process B3*/
+		GPUconvolve_hrtf(p->d_input[(p->blockNo - 1) % 5] + HRTF_LEN, p->hrtf_idx, p->d_output[0], FRAMES_PER_BUFFER, p->gain, &(p->streams[(p->blockNo - 1) % 5 * 2]));
+		/*Idle B2*/
+
+		/*Idle B1*/
+
+		memcpy(p->x, p->x + FRAMES_PER_BUFFER, (HRTF_LEN - 1) * sizeof(float));
+		p->blockNo++;
+
+		/*ROUND 5*/
+		/*Copy new input chunk into pinned memory*/
+		memcpy(p->x + HRTF_LEN - 1, p->buf + p->count, FRAMES_PER_BUFFER * sizeof(float));
+		p->count += FRAMES_PER_BUFFER;
+
+		/*Send B5*/
+		checkCudaErrors(cudaMemcpyAsync(p->d_input[p->blockNo % 5], p->x, COPY_AMT * sizeof(float), cudaMemcpyHostToDevice, p->streams[(p->blockNo) % 5 * 2]));
+		/*Process B4*/
+		GPUconvolve_hrtf(p->d_input[(p->blockNo - 1) % 5] + HRTF_LEN, p->hrtf_idx, p->d_output[0], FRAMES_PER_BUFFER, p->gain, &(p->streams[(p->blockNo - 1) % 5 * 2]));
+		
+		/*Idle B3
+		/*Idle B2*/
+
+		/*Return B1*/
+		checkCudaErrors(cudaMemcpyAsync(p->intermediate, p->d_output[(p->blockNo - 4) % 5], FRAMES_PER_BUFFER * 2 * sizeof(float), cudaMemcpyDeviceToHost, p->streams[(p->blockNo - 4) % 5 * 2]));
+		memcpy(p->x, p->x + FRAMES_PER_BUFFER, (HRTF_LEN - 1) * sizeof(float));
+		p->blockNo++;
+		
 		sf_close(test);
+		checkCudaErrors(cudaDeviceSynchronize());
 	#endif
 	
 
@@ -48,26 +148,36 @@ int main(int argc, char *argv[]){
 	fprintf(stderr, "\n\n\n\nInitializing PortAudio\n\n\n\n");
 	initializePA(SAMPLE_RATE);
 	printf("\n\n\n\nStarting playout\n");
-
+	fprintf(stderr, " %i %i %i %i %i\n", p->blockNo, p->blockNo - 1, p->blockNo - 2, p->blockNo - 3, p->blockNo - 4);
 #endif
 	///////////////////////////////////////////////////////////////////////////////////////////////////
 	/*MAIN FUNCTIONAL LOOP*/
 	/*Here to debug without graphics*/
 #if DEBUGMODE == 2
-	char merp = getchar();
+	std::this_thread::sleep_for(std::chrono::seconds((p->length)/44100));
+	//char merp = getchar();
 #else
 	graphicsMain(argc, argv, p);
 #endif
 	
 	///////////////////////////////////////////////////////////////////////////////////////////////////
-	
+	CUcontext pctx;
+	printf("%i\n", cuCtxPopCurrent(&pctx));
 	/*THIS SECTION WILL NOT RUN IF GRAPHICS IS TURNED ON*/
 	/*Placed here to properly close files when debugging without graphics*/
-	
+	cudaProfilerStop();
 	/*Close output file*/
 	sf_close(p->sndfile);
-
 	closePA();
+	for (int i = 0; i < 3; i++){
+		checkCudaErrors(cudaFree(p->d_input[i]));
+		checkCudaErrors(cudaFree(p->d_output[i]));
+		checkCudaErrors(cudaStreamDestroy(p->streams[i * 2]));
+		checkCudaErrors(cudaStreamDestroy(p->streams[i * 2 + 1]));
+	}
+	checkCudaErrors(cudaFreeHost(p->intermediate));
+	checkCudaErrors(cudaFreeHost(p->x));
+	
 
 	return 0;
 }
