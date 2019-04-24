@@ -161,8 +161,8 @@ int main(int argc, char *argv[]){
 #endif
 	
 	///////////////////////////////////////////////////////////////////////////////////////////////////
-	CUcontext pctx;
-	printf("%i\n", cuCtxPopCurrent(&pctx));
+	// CUcontext pctx;
+	// printf("%i\n", cuCtxPopCurrent(&pctx));
 	/*THIS SECTION WILL NOT RUN IF GRAPHICS IS TURNED ON*/
 	/*Placed here to properly close files when debugging without graphics*/
 	cudaProfilerStop();
