@@ -1,7 +1,22 @@
-#pragma once
 #include "kernels.cuh"
 
-
+struct is_negative {
+	__host__ __device__ bool operator()(float x) {
+		if (x < 0) {
+			return true;
+		}
+		return false;
+	}
+};
+template <typename T>
+struct square
+{
+	__host__ __device__
+		T operator()(const T& x) const
+	{
+		return x * x;
+	}
+};
 ///////////////////////////////////////////////////////////////////////////////
 //! Simple kernel to modify vertex positions in sine wave pattern
 //! @param data  data in global memory

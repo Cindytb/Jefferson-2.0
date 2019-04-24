@@ -12,11 +12,11 @@
 *
 */
 
-#include <windows.h>
+//#include <windows.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <conio.h>
-#include <io.h>
+//#include <conio.h>
+//#include <io.h>
 #include "object.h"
 #include "load_3ds.h"
 
@@ -52,15 +52,18 @@ char Load3DS(obj_type_ptr p_object, const char *p_filename)
 
 	unsigned short l_face_flags; //Flag that stores some face information
 
-	if (p_filename == '\0') return(0);
+	if (p_filename == 0) return(0);
 
 	if ((l_file = fopen(p_filename, "rb")) == NULL)
 	{
-		MessageBox(NULL, "3DS file not found", "Spacesim", MB_OK | MB_ICONERROR);
+		printf("3DS file not found");
 		return (0);
 	}
+	fseek(l_file, 0L, SEEK_END);
+	long file_length =  ftell(l_file);
 
-	while (ftell(l_file) < filelength(fileno(l_file))) //Loop to scan the whole file 
+	rewind(l_file);
+	while (ftell(l_file) < file_length) //Loop to scan the whole file 
 	{
 		//getche(); //Insert this command for debug (to wait for keypress for each chuck reading)
 
@@ -123,7 +126,7 @@ char Load3DS(obj_type_ptr p_object, const char *p_filename)
 			//printf("Number of vertices: %d\n", l_qty);
 			if (l_qty>MAX_VERTICES)
 			{
-				MessageBox(NULL, "Number of vertices too high", "Spacesim", MB_OK | MB_ICONERROR);
+				printf("Number of vertices too high");
 				return (0);
 			}
 			for (i = 0; i<l_qty; i++)
@@ -150,7 +153,7 @@ char Load3DS(obj_type_ptr p_object, const char *p_filename)
 			//printf("Number of polygons: %d\n", l_qty);
 			if (l_qty>MAX_POLYGONS)
 			{
-				MessageBox(NULL, "Number of polygons too high", "Spacesim", MB_OK | MB_ICONERROR);
+				printf("Number of polygons too high");
 				return (0);
 			}
 			for (i = 0; i<l_qty; i++)
