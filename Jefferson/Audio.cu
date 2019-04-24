@@ -129,9 +129,9 @@ static int paCallback(const void *inputBuffer, void *outputBuffer,
 	}
 	// /*convolve with HRTF on CPU*/
 	// convolve_hrtf(&p->x[HRTF_LEN], p->hrtf_idx, output, framesPerBuffer, p->gain);
-	if (p->blockNo == 5) {
-		printf("%i\n", cuCtxPushCurrent(0));
-	}
+	// if (p->blockNo == 5) {
+	// 	printf("%i\n", cuCtxPushCurrent(0));
+	// }
 	fprintf(stderr, "Stream %i %s\n", p->blockNo % 5, cudaStreamQuery(p->streams[p->blockNo % 5 * 2]) ? "Unfinished":"Finished");
 	/*Enable pausing of audio*/
 	if (p->pauseStatus == true) {
@@ -146,7 +146,7 @@ static int paCallback(const void *inputBuffer, void *outputBuffer,
 	/*Send*/
 	checkCudaErrors(cudaMemcpyAsync(p->d_input[p->blockNo % 5], p->x, COPY_AMT * sizeof(float), cudaMemcpyHostToDevice, p->streams[(p->blockNo) % 5 * 2]));
 	/*Process*/
-	GPUconvolve_hrtf(p->d_input[(p->blockNo - 1) % 5] + HRTF_LEN, p->hrtf_idx, p->d_output[0], FRAMES_PER_BUFFER, p->gain, &(p->streams[(p->blockNo - 1) % 5 * 2]));
+	// GPUconvolve_hrtf(p->d_input[(p->blockNo - 1) % 5] + HRTF_LEN, p->hrtf_idx, p->d_output[0], FRAMES_PER_BUFFER, p->gain, &(p->streams[(p->blockNo - 1) % 5 * 2]));
 	/*Idle blockNo - 2*/
 	/*Idle blockNo - 3*/
 	/*Return & fill intermediate*/

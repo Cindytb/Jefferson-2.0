@@ -1,5 +1,7 @@
 #include "graphics.cuh"
-
+#undef HELPERGL_EXTERN_GL_FUNC_IMPLEMENTATION
+#include <helper_gl.h>
+#define HELPERGL_EXTERN_GL_FUNC_IMPLEMENTATION
 ////////////////////////////////////////////////////////////////////////////////
 
 // vbo variables
@@ -209,7 +211,7 @@ bool initGL(int *argc, char **argv)
 	ObjLoad("letter.3ds");
 	printf("...Loading hat\n");
 	ObjLoad("hat.3ds");
-	glewInit();
+	// glewInit();
 	SDK_CHECK_ERROR_GL();
 
 	return true;
