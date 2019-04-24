@@ -25,7 +25,9 @@
 
 #include "kernels.cuh"
 // Complex data type
-typedef float2 Complex; 
+
+
+
 typedef struct Data_tag Data;
 
 

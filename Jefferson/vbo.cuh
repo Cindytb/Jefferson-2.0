@@ -1,5 +1,6 @@
 #pragma once
 /*OpenGL Includes*/
+#define HELPERGL_EXTERN_GL_FUNC_IMPLEMENTATION
 #include <helper_gl.h>
 #include <GL/freeglut.h>
 
@@ -32,11 +33,11 @@ public:
 	int averageNum;
 	float ratio;
 
-	VBO::VBO(float **a, float *b, unsigned int c, float d);
+	VBO(float **a, float *b, unsigned int c, float d);
 	void init();
 	void create();
 	void update();
-	void VBO::draw(float rotateVBO_x, float rotateVBO_y, float  rotateVBO_z);
+	void draw(float rotateVBO_x, float rotateVBO_y, float  rotateVBO_z);
 	~VBO();
 private:
 	GLuint vbo;

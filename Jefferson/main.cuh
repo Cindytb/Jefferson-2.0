@@ -2,6 +2,7 @@
 #ifndef _MAIN_H
 #define _MAIN_H
 
+#define HELPERGL_EXTERN_GL_FUNC_IMPLEMENTATION
 #include "Universal.cuh"
 #include "cudaPart.cuh"
 #include "graphics.cuh"

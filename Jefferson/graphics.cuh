@@ -2,11 +2,14 @@
 #ifndef _GRAPHICS_H
 #define _GRAPHICS_H
 
+#include <helper_gl.h>
+#include "vbo.cuh"
 #include "Universal.cuh"
 #include "hrtf_signals.cuh"
 #include "Audio.cuh"
-#include "vbo.cuh"
 #include "kernels.cuh"
+
+#include <glm/glm.hpp>
 
 
 
@@ -23,7 +26,8 @@
 #endif
 /*Graphics Includes*/
 // OpenGL Graphics includes
-#include <helper_gl.h>
+
+
 #if defined (__APPLE__) || defined(MACOSX)
 #pragma clang diagnostic ignored "-Wdeprecated-declarations"
 #include <GLUT/glut.h>
@@ -33,8 +37,6 @@
 #else
 #include <GL/freeglut.h>
 #endif
-
-#include <glm/glm.hpp>
 
 
 // includes, cuda

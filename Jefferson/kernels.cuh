@@ -1,4 +1,4 @@
-#pragma once 
+//#pragma once 
 #include "Universal.cuh"
 
 /*CUDA Includes*/
@@ -26,20 +26,3 @@ int PadData(const float *signal, float **padded_signal, int signal_size,
 	const float *filter_kernel, float **padded_filter_kernel, int filter_kernel_size);
 __global__ void averagingKernel(float4 *pos, float *d_buf, unsigned int size, double ratio, int averageSize);
 __global__ void ComplexPointwiseMulAndScale(cufftComplex *a, const cufftComplex *b, int size, float scale);
-struct is_negative {
-	__host__ __device__ bool operator()(float x) {
-		if (x < 0) {
-			return true;
-		}
-		return false;
-	}
-};
-template <typename T>
-struct square
-{
-	__host__ __device__
-		T operator()(const T& x) const
-	{
-		return x * x;
-	}
-};
