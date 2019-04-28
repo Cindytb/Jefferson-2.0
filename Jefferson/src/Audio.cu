@@ -139,12 +139,12 @@ static int set_swparams(snd_pcm_t *handle, snd_pcm_sw_params_t *swparams)
 }
 
 void callback_func(float *output, Data *p){
-	printf("%i\n", p->count);
-	for(int i = 0; i < 8; i++){
-		fprintf(stderr, "Stream No:%i - %s\n", i, cudaStreamQuery(p->streams[i]) ? "Not Finished" : "Finished");
-	}
-	fprintf(stderr, "\n");
-	checkCudaErrors(cudaStreamSynchronize(p->streams[(p->blockNo - 2) % 3 * 2]));
+	// printf("%i\n", p->count);
+	// for(int i = 0; i < 8; i++){
+	// 	fprintf(stderr, "Stream No:%i - %s\n", i, cudaStreamQuery(p->streams[i]) ? "Not Finished" : "Finished");
+	// }
+	// fprintf(stderr, "\n");
+	checkCudaErrors(cudaStreamSynchronize(p->streams[(p->blockNo - 2) % 5 * 2]));
 	/*Copy into p->x pinned memory*/
 	if (p->count + period_size < p->length){
 		memcpy(p->x + HRTF_LEN - 1, p->buf + p->count, period_size * sizeof(float));
@@ -174,7 +174,7 @@ void callback_func(float *output, Data *p){
 	/*Send*/
 	checkCudaErrors(cudaMemcpyAsync(p->d_input[p->blockNo % 5], p->x, COPY_AMT * sizeof(float), cudaMemcpyHostToDevice, p->streams[(p->blockNo) % 5 * 2]));
 	/*Process*/
-	GPUconvolve_hrtf(p->d_input[(p->blockNo - 1) % 5] + HRTF_LEN, p->hrtf_idx, p->d_output[0], FRAMES_PER_BUFFER, p->gain, &(p->streams[(p->blockNo - 1) % 5 * 2]));
+	GPUconvolve_hrtf(p->d_input[(p->blockNo - 1) % 5] + HRTF_LEN, p->hrtf_idx, p->d_output[(p->blockNo - 1) % 5], FRAMES_PER_BUFFER, p->gain, &(p->streams[(p->blockNo - 1) % 5 * 2]));
 	/*Idle blockNo - 2*/
 	/*Idle blockNo - 3*/
 	/*Return & fill intermediate*/

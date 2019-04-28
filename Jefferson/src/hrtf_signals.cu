@@ -263,22 +263,9 @@ void GPUconvolve_hrtf(float *input, int hrtf_idx, float *d_output, int outputLen
 	else {
 		swap_chan = true;
 	}
-// 	for (n = 0; n < outputLen; n++) {
-// 		for (k = 0; k < HRTF_LEN; k++) {
-// 			for (j = 0; j < HRTF_CHN; j++) {
-// 				/* outputLen and HRTF_LEN are n frames, output and hrtf are interleaved
-// 				* input is mono
-// 				*/
-// 				j_hrtf = (swap_chan == false) ? j : (j == 0) ? 1 : 0;
-// 				output[2 * n + j] += input[n - k] * p_hrtf[2 * k + j_hrtf];
-// 			}
-// 			output[2 * n] *= gain;
-// 			output[2 * n + 1] *= gain;
-// 		}
-// 	}
 	int numBlocks = 4;
 	int numThread = FRAMES_PER_BUFFER / 4;
-	dummyIO<<< numBlocks, numThread, 0, streams[0] >>>(
+	timeDomainConvolutionNaive<<< numBlocks, numThread, 0, streams[0] >>>(
 		input, 
 		d_hrtf + hrtf_idx * HRTF_LEN * HRTF_CHN, 
 		d_output, 
@@ -286,7 +273,7 @@ void GPUconvolve_hrtf(float *input, int hrtf_idx, float *d_output, int outputLen
 		HRTF_LEN, 
 		!swap_chan ? 0 : 1, 
 		gain);
-	dummyIO<<< numBlocks, numThread, 0, streams[1] >>>(
+	timeDomainConvolutionNaive<<< numBlocks, numThread, 0, streams[1] >>>(
 		input, 
 		d_hrtf + hrtf_idx * HRTF_LEN * HRTF_CHN, 
 		d_output, 

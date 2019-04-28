@@ -84,7 +84,7 @@ int main(int argc, char *argv[]){
 		/*Send B2*/
 		checkCudaErrors(cudaMemcpyAsync(p->d_input[p->blockNo], p->x, COPY_AMT * sizeof(float), cudaMemcpyHostToDevice, p->streams[p->blockNo * 2]));
 		/*Process B1*/
-		GPUconvolve_hrtf(p->d_input[p->blockNo - 1] + HRTF_LEN, p->hrtf_idx, p->d_output[0], FRAMES_PER_BUFFER, p->gain, &(p->streams[(p->blockNo - 1) * 2]));
+		GPUconvolve_hrtf(p->d_input[p->blockNo - 1] + HRTF_LEN, p->hrtf_idx, p->d_output[p->blockNo - 1], FRAMES_PER_BUFFER, p->gain, &(p->streams[(p->blockNo - 1) * 2]));
 
 		/*overlap-save*/
 		memcpy(p->x, p->x + FRAMES_PER_BUFFER, (HRTF_LEN - 1) * sizeof(float));
@@ -99,7 +99,7 @@ int main(int argc, char *argv[]){
 		fprintf(stderr, "%i %i %i", p->blockNo, p->blockNo - 1, p->blockNo - 2);
 		checkCudaErrors(cudaMemcpyAsync(p->d_input[p->blockNo], p->x, COPY_AMT * sizeof(float), cudaMemcpyHostToDevice, p->streams[p->blockNo * 2]));
 		/*Process B2*/
-		GPUconvolve_hrtf(p->d_input[p->blockNo - 1] + HRTF_LEN, p->hrtf_idx, p->d_output[0], FRAMES_PER_BUFFER, p->gain, &(p->streams[(p->blockNo - 1) * 2]));
+		GPUconvolve_hrtf(p->d_input[p->blockNo - 1] + HRTF_LEN, p->hrtf_idx, p->d_output[p->blockNo - 1], FRAMES_PER_BUFFER, p->gain, &(p->streams[(p->blockNo - 1) * 2]));
 		/*Idle B1*/
 
 		/*overlap-save*/
@@ -114,7 +114,7 @@ int main(int argc, char *argv[]){
 		/*Send B4*/
 		checkCudaErrors(cudaMemcpyAsync(p->d_input[p->blockNo % 5], p->x, COPY_AMT * sizeof(float), cudaMemcpyHostToDevice, p->streams[(p->blockNo) % 5 * 2]));
 		/*Process B3*/
-		GPUconvolve_hrtf(p->d_input[(p->blockNo - 1) % 5] + HRTF_LEN, p->hrtf_idx, p->d_output[0], FRAMES_PER_BUFFER, p->gain, &(p->streams[(p->blockNo - 1) % 5 * 2]));
+		GPUconvolve_hrtf(p->d_input[(p->blockNo - 1) % 5] + HRTF_LEN, p->hrtf_idx, p->d_output[p->blockNo - 1], FRAMES_PER_BUFFER, p->gain, &(p->streams[(p->blockNo - 1) % 5 * 2]));
 		/*Idle B2*/
 
 		/*Idle B1*/
@@ -130,7 +130,7 @@ int main(int argc, char *argv[]){
 		/*Send B5*/
 		checkCudaErrors(cudaMemcpyAsync(p->d_input[p->blockNo % 5], p->x, COPY_AMT * sizeof(float), cudaMemcpyHostToDevice, p->streams[(p->blockNo) % 5 * 2]));
 		/*Process B4*/
-		GPUconvolve_hrtf(p->d_input[(p->blockNo - 1) % 5] + HRTF_LEN, p->hrtf_idx, p->d_output[0], FRAMES_PER_BUFFER, p->gain, &(p->streams[(p->blockNo - 1) % 5 * 2]));
+		GPUconvolve_hrtf(p->d_input[(p->blockNo - 1) % 5] + HRTF_LEN, p->hrtf_idx, p->d_output[p->blockNo - 1], FRAMES_PER_BUFFER, p->gain, &(p->streams[(p->blockNo - 1) % 5 * 2]));
 		
 		/*Idle B3
 		/*Idle B2*/

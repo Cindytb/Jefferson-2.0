@@ -16,15 +16,14 @@ const int COPY_AMT = 2 * (FRAMES_PER_BUFFER + HRTF_LEN - 1);
 //Value of 0 allows everything
 //Value of 1 is graphics-only debugging
 //Value of 2 is audio-only debugging
-#define DEBUGMODE 2
+#define DEBUGMODE 0
 
 struct Data_tag {
 	float *samples; 		/*IO Buffer for ALSA. Unnecessary for PortAudio*/
 	int hrtf_idx; 			/*Index to the correct HRTF elevation/azimuth*/
 	SNDFILE *sndfile;		/*Soundfile object for output file*/
 	float *buf;				/*Reverberated signal on host*/
-	/*Buffer for PA output on host*/
-	float *x; /* sound object buffer, mono */
+	float *x; 				/*Buffer for PA output on host, mono, pinned memory, FRAMES_PER_BUFFER + HRTF_LEN -1 size */
 	int count;
 	int length;
 	float gain;
