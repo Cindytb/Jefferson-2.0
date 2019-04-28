@@ -2,13 +2,14 @@
 #ifndef _AUDIO_H_
 #define _AUDIO_H_
 
-#include <alsa/asoundlib.h>
-#include <alsa/pcm.h>
+
 #include "Universal.cuh"
 #include "hrtf_signals.cuh"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <alsa/asoundlib.h>
+#include <alsa/pcm.h>
 
 
 /*PortAudio stuff*/
