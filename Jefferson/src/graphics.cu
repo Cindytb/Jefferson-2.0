@@ -66,21 +66,6 @@ std::stringstream s;
 
 VBO *obj;
 
-///////////////////////////////////////////////////////////////////////////////
-//! Simple kernel to modify vertex positions in sine wave pattern
-//! @param data  data in global memory
-///////////////////////////////////////////////////////////////////////////////
-
-
-void launch_kernel(float4 *pos, unsigned int mesh_width,
-	unsigned int mesh_height, float time)
-{
-	// execute the kernel
-	dim3 block(8, 8, 1);
-	dim3 grid(mesh_width / block.x, mesh_height / block.y, 1);
-	simple_vbo_kernel << < grid, block >> > (pos, mesh_width, mesh_height, time);
-}
-
 ////////////////////////////////////////////////////////////////////////////////
 // Program main
 ////////////////////////////////////////////////////////////////////////////////
@@ -90,8 +75,6 @@ int graphicsMain(int argc, char **argv, Data *p)
 	GP = p;
 	pArgc = &argc;
 	pArgv = argv;
-
-
 
 #if defined(__linux__)
 	setenv("DISPLAY", ":0", 0);
@@ -116,6 +99,75 @@ int graphicsMain(int argc, char **argv, Data *p)
 	//exit(g_TotalErrors == 0 ? EXIT_SUCCESS : EXIT_FAILURE);
 	return 0;
 }
+
+////////////////////////////////////////////////////////////////////////////////
+//! Run a simple test for CUDA
+////////////////////////////////////////////////////////////////////////////////
+bool runTest(int argc, char **argv, char *ref_file)
+{
+
+	// Create the CUTIL timer
+	sdkCreateTimer(&timer);
+	// First initialize OpenGL context, so we can properly set the GL for CUDA.
+	// This is necessary in order to achieve optimal performance with OpenGL/CUDA interop.
+	if (false == initGL(&argc, argv))
+	{
+		return false;
+	}
+	// register callbacks
+	glutDisplayFunc(display);
+	glutKeyboardFunc(keyboard);
+	glutMouseFunc(mouse);
+	glutMotionFunc(motion);
+	glutSpecialFunc(specialKeys);
+#if defined (__APPLE__) || defined(MACOSX)
+	atexit(cleanup);
+#else
+	glutCloseFunc(cleanup);
+#endif
+	
+#if(DEBUGMODE != 1)
+	/*MOVING SIGNAL TO GPU*/
+	// Allocate device memory for signal
+	float *d_signal;
+	checkCudaErrors(cudaMalloc((void **)&d_signal, GP->length * sizeof(float)));
+
+	// Copy signal from host to device
+	checkCudaErrors(cudaMemcpy(d_signal, GP->buf, GP->length * sizeof(float),
+		cudaMemcpyHostToDevice));
+
+	obj = new VBO(&d_signal, &translate_x, GP->length, 1 / 44100.0f);
+	obj->init();
+	obj->averageNum = 100;
+	obj->create();
+#endif
+	// create sine wave VBO
+	createVBO(&vbo, &cuda_vbo_resource, cudaGraphicsMapFlagsWriteDiscard);
+
+	// run the cuda part
+	runCuda(&cuda_vbo_resource);
+
+	// start rendering mainloop
+	glutMainLoop();
+
+	return true;
+}
+
+///////////////////////////////////////////////////////////////////////////////
+//! Simple kernel to modify vertex positions in sine wave pattern
+//! @param data  data in global memory
+///////////////////////////////////////////////////////////////////////////////
+
+
+void launch_kernel(float4 *pos, unsigned int mesh_width,
+	unsigned int mesh_height, float time)
+{
+	// execute the kernel
+	dim3 block(8, 8, 1);
+	dim3 grid(mesh_width / block.x, mesh_height / block.y, 1);
+	simple_vbo_kernel << < grid, block >> > (pos, mesh_width, mesh_height, time);
+}
+
 
 void computeFPS()
 {
@@ -217,58 +269,6 @@ bool initGL(int *argc, char **argv)
 	return true;
 }
 
-////////////////////////////////////////////////////////////////////////////////
-//! Run a simple test for CUDA
-////////////////////////////////////////////////////////////////////////////////
-bool runTest(int argc, char **argv, char *ref_file)
-{
-
-	// Create the CUTIL timer
-	sdkCreateTimer(&timer);
-	// First initialize OpenGL context, so we can properly set the GL for CUDA.
-	// This is necessary in order to achieve optimal performance with OpenGL/CUDA interop.
-	if (false == initGL(&argc, argv))
-	{
-		return false;
-	}
-	// register callbacks
-	glutDisplayFunc(display);
-	glutKeyboardFunc(keyboard);
-	glutMouseFunc(mouse);
-	glutMotionFunc(motion);
-	glutSpecialFunc(specialKeys);
-#if defined (__APPLE__) || defined(MACOSX)
-	atexit(cleanup);
-#else
-	glutCloseFunc(cleanup);
-#endif
-	
-#if(DEBUGMODE != 1)
-	/*MOVING SIGNAL TO GPU*/
-	// Allocate device memory for signal
-	float *d_signal;
-	checkCudaErrors(cudaMalloc((void **)&d_signal, GP->length * sizeof(float)));
-
-	// Copy signal from host to device
-	checkCudaErrors(cudaMemcpy(d_signal, GP->buf, GP->length * sizeof(float),
-		cudaMemcpyHostToDevice));
-
-	obj = new VBO(&d_signal, &translate_x, GP->length, 1 / 44100.0f);
-	obj->init();
-	obj->averageNum = 100;
-	obj->create();
-#endif
-	// create sine wave VBO
-	createVBO(&vbo, &cuda_vbo_resource, cudaGraphicsMapFlagsWriteDiscard);
-
-	// run the cuda part
-	runCuda(&cuda_vbo_resource);
-
-	// start rendering mainloop
-	glutMainLoop();
-
-	return true;
-}
 
 ////////////////////////////////////////////////////////////////////////////////
 //! Run the Cuda part of the computation
@@ -529,7 +529,8 @@ void timerEvent(int value){
 	}
 }
 void cleanup()
-{
+{	
+	printf("Cleaning up\n");
 	sdkDeleteTimer(&timer);
 
 	if (vbo)
@@ -541,7 +542,8 @@ void cleanup()
 	sf_close(GP->sndfile);
 
 	/* Stop stream */
-	closePA();
+	// closePA();
+	closeAlsa();
 	
 
 #endif

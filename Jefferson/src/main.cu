@@ -46,7 +46,9 @@ int main(int argc, char *argv[]){
 
 #if(DEBUGMODE != 1)
 	fprintf(stderr, "\n\n\n\nInitializing PortAudio\n\n\n\n");
-	initializePA(SAMPLE_RATE);
+	// initializePA(SAMPLE_RATE);
+	initializeAlsa(SAMPLE_RATE, p);
+	
 	printf("\n\n\n\nStarting playout\n");
 
 #endif
@@ -65,9 +67,10 @@ int main(int argc, char *argv[]){
 	/*Placed here to properly close files when debugging without graphics*/
 	
 	/*Close output file*/
-	sf_close(p->sndfile);
+	// sf_close(p->sndfile);
 
-	closePA();
+	// closePA();
+	// closeAlsa();
 
 	return 0;
 }
