@@ -202,15 +202,15 @@ bool initGL(int *argc, char **argv)
 
 	/*Attempting to create a face*/
 	printf("...Loading body\n");
-	ObjLoad("body.3ds");
+	ObjLoad("media/body.3ds");
 	printf("...Loading eyes\n");
-	ObjLoad("eyes.3ds");
+	ObjLoad("media/eyes.3ds");
 	printf("...Loading smile\n");
-	ObjLoad("smile.3ds");
+	ObjLoad("media/smile.3ds");
 	printf("...Loading letter\n");
-	ObjLoad("letter.3ds");
+	ObjLoad("media/letter.3ds");
 	printf("...Loading hat\n");
-	ObjLoad("hat.3ds");
+	ObjLoad("media/hat.3ds");
 	// glewInit();
 	SDK_CHECK_ERROR_GL();
 
