@@ -1,0 +1,19 @@
+{
+    "configurations": [
+        {
+            "name": "Linux",
+            "includePath": [
+                "${workspaceFolder}/**",
+                "/media/cindy/Acer/Projects/OpenGL/Projects/Jefferson/Jefferson",
+                "/home/cindy/NVIDIA_CUDA-10.1_Samples/common/inc",
+                "/usr/local/cuda-10.1/targets/x86_64-linux/include"
+            ],
+            "defines": [],
+            "compilerPath": "/usr/bin/g++",
+            "cStandard": "c11",
+            "cppStandard": "c++17",
+            "intelliSenseMode": "clang-x64"
+        }
+    ],
+    "version": 4
+}
