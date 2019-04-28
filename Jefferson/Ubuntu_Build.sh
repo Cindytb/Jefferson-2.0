@@ -27,7 +27,7 @@ for i in ${FILENAMES[@]}; do
 done
 cd obj
 printf "Linking files into executable\n"
-/usr/local/cuda-10.1/bin/nvcc -ccbin g++ -g -pg -o ../bin/Jefferson \
+/usr/local/cuda-10.1/bin/nvcc -ccbin g++ -g -g -o ../bin/Jefferson \
     -link mat_matr.o mat_vect.o object.o load_3ds.o \
     main.o hrtf_signals.o Audio.o graphics.o  kernels.o vbo.o cudaPart.o \
     -L/home/cindy/NVIDIA_CUDA-10.1_Samples/common/lib/linux/x86_64 \
