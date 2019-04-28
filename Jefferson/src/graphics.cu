@@ -531,22 +531,29 @@ void timerEvent(int value){
 void cleanup()
 {	
 	printf("Cleaning up\n");
+	#if(DEBUGMODE != 1)
+	/*Close output file*/
+	sf_close(GP->sndfile);
+	/* Stop stream */
+	closeAlsa();
+#endif
 	sdkDeleteTimer(&timer);
-
+	for(int i = 0; i < 5; i++){
+		checkCudaErrors(cudaFree(GP->d_input[i]));
+		checkCudaErrors(cudaFree(GP->d_output[i]));
+		checkCudaErrors(cudaStreamSynchronize(GP->streams[i * 2]));
+		checkCudaErrors(cudaStreamSynchronize(GP->streams[i * 2 + 1]));
+		checkCudaErrors(cudaStreamDestroy(GP->streams[i * 2]));
+		checkCudaErrors(cudaStreamDestroy(GP->streams[i * 2 + 1]));
+	}
+	checkCudaErrors(cudaFreeHost(GP->x));
+	checkCudaErrors(cudaFreeHost(GP->intermediate));
+	free(GP->buf);
 	if (vbo)
 	{
 		deleteVBO(&vbo, cuda_vbo_resource);
 	}
-#if(DEBUGMODE != 1)
-	/*Close output file*/
-	sf_close(GP->sndfile);
 
-	/* Stop stream */
-	// closePA();
-	closeAlsa();
-	
-
-#endif
 }
 ////////////////////////////////////////////////////////////////////////////////
 //! Keyboard events handler

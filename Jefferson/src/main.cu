@@ -12,7 +12,7 @@ int main(int argc, char *argv[]){
 	data.count = 0;
 	data.length = 0;
 	data.gain = 0.99074;
-	data.hrtf_idx = -151;
+	data.hrtf_idx = 151;
 	#if(DEBUGMODE != 1)
 		/*Initialize & read files*/
 		cudaFFT(argc, argv, p);
@@ -149,7 +149,7 @@ int main(int argc, char *argv[]){
 	fprintf(stderr, "\n\n\n\nInitializing PortAudio\n\n\n\n");
 	initializeAlsa(SAMPLE_RATE, p);
 	printf("\n\n\n\nStarting playout\n");
-	fprintf(stderr, " %i %i %i %i %i\n", p->blockNo, p->blockNo - 1, p->blockNo - 2, p->blockNo - 3, p->blockNo - 4);
+	// fprintf(stderr, " %i %i %i %i %i\n", p->blockNo, p->blockNo - 1, p->blockNo - 2, p->blockNo - 3, p->blockNo - 4);
 #endif
 	///////////////////////////////////////////////////////////////////////////////////////////////////
 	/*MAIN FUNCTIONAL LOOP*/

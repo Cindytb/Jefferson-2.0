@@ -231,7 +231,8 @@ int read_hrtf_signals(void) {
 
 
 
-__global__ void timeDomainConvolutionNaive(float *ibuf, float *rbuf, float *obuf, long long oframes, long long rframes, int ch, float gain){
+__global__ void timeDomainConvolutionNaive(float *ibuf, float *rbuf, float *obuf, long long oframes, 
+	long long rframes, int hrtf_ch, int ch, float gain){
 	int threadID = blockIdx.x * blockDim.x + threadIdx.x;
 	float value = 0;
 	for(int k = 0; k < rframes; k++){
@@ -240,46 +241,43 @@ __global__ void timeDomainConvolutionNaive(float *ibuf, float *rbuf, float *obuf
 	obuf[threadID * 2 + ch] = value * gain;
 	
 }
-__global__ void dummyIO(float *ibuf, float *rbuf, float *obuf, long long oframes, long long rframes, int ch, float gain){
-	int threadID = blockIdx.x * blockDim.x + threadIdx.x;
-	// float value = 0;
-	// for(int k = 0; k < rframes; k++){
-	// 	value += ibuf[threadID - k] * rbuf[2 * k + ch];
-	// }
-	obuf[threadID * 2 + ch] = ibuf[threadID] * gain;
-	
-}
 
 ////////////////////////////////////////////////////////////////////////////////
 /*GPU Convolution was not fast enough because of the large overhead
 of FFT and IFFT. Keeping the code here for future purposes*/
 void GPUconvolve_hrtf(float *input, int hrtf_idx, float *d_output, int outputLen, float gain, cudaStream_t *streams) {
 	bool swap_chan;
+	float *p_hrtf;
 	if (gain > 1)
 		gain = 1;
 	if (hrtf_idx >= 0) {
 		swap_chan = false;
+		p_hrtf = d_hrtf + hrtf_idx * HRTF_LEN * HRTF_CHN;
 	}
 	else {
 		swap_chan = true;
+		p_hrtf = d_hrtf -hrtf_idx * HRTF_LEN * HRTF_CHN;
 	}
+
 	int numBlocks = 4;
 	int numThread = FRAMES_PER_BUFFER / 4;
 	timeDomainConvolutionNaive<<< numBlocks, numThread, 0, streams[0] >>>(
 		input, 
-		d_hrtf + hrtf_idx * HRTF_LEN * HRTF_CHN, 
+		p_hrtf, 
 		d_output, 
 		outputLen, 
 		HRTF_LEN, 
-		!swap_chan ? 0 : 1, 
+		!swap_chan ? 0 : 1,
+		0,
 		gain);
 	timeDomainConvolutionNaive<<< numBlocks, numThread, 0, streams[1] >>>(
 		input, 
-		d_hrtf + hrtf_idx * HRTF_LEN * HRTF_CHN, 
+		p_hrtf, 
 		d_output, 
 		outputLen, 
 		HRTF_LEN, 
 		!swap_chan ? 1 : 0, 
+		1,
 		gain);
 	
 }
