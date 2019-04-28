@@ -11,7 +11,7 @@
 #define FRAMES_PER_BUFFER 512  //buffer in portaudio i/o buffer
 #define HRTF_CHN    2
 const int COPY_AMT = 2 * (FRAMES_PER_BUFFER + HRTF_LEN - 1);
-#define FLIGHT_NUM 3
+#define FLIGHT_NUM 5
 
 /* 
 	0 - Run everything, no debugging

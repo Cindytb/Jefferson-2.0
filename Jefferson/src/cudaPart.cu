@@ -182,17 +182,7 @@ void cudaFFT(int argc, char **argv, Data *p) {
 	p->buf = obuf;
 	p->length = new_size;
 
-	/*Store pointer to pointer of signal on device in struct*/
-	//p->d_buf = &d_signal;
-
 	fprintf(stderr, "Samples: %i\nTotal Bytes: %i\nTotal KB: %f3\nTotal MB: %f3\n\n\n", new_size, mem_size, mem_size / (float)1024, mem_size / (float)1024 / (float)1024);
-	////////////////////////////////////////////////////////////////////////////////
-	///*NOTE: GPU Convolution was not fast enough because of the large overhead
-	//of FFT and IFFT. Keeping the code here for future purposes*/
-	//
-	/*Convolved signal on device*/
-	//p->dbuf = d_signal;
-	////////////////////////////////////////////////////////////////////////////////
 
 	/*Write reverberated sound file*/
 	//SndfileHandle file = SndfileHandle("output.wav", SFM_WRITE, isfinfo.format, isfinfo.channels, isfinfo.samplerate);
