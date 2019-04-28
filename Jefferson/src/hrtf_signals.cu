@@ -11,7 +11,7 @@ int azimuth_offset[NUM_ELEV + 1];
 /*Read hrtf signals on CPU/RAM*/
 int read_hrtf_signals(void) {
 	char hrtf_file[PATH_LEN];
-	int i, j, ele, num_samples, count;
+	int i, j, ele, num_samples;
 	float azi;
 	/* sndfile data structures */
 	SNDFILE *sndfile;
@@ -48,7 +48,7 @@ int read_hrtf_signals(void) {
 
 			/* read HRTF signal */
 			num_samples = (int) sfinfo.frames * sfinfo.channels;
-			if ((count = sf_read_float(sndfile, hrtf[j], num_samples)) != num_samples) {
+			if (sf_read_float(sndfile, hrtf[j], num_samples) != num_samples) {
 				fprintf(stderr, "ERROR: cannot read HRTF signal %3d\n", j);
 				return -1;
 			}

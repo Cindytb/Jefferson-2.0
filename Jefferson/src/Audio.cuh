@@ -2,6 +2,8 @@
 #ifndef _AUDIO_H_
 #define _AUDIO_H_
 
+#include <alsa/asoundlib.h>
+#include <alsa/pcm.h>
 #include "Universal.cuh"
 #include "hrtf_signals.cuh"
 #include <stdio.h>
@@ -9,14 +11,12 @@
 #include <string.h>
 
 
-/*Portaudio defines*/
-#define FRAMES_PER_BUFFER 512  //buffer in portaudio i/o buffer
-
-
 /*PortAudio stuff*/
 
 extern Data data;
 
+void initializeAlsa(int fs, Data *p);
+void closeAlsa();
 
 static int paCallback(const void *inputBuffer, void *outputBuffer,
 	unsigned long framesPerBuffer,
@@ -24,8 +24,8 @@ static int paCallback(const void *inputBuffer, void *outputBuffer,
 	PaStreamCallbackFlags statusFlags,
 	void *userData);
 
-void initializePA(int fs);
-void closePA();
+// void initializePA(int fs);
+// void closePA();
 
 
 #endif
