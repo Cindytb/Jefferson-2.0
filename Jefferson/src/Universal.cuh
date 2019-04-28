@@ -24,10 +24,10 @@ struct Data_tag {
 	SNDFILE *sndfile;		/*Soundfile object for output file*/
 	float *buf;				/*Reverberated signal on host*/
 	float *x; 				/*Buffer for PA output on host, mono, pinned memory, FRAMES_PER_BUFFER + HRTF_LEN -1 size */
-	int count;
-	int length;
-	float gain;
-	float ele;
+	int count;				/*Current frame count for the audio callback*/
+	int length;				/*Length of the input signal*/
+	float gain;				/*Gain for distance away*/
+	float ele;				/*Elevation of the sound source*/
 	bool pauseStatus = false;
 	////////////////////////////////////////////////////////////////////////////////
 	///*NOTE: GPU Convolution was not fast enough because of the large overhead

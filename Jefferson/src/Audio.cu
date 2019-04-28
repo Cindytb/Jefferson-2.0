@@ -9,7 +9,7 @@ static unsigned int channels = 2;                       /* count of channels */
 // static unsigned int period_time = 100000;               
 static unsigned int period_time =  1000000.0 * 512.0 / 44100.0; /* period time in us */
 static unsigned int buffer_time = period_time * channels;               /* ring buffer length in us */
-static int verbose = 1;                                 /* verbose flag */
+static int verbose = 0;                                 /* verbose flag */
 static int resample = 1;                                /* enable alsa-lib resampling */
 static int period_event = 0;                            /* produce poll event after each period */
 static snd_pcm_sframes_t buffer_size;
@@ -223,6 +223,13 @@ static void my_callback(snd_async_handler_t *ahandler)
 			}
 		}
 		avail = snd_pcm_avail_update(handle);
+		if (avail == -EPIPE){
+			printf("WARNING: Buffer Underrun\n");
+			avail = snd_pcm_recover(handle, avail, 0);
+			if (avail == -EPIPE){
+				printf("ERROR: UNRECOVERABLE\n");
+			}
+		}
 	}
 	sf_writef_float(p->sndfile, output, period_size);
 	return;
