@@ -1,7 +1,7 @@
 #include "hrtf_signals.cuh"
 
-float hrtf[NUM_HRFT][HRTF_CHN][HRTF_LEN];   /* de-interleaved HRTF impulse responses */
-//float hrtf[NUM_HRFT][HRTF_CHN * HRTF_LEN];   /* interleaved HRTF impulse responses */
+// float hrtf[NUM_HRFT][HRTF_CHN][HRTF_LEN];   /* de-interleaved HRTF impulse responses */
+float hrtf[NUM_HRFT][HRTF_CHN * HRTF_LEN];   /* interleaved HRTF impulse responses */
 float *d_hrtf;
 int elevation_pos[NUM_ELEV] =
 { -40,  -30,  -20,  -10,    0,   10,   20,   30,   40,   50,    60,    70,    80,  90 };
@@ -206,10 +206,11 @@ int read_hrtf_signals(void) {
 				fprintf(stderr, "ERROR: cannot read HRTF signal %3d\n", j);
 				return -1;
 			}
-			for (int frame = 0; frame < num_samples / 2; frame++){
-				hrtf[j][0][frame] = temp[frame * 2];
-				hrtf[j][1][frame] = temp[frame * 2 + 1];
-			}
+			memcpy(hrtf[j], temp, num_samples);
+			// for (int frame = 0; frame < num_samples / 2; frame++){
+			// 	hrtf[j][0][frame] = temp[frame * 2];
+			// 	hrtf[j][1][frame] = temp[frame * 2 + 1];
+			// }
 			
 			/* close file */
 			sf_close(sndfile);
@@ -230,11 +231,12 @@ int read_hrtf_signals(void) {
 
 
 
-__global__ void timeDomainConvolutionNaive(float *ibuf, float *rbuf, float *obuf, long long oframes, long long rframes, int ch, float gain){
+__global__ void timeDomainConvolutionNaive(float *ibuf, float *rbuf, float *obuf, long long oframes, 
+	long long rframes, int hrtf_ch, int ch, float gain){
 	int threadID = blockIdx.x * blockDim.x + threadIdx.x;
 	float value = 0;
 	for(int k = 0; k < rframes; k++){
-		value += ibuf[threadID - k] * rbuf[k];
+		value += ibuf[threadID - k] * rbuf[2 * k + hrtf_ch];
 	}
 	obuf[threadID * 2 + ch] = value * gain;
 	
@@ -245,19 +247,38 @@ __global__ void timeDomainConvolutionNaive(float *ibuf, float *rbuf, float *obuf
 of FFT and IFFT. Keeping the code here for future purposes*/
 void GPUconvolve_hrtf(float *input, int hrtf_idx, float *d_output, int outputLen, float gain, cudaStream_t *streams) {
 	bool swap_chan;
+	float *p_hrtf;
 	if (gain > 1)
 		gain = 1;
 	if (hrtf_idx >= 0) {
 		swap_chan = false;
+		p_hrtf = d_hrtf + hrtf_idx * HRTF_LEN * HRTF_CHN;
 	}
 	else {
 		swap_chan = true;
+		p_hrtf = d_hrtf - hrtf_idx * HRTF_LEN * HRTF_CHN;
 	}
 
 	int numBlocks = 4;
 	int numThread = FRAMES_PER_BUFFER / 4;
-	timeDomainConvolutionNaive<<< numBlocks, numThread, 0, streams[0] >>>(input, d_hrtf + hrtf_idx * HRTF_LEN * HRTF_CHN, d_output, outputLen, HRTF_LEN, !swap_chan ? 0 : 1, gain);
-	timeDomainConvolutionNaive<<< numBlocks, numThread, 0, streams[1] >>>(input, d_hrtf + hrtf_idx * HRTF_LEN * HRTF_CHN + HRTF_LEN, d_output, outputLen, HRTF_LEN, !swap_chan ? 1 : 0, gain);
+	timeDomainConvolutionNaive<<< numBlocks, numThread, 0, streams[0] >>>(
+		input, 
+		p_hrtf, 
+		d_output, 
+		outputLen, 
+		HRTF_LEN, 
+		!swap_chan ? 0 : 1,
+		0,
+		gain);
+	timeDomainConvolutionNaive<<< numBlocks, numThread, 0, streams[1] >>>(
+		input, 
+		p_hrtf, 
+		d_output, 
+		outputLen, 
+		HRTF_LEN, 
+		!swap_chan ? 1 : 0, 
+		1,
+		gain);
 	
 }
 ////////////////////////////////////////////////////////////////////////////////

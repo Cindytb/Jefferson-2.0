@@ -100,53 +100,43 @@ void closePA() {
 	}
 #endif
 }
-
-static int paCallback(const void *inputBuffer, void *outputBuffer,
-	unsigned long framesPerBuffer,
-	const PaStreamCallbackTimeInfo* timeInfo,
-	PaStreamCallbackFlags statusFlags,
-	void *userData)
-{
-	/* Cast data passed through stream to our structure. */
-	Data *p = (Data *)userData;
-	float *output = (float *)outputBuffer;
-	//float *input = (float *)inputBuffer; /* input not used in this code */
-	/*for(int i = 0; i < 8; i++){
-		fprintf(stderr, "Stream No:%i - %s\n", i, cudaStreamQuery(p->streams[i]) ? "Not Finished" : "Finished");
-	}
-	fprintf(stderr, "\n");*/
-	checkCudaErrors(cudaStreamSynchronize(p->streams[(p->blockNo - 2) % 3 * 2]));
+void callback_func(float *output, Data *p){
+	// printf("%i\n", p->count);
+	// for(int i = 0; i < 8; i++){
+	// 	fprintf(stderr, "Stream No:%i - %s\n", i, cudaStreamQuery(p->streams[i]) ? "Not Finished" : "Finished");
+	// }
+	// fprintf(stderr, "\n");
+	checkCudaErrors(cudaStreamSynchronize(p->streams[(p->blockNo - 2) % 5 * 2]));
 	/*Copy into p->x pinned memory*/
-	if (p->count + framesPerBuffer < p->length){
+	if (p->count + FRAMES_PER_BUFFER < p->length){
 		memcpy(p->x + HRTF_LEN - 1, p->buf + p->count, FRAMES_PER_BUFFER * sizeof(float));
 		p->count += FRAMES_PER_BUFFER;
 	}
 	else{
 		int rem = p->length - p->count;
 		memcpy(p->x + HRTF_LEN - 1, p->buf + p->count, rem * sizeof(float));
-		memcpy(p->x + HRTF_LEN - 1 + rem, p->buf, (framesPerBuffer - rem) * sizeof(float));
+		memcpy(p->x + HRTF_LEN - 1 + rem, p->buf, (FRAMES_PER_BUFFER - rem) * sizeof(float));
 		p->count = FRAMES_PER_BUFFER - rem;
 	}
-	// /*convolve with HRTF on CPU*/
-	// convolve_hrtf(&p->x[HRTF_LEN], p->hrtf_idx, output, framesPerBuffer, p->gain);
+
 	// if (p->blockNo == 5) {
 	// 	printf("%i\n", cuCtxPushCurrent(0));
 	// }
-	fprintf(stderr, "Stream %i %s\n", p->blockNo % 5, cudaStreamQuery(p->streams[p->blockNo % 5 * 2]) ? "Unfinished":"Finished");
+	// fprintf(stderr, "Stream %i %s\n", p->blockNo % 5, cudaStreamQuery(p->streams[p->blockNo % 5 * 2]) ? "Unfinished":"Finished");
 	/*Enable pausing of audio*/
 	if (p->pauseStatus == true) {
-		for (int i = 0; i < framesPerBuffer; i++) {
+		for (int i = 0; i < FRAMES_PER_BUFFER; i++) {
 			output[2 * i] = 0;
 			output[2 * i + 1] = 0;
 		}
-		return 0;
+		return;
 	}
-	memcpy(output, p->intermediate, framesPerBuffer * 2 * sizeof(float));
-	fprintf(stderr, "%i %i %i %i %i\n", p->blockNo % 5, (p->blockNo - 1) % 5, (p->blockNo - 2) % 5, (p->blockNo - 3) % 5, (p->blockNo - 4) % 5);
+	memcpy(output, p->intermediate, FRAMES_PER_BUFFER * 2 * sizeof(float));
+	// fprintf(stderr, "%i %i %i %i %i\n", p->blockNo % 5, (p->blockNo - 1) % 5, (p->blockNo - 2) % 5, (p->blockNo - 3) % 5, (p->blockNo - 4) % 5);
 	/*Send*/
 	checkCudaErrors(cudaMemcpyAsync(p->d_input[p->blockNo % 5], p->x, COPY_AMT * sizeof(float), cudaMemcpyHostToDevice, p->streams[(p->blockNo) % 5 * 2]));
 	/*Process*/
-	// GPUconvolve_hrtf(p->d_input[(p->blockNo - 1) % 5] + HRTF_LEN, p->hrtf_idx, p->d_output[0], FRAMES_PER_BUFFER, p->gain, &(p->streams[(p->blockNo - 1) % 5 * 2]));
+	GPUconvolve_hrtf(p->d_input[(p->blockNo - 1) % 5] + HRTF_LEN, p->hrtf_idx, p->d_output[(p->blockNo - 1) % 5], FRAMES_PER_BUFFER, p->gain, &(p->streams[(p->blockNo - 1) % 5 * 2]));
 	/*Idle blockNo - 2*/
 	/*Idle blockNo - 3*/
 	/*Return & fill intermediate*/
@@ -158,6 +148,18 @@ static int paCallback(const void *inputBuffer, void *outputBuffer,
 	p->blockNo++;
 
 	//sf_writef_float(p->sndfile, output, framesPerBuffer);
+	return;
+}
+static int paCallback(const void *inputBuffer, void *outputBuffer,
+	unsigned long framesPerBuffer,
+	const PaStreamCallbackTimeInfo* timeInfo,
+	PaStreamCallbackFlags statusFlags,
+	void *userData)
+{
+	/* Cast data passed through stream to our structure. */
+	Data *p = (Data *)userData;
+	float *output = (float *)outputBuffer;
+	callback_func(output, p);
 	return 0;
 }
 
