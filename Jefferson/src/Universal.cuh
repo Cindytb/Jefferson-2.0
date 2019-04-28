@@ -8,7 +8,7 @@
 #include <portaudio.h>
 
 #define HRTF_LEN	128
-#define FRAMES_PER_BUFFER 8192  //buffer in portaudio i/o buffer
+#define FRAMES_PER_BUFFER 512  //buffer in portaudio i/o buffer
 #define HRTF_CHN    2
 
 //Value of 0 allows everything
