@@ -10,6 +10,40 @@
       <Platform>x64</Platform>
     </ProjectConfiguration>
   </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="src\Audio.cuh" />
+    <ClInclude Include="src\cudaPart.cuh" />
+    <ClInclude Include="src\graphics.cuh" />
+    <ClInclude Include="src\hrtf_signals.cuh" />
+    <ClInclude Include="src\hrtf_signals.h" />
+    <ClInclude Include="src\kernels.cuh" />
+    <ClInclude Include="src\load_3ds.h" />
+    <ClInclude Include="src\load_bmp.h" />
+    <ClInclude Include="src\main.cuh" />
+    <ClInclude Include="src\mat_matr.h" />
+    <ClInclude Include="src\mat_vect.h" />
+    <ClInclude Include="src\object.h" />
+    <ClInclude Include="src\texture.h" />
+    <ClInclude Include="src\Universal.cuh" />
+    <ClInclude Include="src\vbo.cuh" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="src\hrtf_signals.cpp" />
+    <ClCompile Include="src\load_3ds.cpp" />
+    <ClCompile Include="src\mat_matr.cpp" />
+    <ClCompile Include="src\mat_vect.cpp" />
+    <ClCompile Include="src\object.cpp" />
+    <ClCompile Include="src\texture.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <CudaCompile Include="src\Audio.cu" />
+    <CudaCompile Include="src\cudaPart.cu" />
+    <CudaCompile Include="src\graphics.cu" />
+    <CudaCompile Include="src\hrtf_signals.cu" />
+    <CudaCompile Include="src\kernels.cu" />
+    <CudaCompile Include="src\main.cu" />
+    <CudaCompile Include="src\vbo.cu" />
+  </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{E74F810C-4109-4BB8-9EEC-9D3491B87972}</ProjectGuid>
     <RootNamespace>Jefferson</RootNamespace>
@@ -81,38 +115,6 @@
       <TargetMachinePlatform>64</TargetMachinePlatform>
     </CudaCompile>
   </ItemDefinitionGroup>
-  <ItemGroup>
-    <CudaCompile Include="Audio.cu" />
-    <CudaCompile Include="cudaPart.cu" />
-    <CudaCompile Include="graphics.cu" />
-    <CudaCompile Include="hrtf_signals.cu" />
-    <CudaCompile Include="kernels.cu" />
-    <CudaCompile Include="main.cu" />
-    <CudaCompile Include="vbo.cu" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="Audio.cuh" />
-    <ClInclude Include="cudaPart.cuh" />
-    <ClInclude Include="graphics.cuh" />
-    <ClInclude Include="hrtf_signals.cuh" />
-    <ClInclude Include="kernels.cuh" />
-    <ClInclude Include="load_3ds.h" />
-    <ClInclude Include="load_bmp.h" />
-    <ClInclude Include="main.cuh" />
-    <ClInclude Include="mat_matr.h" />
-    <ClInclude Include="mat_vect.h" />
-    <ClInclude Include="object.h" />
-    <ClInclude Include="texture.h" />
-    <ClInclude Include="Universal.cuh" />
-    <ClInclude Include="vbo.cuh" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClCompile Include="load_3ds.cpp" />
-    <ClCompile Include="mat_matr.cpp" />
-    <ClCompile Include="mat_vect.cpp" />
-    <ClCompile Include="object.cpp" />
-    <ClCompile Include="texture.cpp" />
-  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
     <Import Project="$(VCTargetsPath)\BuildCustomizations\CUDA 10.0.targets" />

@@ -9,7 +9,7 @@ Total MB: 1.6243523
 
 Opening and Reading HRTF signals
 Opening output file
-2 1 0
+
 
 
 
@@ -97,11 +97,11 @@ PinNew: Default sample rate = 44100 Hz
 Failed PinQueryNotificationSupport
 PinNew: Finding topology pin...
 FindStartConnectionTo: Startpin 0, Checking 5 connections...
-FindStartConnectionTo: returning 00000272A3A3DD98
+FindStartConnectionTo: returning 0000028AACFAA8A8
 GetConnectedPin: count=2, forward=1, muxPosition=-1
-GetConnectionTo: Checking 5 connections... (pFrom = 00000272A3A3DD98)GetConnectionTo: Returning 00000272A3A3DD88
+GetConnectionTo: Checking 5 connections... (pFrom = 0000028AACFAA8A8)GetConnectionTo: Returning 0000028AACFAA898
 GetConnectedPin: count=2, forward=1, muxPosition=-1
-GetConnectionTo: Checking 5 connections... (pFrom = 00000272A3A3DD88)GetConnectionTo: Returning 00000272A3A3DDC8
+GetConnectionTo: Checking 5 connections... (pFrom = 0000028AACFAA898)GetConnectionTo: Returning 0000028AACFAA8D8
 PinNew: Getting physical connection...
 PinNew: Physical connection found!
 PinNew: Creating topology filter '\\?\INTELAUDIO#FUNC_01&VEN_10EC&DEV_0295&SUBSYS_10251234&REV_1000#4&10a3dbe8&1&0001#{6994ad04-93ef-11d0-a3cc-00a0c9223196}\RearLineOutTopoSST'
@@ -117,13 +117,13 @@ DumpConnectionsAndNodes: connections=4, nodes=3
   Node: 2 - {E88C9BA0-C557-11D0-8A2B-00A0C9255AC1}
 PinNew: Opening topology filter...PinNew: Checking for output endpoint pin id...
 FindStartConnectionTo: Startpin 0, Checking 4 connections...
-FindStartConnectionTo: returning 000002728CCCD518
+FindStartConnectionTo: returning 0000028AAD644C98
 GetConnectedPin: count=3, forward=1, muxPosition=-1
-GetConnectionTo: Checking 4 connections... (pFrom = 000002728CCCD518)GetConnectionTo: Returning 000002728CCCD528
+GetConnectionTo: Checking 4 connections... (pFrom = 0000028AAD644C98)GetConnectionTo: Returning 0000028AAD644CA8
 GetConnectedPin: count=3, forward=1, muxPosition=-1
-GetConnectionTo: Checking 4 connections... (pFrom = 000002728CCCD528)GetConnectionTo: Returning 000002728CCCD538
+GetConnectionTo: Checking 4 connections... (pFrom = 0000028AAD644CA8)GetConnectionTo: Returning 0000028AAD644CB8
 GetConnectedPin: count=3, forward=1, muxPosition=-1
-GetConnectionTo: Checking 4 connections... (pFrom = 000002728CCCD538)GetConnectionTo: Returning 000002728CCCD548
+GetConnectionTo: Checking 4 connections... (pFrom = 0000028AAD644CB8)GetConnectionTo: Returning 0000028AAD644CC8
 PinNew: Found endpoint pin id 1
 GetNameFromCategory: USB GUID 0301 -> 'Speakers'
 PinNew: Pin name 'Speakers'
@@ -143,22 +143,22 @@ PinNew: Default sample rate = 44100 Hz
 Failed PinQueryNotificationSupport
 PinNew: Finding topology pin...
 FindStartConnectionTo: Startpin 2, Checking 5 connections...
-FindStartConnectionTo: returning 00000272A3A3DDA8
+FindStartConnectionTo: returning 0000028AACFAA8B8
 GetConnectedPin: count=2, forward=1, muxPosition=-1
-GetConnectionTo: Checking 5 connections... (pFrom = 00000272A3A3DDA8)GetConnectionTo: Returning 00000272A3A3DD88
+GetConnectionTo: Checking 5 connections... (pFrom = 0000028AACFAA8B8)GetConnectionTo: Returning 0000028AACFAA898
 GetConnectedPin: count=2, forward=1, muxPosition=-1
-GetConnectionTo: Checking 5 connections... (pFrom = 00000272A3A3DD88)GetConnectionTo: Returning 00000272A3A3DDC8
+GetConnectionTo: Checking 5 connections... (pFrom = 0000028AACFAA898)GetConnectionTo: Returning 0000028AACFAA8D8
 PinNew: Getting physical connection...
 PinNew: Physical connection found!
 PinNew: Opening topology filter...PinNew: Checking for output endpoint pin id...
 FindStartConnectionTo: Startpin 0, Checking 4 connections...
-FindStartConnectionTo: returning 000002728CCCD518
+FindStartConnectionTo: returning 0000028AAD644C98
 GetConnectedPin: count=3, forward=1, muxPosition=-1
-GetConnectionTo: Checking 4 connections... (pFrom = 000002728CCCD518)GetConnectionTo: Returning 000002728CCCD528
+GetConnectionTo: Checking 4 connections... (pFrom = 0000028AAD644C98)GetConnectionTo: Returning 0000028AAD644CA8
 GetConnectedPin: count=3, forward=1, muxPosition=-1
-GetConnectionTo: Checking 4 connections... (pFrom = 000002728CCCD528)GetConnectionTo: Returning 000002728CCCD538
+GetConnectionTo: Checking 4 connections... (pFrom = 0000028AAD644CA8)GetConnectionTo: Returning 0000028AAD644CB8
 GetConnectedPin: count=3, forward=1, muxPosition=-1
-GetConnectionTo: Checking 4 connections... (pFrom = 000002728CCCD538)GetConnectionTo: Returning 000002728CCCD548
+GetConnectionTo: Checking 4 connections... (pFrom = 0000028AAD644CB8)GetConnectionTo: Returning 0000028AAD644CC8
 PinNew: Found endpoint pin id 1
 GetNameFromCategory: USB GUID 0301 -> 'Speakers'
 PinNew: Pin name 'Speakers'
@@ -176,10 +176,10 @@ PinNew: Default sample rate = 48000 Hz
 Failed PinQueryNotificationSupport
 PinNew: Finding topology pin...
 FindStartConnectionFrom: Startpin 3, Checking 5 connections...
-FindStartConnectionFrom: returning 00000272A3A3DDB8
+FindStartConnectionFrom: returning 0000028AACFAA8C8
 GetConnectedPin: count=2, forward=0, muxPosition=-1
-GetConnectionFrom: Checking 5 connections... (pTo = 00000272A3A3DDB8)
-GetConnectionFrom: Returning 00000272A3A3DD98
+GetConnectionFrom: Checking 5 connections... (pTo = 0000028AACFAA8C8)
+GetConnectionFrom: Returning 0000028AACFAA8A8
 PinNew: Getting physical connection...
 PinNew: No physical connection! Getting the pin name
 Pin created successfully
@@ -202,10 +202,10 @@ PinNew: Default sample rate = 48000 Hz
 Failed PinQueryNotificationSupport
 PinNew: Finding topology pin...
 FindStartConnectionFrom: Startpin 0, Checking 2 connections...
-FindStartConnectionFrom: returning 00000272A9843408
+FindStartConnectionFrom: returning 0000028AA7C6BFF8
 GetConnectedPin: count=1, forward=0, muxPosition=-1
-GetConnectionFrom: Checking 2 connections... (pTo = 00000272A9843408)
-GetConnectionFrom: Returning 00000272A98433F8
+GetConnectionFrom: Checking 2 connections... (pTo = 0000028AA7C6BFF8)
+GetConnectionFrom: Returning 0000028AA7C6BFE8
 PinNew: Getting physical connection...
 PinNew: Physical connection found!
 PinNew: Creating topology filter '\\?\INTELAUDIO#FUNC_01&VEN_10EC&DEV_0295&SUBSYS_10251234&REV_1000#4&10a3dbe8&1&0001#{6994ad04-93ef-11d0-a3cc-00a0c9223196}\RtStereoMixTopo'
@@ -219,13 +219,13 @@ DumpConnectionsAndNodes: connections=3, nodes=2
   Node: 1 - {02B223C0-C557-11D0-8A2B-00A0C9255AC1}
 PinNew: Opening topology filter...PinNew: Checking for input endpoint pin id (0)...
 FindStartConnectionFrom: Startpin 0, Checking 3 connections...
-FindStartConnectionFrom: returning 0000027298237C38
+FindStartConnectionFrom: returning 0000028A9B403018
 GetConnectedPin: count=2, forward=0, muxPosition=0
-GetConnectionFrom: Checking 3 connections... (pTo = 0000027298237C38)
-GetConnectionFrom: Returning 0000027298237C28
+GetConnectionFrom: Checking 3 connections... (pTo = 0000028A9B403018)
+GetConnectionFrom: Returning 0000028A9B403008
 GetConnectedPin: count=2, forward=0, muxPosition=0
-GetConnectionFrom: Checking 3 connections... (pTo = 0000027298237C28)
-GetConnectionFrom: Returning 0000027298237C18
+GetConnectionFrom: Checking 3 connections... (pTo = 0000028A9B403008)
+GetConnectionFrom: Returning 0000028A9B402FF8
 PinNew: Found endpoint pin id 1
 PinNew: Input friendly name 'Stereo Mix'
 PinNew: Releasing topology filter...
@@ -254,10 +254,10 @@ PinNew: Default sample rate = 48000 Hz
 Failed PinQueryNotificationSupport
 PinNew: Finding topology pin...
 FindStartConnectionFrom: Startpin 0, Checking 4 connections...
-FindStartConnectionFrom: returning 000002728CCCDBD8
+FindStartConnectionFrom: returning 0000028AAD644E08
 GetConnectedPin: count=1, forward=0, muxPosition=-1
-GetConnectionFrom: Checking 4 connections... (pTo = 000002728CCCDBD8)
-GetConnectionFrom: Returning 000002728CCCDBC8
+GetConnectionFrom: Checking 4 connections... (pTo = 0000028AAD644E08)
+GetConnectionFrom: Returning 0000028AAD644DF8
 PinNew: Getting physical connection...
 PinNew: Physical connection found!
 PinNew: Creating topology filter '\\?\INTELAUDIO#FUNC_01&VEN_10EC&DEV_0295&SUBSYS_10251234&REV_1000#4&10a3dbe8&1&0001#{6994ad04-93ef-11d0-a3cc-00a0c9223196}\RtMicInSSTTopo'
@@ -273,16 +273,16 @@ DumpConnectionsAndNodes: connections=4, nodes=3
   Node: 2 - {02B223C0-C557-11D0-8A2B-00A0C9255AC1}
 PinNew: Opening topology filter...PinNew: Checking for input endpoint pin id (0)...
 FindStartConnectionFrom: Startpin 0, Checking 4 connections...
-FindStartConnectionFrom: returning 000002728CCCDF48
+FindStartConnectionFrom: returning 0000028AAD645678
 GetConnectedPin: count=3, forward=0, muxPosition=0
-GetConnectionFrom: Checking 4 connections... (pTo = 000002728CCCDF48)
-GetConnectionFrom: Returning 000002728CCCDF38
+GetConnectionFrom: Checking 4 connections... (pTo = 0000028AAD645678)
+GetConnectionFrom: Returning 0000028AAD645668
 GetConnectedPin: count=3, forward=0, muxPosition=0
-GetConnectionFrom: Checking 4 connections... (pTo = 000002728CCCDF38)
-GetConnectionFrom: Returning 000002728CCCDF28
+GetConnectionFrom: Checking 4 connections... (pTo = 0000028AAD645668)
+GetConnectionFrom: Returning 0000028AAD645658
 GetConnectedPin: count=3, forward=0, muxPosition=0
-GetConnectionFrom: Checking 4 connections... (pTo = 000002728CCCDF28)
-GetConnectionFrom: Returning 000002728CCCDF18
+GetConnectionFrom: Checking 4 connections... (pTo = 0000028AAD645658)
+GetConnectionFrom: Returning 0000028AAD645648
 PinNew: Found endpoint pin id 1
 PinNew: Input friendly name 'Microphone Array'
 PinNew: Releasing topology filter...
@@ -299,24 +299,24 @@ PinNew: Default sample rate = 16000 Hz
 Failed PinQueryNotificationSupport
 PinNew: Finding topology pin...
 FindStartConnectionFrom: Startpin 2, Checking 4 connections...
-FindStartConnectionFrom: returning 000002728CCCDBA8
+FindStartConnectionFrom: returning 0000028AAD644DD8
 GetConnectedPin: count=1, forward=0, muxPosition=-1
-GetConnectionFrom: Checking 4 connections... (pTo = 000002728CCCDBA8)
-GetConnectionFrom: Returning 000002728CCCDBC8
+GetConnectionFrom: Checking 4 connections... (pTo = 0000028AAD644DD8)
+GetConnectionFrom: Returning 0000028AAD644DF8
 PinNew: Getting physical connection...
 PinNew: Physical connection found!
 PinNew: Opening topology filter...PinNew: Checking for input endpoint pin id (0)...
 FindStartConnectionFrom: Startpin 0, Checking 4 connections...
-FindStartConnectionFrom: returning 000002728CCCDF48
+FindStartConnectionFrom: returning 0000028AAD645678
 GetConnectedPin: count=3, forward=0, muxPosition=0
-GetConnectionFrom: Checking 4 connections... (pTo = 000002728CCCDF48)
-GetConnectionFrom: Returning 000002728CCCDF38
+GetConnectionFrom: Checking 4 connections... (pTo = 0000028AAD645678)
+GetConnectionFrom: Returning 0000028AAD645668
 GetConnectedPin: count=3, forward=0, muxPosition=0
-GetConnectionFrom: Checking 4 connections... (pTo = 000002728CCCDF38)
-GetConnectionFrom: Returning 000002728CCCDF28
+GetConnectionFrom: Checking 4 connections... (pTo = 0000028AAD645668)
+GetConnectionFrom: Returning 0000028AAD645658
 GetConnectedPin: count=3, forward=0, muxPosition=0
-GetConnectionFrom: Checking 4 connections... (pTo = 000002728CCCDF28)
-GetConnectionFrom: Returning 000002728CCCDF18
+GetConnectionFrom: Checking 4 connections... (pTo = 0000028AAD645658)
+GetConnectionFrom: Returning 0000028AAD645648
 PinNew: Found endpoint pin id 1
 PinNew: Input friendly name 'Microphone Array'
 PinNew: Releasing topology filter...
@@ -330,24 +330,24 @@ PinNew: Default sample rate = 16000 Hz
 Failed PinQueryNotificationSupport
 PinNew: Finding topology pin...
 FindStartConnectionFrom: Startpin 3, Checking 4 connections...
-FindStartConnectionFrom: returning 000002728CCCDBB8
+FindStartConnectionFrom: returning 0000028AAD644DE8
 GetConnectedPin: count=1, forward=0, muxPosition=-1
-GetConnectionFrom: Checking 4 connections... (pTo = 000002728CCCDBB8)
-GetConnectionFrom: Returning 000002728CCCDBC8
+GetConnectionFrom: Checking 4 connections... (pTo = 0000028AAD644DE8)
+GetConnectionFrom: Returning 0000028AAD644DF8
 PinNew: Getting physical connection...
 PinNew: Physical connection found!
 PinNew: Opening topology filter...PinNew: Checking for input endpoint pin id (0)...
 FindStartConnectionFrom: Startpin 0, Checking 4 connections...
-FindStartConnectionFrom: returning 000002728CCCDF48
+FindStartConnectionFrom: returning 0000028AAD645678
 GetConnectedPin: count=3, forward=0, muxPosition=0
-GetConnectionFrom: Checking 4 connections... (pTo = 000002728CCCDF48)
-GetConnectionFrom: Returning 000002728CCCDF38
+GetConnectionFrom: Checking 4 connections... (pTo = 0000028AAD645678)
+GetConnectionFrom: Returning 0000028AAD645668
 GetConnectedPin: count=3, forward=0, muxPosition=0
-GetConnectionFrom: Checking 4 connections... (pTo = 000002728CCCDF38)
-GetConnectionFrom: Returning 000002728CCCDF28
+GetConnectionFrom: Checking 4 connections... (pTo = 0000028AAD645668)
+GetConnectionFrom: Returning 0000028AAD645658
 GetConnectedPin: count=3, forward=0, muxPosition=0
-GetConnectionFrom: Checking 4 connections... (pTo = 000002728CCCDF28)
-GetConnectionFrom: Returning 000002728CCCDF18
+GetConnectionFrom: Checking 4 connections... (pTo = 0000028AAD645658)
+GetConnectionFrom: Returning 0000028AAD645648
 PinNew: Found endpoint pin id 1
 PinNew: Input friendly name 'Microphone Array'
 PinNew: Releasing topology filter...
@@ -374,9 +374,9 @@ PinNew: Format PCM 16 bit supported
 PinNew: Default sample rate = 48000 Hz
 PinNew: Finding topology pin...
 FindStartConnectionTo: Startpin 0, Checking 4 connections...
-FindStartConnectionTo: returning 000002728CCCDF68
+FindStartConnectionTo: returning 0000028AAD645F08
 GetConnectedPin: count=2, forward=1, muxPosition=-1
-GetConnectionTo: Checking 4 connections... (pFrom = 000002728CCCDF68)GetConnectionTo: Returning 000002728CCCDF78
+GetConnectionTo: Checking 4 connections... (pFrom = 0000028AAD645F08)GetConnectionTo: Returning 0000028AAD645F18
 PinNew: Getting physical connection...
 PinNew: Physical connection found!
 PinNew: Creating topology filter '\\?\ROOT#MEDIA#0000#{6994ad04-93ef-11d0-a3cc-00a0c9223196}\Topology'
@@ -395,11 +395,11 @@ DumpConnectionsAndNodes: connections=6, nodes=4
   Node: 3 - {02B223C0-C557-11D0-8A2B-00A0C9255AC1}
 PinNew: Opening topology filter...PinNew: Checking for output endpoint pin id...
 FindStartConnectionTo: Startpin 0, Checking 6 connections...
-FindStartConnectionTo: returning 00000272A470F5B8
+FindStartConnectionTo: returning 0000028AAD64E6E8
 GetConnectedPin: count=4, forward=1, muxPosition=-1
-GetConnectionTo: Checking 6 connections... (pFrom = 00000272A470F5B8)GetConnectionTo: Returning 00000272A470F5C8
+GetConnectionTo: Checking 6 connections... (pFrom = 0000028AAD64E6E8)GetConnectionTo: Returning 0000028AAD64E6F8
 GetConnectedPin: count=4, forward=1, muxPosition=-1
-GetConnectionTo: Checking 6 connections... (pFrom = 00000272A470F5C8)GetConnectionTo: Returning 00000272A470F5D8
+GetConnectionTo: Checking 6 connections... (pFrom = 0000028AAD64E6F8)GetConnectionTo: Returning 0000028AAD64E708
 PinNew: Found endpoint pin id 1
 GetNameFromCategory: USB GUID 0301 -> 'Speakers'
 PinNew: Pin name 'Speakers'
@@ -417,21 +417,21 @@ PinNew: Format PCM 16 bit supported
 PinNew: Default sample rate = 48000 Hz
 PinNew: Finding topology pin...
 FindStartConnectionFrom: Startpin 2, Checking 4 connections...
-FindStartConnectionFrom: returning 000002728CCCDF98
+FindStartConnectionFrom: returning 0000028AAD645F38
 GetConnectedPin: count=2, forward=0, muxPosition=-1
-GetConnectionFrom: Checking 4 connections... (pTo = 000002728CCCDF98)
-GetConnectionFrom: Returning 000002728CCCDF88
+GetConnectionFrom: Checking 4 connections... (pTo = 0000028AAD645F38)
+GetConnectionFrom: Returning 0000028AAD645F28
 PinNew: Getting physical connection...
 PinNew: Physical connection found!
 PinNew: Opening topology filter...PinNew: Checking for input endpoint pin id (0)...
 FindStartConnectionFrom: Startpin 3, Checking 6 connections...
-FindStartConnectionFrom: returning 00000272A470F608
+FindStartConnectionFrom: returning 0000028AAD64E738
 GetConnectedPin: count=4, forward=0, muxPosition=0
-GetConnectionFrom: Checking 6 connections... (pTo = 00000272A470F608)
-GetConnectionFrom: Returning 00000272A470F5F8
+GetConnectionFrom: Checking 6 connections... (pTo = 0000028AAD64E738)
+GetConnectionFrom: Returning 0000028AAD64E728
 GetConnectedPin: count=4, forward=0, muxPosition=0
-GetConnectionFrom: Checking 6 connections... (pTo = 00000272A470F5F8)
-GetConnectionFrom: Returning 00000272A470F5E8
+GetConnectionFrom: Checking 6 connections... (pTo = 0000028AAD64E728)
+GetConnectionFrom: Returning 0000028AAD64E718
 PinNew: Found endpoint pin id 2
 PinNew: Input friendly name 'Line In'
 PinNew: Releasing topology filter...
@@ -442,1725 +442,7 @@ PinNew: Error -9996
 Filter (WaveCyclic) created with 2 valid pins (total I/Os: 2)
 after paHostApiInitializers[2].
 Pa_StartStream: waveInStart returned = 0x0.
- 5 4 3 2 1
-Stream 0 Finished
-0 4 3 2 1
-Stream 1 Finished
-1 0 4 3 2
-Stream 2 Finished
-2 1 0 4 3
-Stream 3 Finished
-3 2 1 0 4
-Stream 4 Unfinished
-4 3 2 1 0
-Stream 0 Finished
-0 4 3 2 1
-Stream 1 Unfinished
-1 0 4 3 2
-Stream 2 Finished
-2 1 0 4 3
-Stream 3 Unfinished
-3 2 1 0 4
-Stream 4 Finished
-4 3 2 1 0
-Stream 0 Finished
-0 4 3 2 1
-Stream 1 Finished
-1 0 4 3 2
-Stream 2 Finished
-2 1 0 4 3
-Stream 3 Unfinished
-3 2 1 0 4
-Stream 4 Finished
-4 3 2 1 0
-Stream 0 Finished
-0 4 3 2 1
-Stream 1 Finished
-1 0 4 3 2
-Stream 2 Finished
-2 1 0 4 3
-Stream 3 Finished
-3 2 1 0 4
-Stream 4 Unfinished
-4 3 2 1 0
-Stream 0 Finished
-0 4 3 2 1
-Stream 1 Unfinished
-1 0 4 3 2
-Stream 2 Finished
-2 1 0 4 3
-Stream 3 Unfinished
-3 2 1 0 4
-Stream 4 Finished
-4 3 2 1 0
-Stream 0 Finished
-0 4 3 2 1
-Stream 1 Finished
-1 0 4 3 2
-Stream 2 Finished
-2 1 0 4 3
-Stream 3 Unfinished
-3 2 1 0 4
-Stream 4 Finished
-4 3 2 1 0
-Stream 0 Finished
-0 4 3 2 1
-Stream 1 Finished
-1 0 4 3 2
-Stream 2 Finished
-2 1 0 4 3
-Stream 3 Finished
-3 2 1 0 4
-Stream 4 Unfinished
-4 3 2 1 0
-Stream 0 Finished
-0 4 3 2 1
-Stream 1 Unfinished
-1 0 4 3 2
-Stream 2 Finished
-2 1 0 4 3
-Stream 3 Unfinished
-3 2 1 0 4
-Stream 4 Finished
-4 3 2 1 0
-Stream 0 Finished
-0 4 3 2 1
-Stream 1 Finished
-1 0 4 3 2
-Stream 2 Finished
-2 1 0 4 3
-Stream 3 Unfinished
-3 2 1 0 4
-Stream 4 Finished
-4 3 2 1 0
-Stream 0 Finished
-0 4 3 2 1
-Stream 1 Finished
-1 0 4 3 2
-Stream 2 Finished
-2 1 0 4 3
-Stream 3 Finished
-3 2 1 0 4
-Stream 4 Unfinished
-4 3 2 1 0
-Stream 0 Finished
-0 4 3 2 1
-Stream 1 Unfinished
-1 0 4 3 2
-Stream 2 Finished
-2 1 0 4 3
-Stream 3 Unfinished
-3 2 1 0 4
-Stream 4 Finished
-4 3 2 1 0
-Stream 0 Finished
-0 4 3 2 1
-Stream 1 Finished
-1 0 4 3 2
-Stream 2 Finished
-2 1 0 4 3
-Stream 3 Unfinished
-3 2 1 0 4
-Stream 4 Finished
-4 3 2 1 0
-Stream 0 Finished
-0 4 3 2 1
-Stream 1 Finished
-1 0 4 3 2
-Stream 2 Finished
-2 1 0 4 3
-Stream 3 Finished
-3 2 1 0 4
-Stream 4 Unfinished
-4 3 2 1 0
-Stream 0 Finished
-0 4 3 2 1
-Stream 1 Unfinished
-1 0 4 3 2
-Stream 2 Finished
-2 1 0 4 3
-Stream 3 Unfinished
-3 2 1 0 4
-Stream 4 Finished
-4 3 2 1 0
-Stream 0 Finished
-0 4 3 2 1
-Stream 1 Finished
-1 0 4 3 2
-Stream 2 Finished
-2 1 0 4 3
-Stream 3 Unfinished
-3 2 1 0 4
-Stream 4 Finished
-4 3 2 1 0
-Stream 0 Finished
-0 4 3 2 1
-Stream 1 Finished
-1 0 4 3 2
-Stream 2 Finished
-2 1 0 4 3
-Stream 3 Finished
-3 2 1 0 4
-Stream 4 Unfinished
-4 3 2 1 0
-Stream 0 Finished
-0 4 3 2 1
-Stream 1 Unfinished
-1 0 4 3 2
-Stream 2 Finished
-2 1 0 4 3
-Stream 3 Unfinished
-3 2 1 0 4
-Stream 4 Finished
-4 3 2 1 0
-Stream 0 Finished
-0 4 3 2 1
-Stream 1 Finished
-1 0 4 3 2
-Stream 2 Finished
-2 1 0 4 3
-Stream 3 Unfinished
-3 2 1 0 4
-Stream 4 Finished
-4 3 2 1 0
-Stream 0 Finished
-0 4 3 2 1
-Stream 1 Finished
-1 0 4 3 2
-Stream 2 Finished
-2 1 0 4 3
-Stream 3 Finished
-3 2 1 0 4
-Stream 4 Unfinished
-4 3 2 1 0
-Stream 0 Finished
-0 4 3 2 1
-Stream 1 Unfinished
-1 0 4 3 2
-Stream 2 Finished
-2 1 0 4 3
-Stream 3 Unfinished
-3 2 1 0 4
-Stream 4 Finished
-4 3 2 1 0
-Stream 0 Finished
-0 4 3 2 1
-Stream 1 Finished
-1 0 4 3 2
-Stream 2 Finished
-2 1 0 4 3
-Stream 3 Unfinished
-3 2 1 0 4
-Stream 4 Finished
-4 3 2 1 0
-Stream 0 Finished
-0 4 3 2 1
-Stream 1 Finished
-1 0 4 3 2
-Stream 2 Finished
-2 1 0 4 3
-Stream 3 Finished
-3 2 1 0 4
-Stream 4 Unfinished
-4 3 2 1 0
-Stream 0 Finished
-0 4 3 2 1
-Stream 1 Unfinished
-1 0 4 3 2
-Stream 2 Finished
-2 1 0 4 3
-Stream 3 Unfinished
-3 2 1 0 4
-Stream 4 Finished
-4 3 2 1 0
-Stream 0 Finished
-0 4 3 2 1
-Stream 1 Finished
-1 0 4 3 2
-Stream 2 Finished
-2 1 0 4 3
-Stream 3 Unfinished
-3 2 1 0 4
-Stream 4 Finished
-4 3 2 1 0
-Stream 0 Finished
-0 4 3 2 1
-Stream 1 Finished
-1 0 4 3 2
-Stream 2 Finished
-2 1 0 4 3
-Stream 3 Finished
-3 2 1 0 4
-Stream 4 Unfinished
-4 3 2 1 0
-Stream 0 Finished
-0 4 3 2 1
-Stream 1 Unfinished
-1 0 4 3 2
-Stream 2 Finished
-2 1 0 4 3
-Stream 3 Unfinished
-3 2 1 0 4
-Stream 4 Finished
-4 3 2 1 0
-Stream 0 Finished
-0 4 3 2 1
-Stream 1 Finished
-1 0 4 3 2
-Stream 2 Finished
-2 1 0 4 3
-Stream 3 Unfinished
-3 2 1 0 4
-Stream 4 Finished
-4 3 2 1 0
-Stream 0 Finished
-0 4 3 2 1
-Stream 1 Finished
-1 0 4 3 2
-Stream 2 Finished
-2 1 0 4 3
-Stream 3 Finished
-3 2 1 0 4
-Stream 4 Unfinished
-4 3 2 1 0
-Stream 0 Finished
-0 4 3 2 1
-Stream 1 Unfinished
-1 0 4 3 2
-Stream 2 Finished
-2 1 0 4 3
-Stream 3 Unfinished
-3 2 1 0 4
-Stream 4 Finished
-4 3 2 1 0
-Stream 0 Finished
-0 4 3 2 1
-Stream 1 Finished
-1 0 4 3 2
-Stream 2 Finished
-2 1 0 4 3
-Stream 3 Unfinished
-3 2 1 0 4
-Stream 4 Finished
-4 3 2 1 0
-Stream 0 Finished
-0 4 3 2 1
-Stream 1 Finished
-1 0 4 3 2
-Stream 2 Finished
-2 1 0 4 3
-Stream 3 Finished
-3 2 1 0 4
-Stream 4 Unfinished
-4 3 2 1 0
-Stream 0 Finished
-0 4 3 2 1
-Stream 1 Unfinished
-1 0 4 3 2
-Stream 2 Finished
-2 1 0 4 3
-Stream 3 Unfinished
-3 2 1 0 4
-Stream 4 Finished
-4 3 2 1 0
-Stream 0 Finished
-0 4 3 2 1
-Stream 1 Finished
-1 0 4 3 2
-Stream 2 Finished
-2 1 0 4 3
-Stream 3 Unfinished
-3 2 1 0 4
-Stream 4 Finished
-4 3 2 1 0
-Stream 0 Finished
-0 4 3 2 1
-Stream 1 Finished
-1 0 4 3 2
-Stream 2 Finished
-2 1 0 4 3
-Stream 3 Finished
-3 2 1 0 4
-Stream 4 Unfinished
-4 3 2 1 0
-Stream 0 Finished
-0 4 3 2 1
-Stream 1 Unfinished
-1 0 4 3 2
-Stream 2 Finished
-2 1 0 4 3
-Stream 3 Unfinished
-3 2 1 0 4
-Stream 4 Finished
-4 3 2 1 0
-Stream 0 Finished
-0 4 3 2 1
-Stream 1 Finished
-1 0 4 3 2
-Stream 2 Finished
-2 1 0 4 3
-Stream 3 Unfinished
-3 2 1 0 4
-Stream 4 Finished
-4 3 2 1 0
-Stream 0 Finished
-0 4 3 2 1
-Stream 1 Finished
-1 0 4 3 2
-Stream 2 Finished
-2 1 0 4 3
-Stream 3 Finished
-3 2 1 0 4
-Stream 4 Unfinished
-4 3 2 1 0
-Stream 0 Finished
-0 4 3 2 1
-Stream 1 Unfinished
-1 0 4 3 2
-Stream 2 Finished
-2 1 0 4 3
-Stream 3 Unfinished
-3 2 1 0 4
-Stream 4 Finished
-4 3 2 1 0
-Stream 0 Finished
-0 4 3 2 1
-Stream 1 Finished
-1 0 4 3 2
-Stream 2 Finished
-2 1 0 4 3
-Stream 3 Unfinished
-3 2 1 0 4
-Stream 4 Finished
-4 3 2 1 0
-Stream 0 Finished
-0 4 3 2 1
-Stream 1 Finished
-1 0 4 3 2
-Stream 2 Finished
-2 1 0 4 3
-Stream 3 Finished
-3 2 1 0 4
-Stream 4 Unfinished
-4 3 2 1 0
-Stream 0 Finished
-0 4 3 2 1
-Stream 1 Unfinished
-1 0 4 3 2
-Stream 2 Finished
-2 1 0 4 3
-Stream 3 Unfinished
-3 2 1 0 4
-Stream 4 Finished
-4 3 2 1 0
-Stream 0 Finished
-0 4 3 2 1
-Stream 1 Finished
-1 0 4 3 2
-Stream 2 Finished
-2 1 0 4 3
-Stream 3 Unfinished
-3 2 1 0 4
-Stream 4 Finished
-4 3 2 1 0
-Stream 0 Finished
-0 4 3 2 1
-Stream 1 Finished
-1 0 4 3 2
-Stream 2 Finished
-2 1 0 4 3
-Stream 3 Finished
-3 2 1 0 4
-Stream 4 Unfinished
-4 3 2 1 0
-Stream 0 Finished
-0 4 3 2 1
-Stream 1 Unfinished
-1 0 4 3 2
-Stream 2 Finished
-2 1 0 4 3
-Stream 3 Unfinished
-3 2 1 0 4
-Stream 4 Finished
-4 3 2 1 0
-Stream 0 Finished
-0 4 3 2 1
-Stream 1 Finished
-1 0 4 3 2
-Stream 2 Finished
-2 1 0 4 3
-Stream 3 Unfinished
-3 2 1 0 4
-Stream 4 Finished
-4 3 2 1 0
-Stream 0 Finished
-0 4 3 2 1
-Stream 1 Finished
-1 0 4 3 2
-Stream 2 Finished
-2 1 0 4 3
-Stream 3 Finished
-3 2 1 0 4
-Stream 4 Unfinished
-4 3 2 1 0
-Stream 0 Finished
-0 4 3 2 1
-Stream 1 Unfinished
-1 0 4 3 2
-Stream 2 Finished
-2 1 0 4 3
-Stream 3 Unfinished
-3 2 1 0 4
-Stream 4 Finished
-4 3 2 1 0
-Stream 0 Finished
-0 4 3 2 1
-Stream 1 Finished
-1 0 4 3 2
-Stream 2 Finished
-2 1 0 4 3
-Stream 3 Unfinished
-3 2 1 0 4
-Stream 4 Finished
-4 3 2 1 0
-Stream 0 Finished
-0 4 3 2 1
-Stream 1 Finished
-1 0 4 3 2
-Stream 2 Finished
-2 1 0 4 3
-Stream 3 Finished
-3 2 1 0 4
-Stream 4 Unfinished
-4 3 2 1 0
-Stream 0 Finished
-0 4 3 2 1
-Stream 1 Unfinished
-1 0 4 3 2
-Stream 2 Finished
-2 1 0 4 3
-Stream 3 Unfinished
-3 2 1 0 4
-Stream 4 Finished
-4 3 2 1 0
-Stream 0 Finished
-0 4 3 2 1
-Stream 1 Finished
-1 0 4 3 2
-Stream 2 Finished
-2 1 0 4 3
-Stream 3 Unfinished
-3 2 1 0 4
-Stream 4 Finished
-4 3 2 1 0
-Stream 0 Finished
-0 4 3 2 1
-Stream 1 Finished
-1 0 4 3 2
-Stream 2 Finished
-2 1 0 4 3
-Stream 3 Finished
-3 2 1 0 4
-Stream 4 Unfinished
-4 3 2 1 0
-Stream 0 Finished
-0 4 3 2 1
-Stream 1 Unfinished
-1 0 4 3 2
-Stream 2 Finished
-2 1 0 4 3
-Stream 3 Unfinished
-3 2 1 0 4
-Stream 4 Finished
-4 3 2 1 0
-Stream 0 Finished
-0 4 3 2 1
-Stream 1 Finished
-1 0 4 3 2
-Stream 2 Finished
-2 1 0 4 3
-Stream 3 Unfinished
-3 2 1 0 4
-Stream 4 Finished
-4 3 2 1 0
-Stream 0 Finished
-0 4 3 2 1
-Stream 1 Finished
-1 0 4 3 2
-Stream 2 Finished
-2 1 0 4 3
-Stream 3 Finished
-3 2 1 0 4
-Stream 4 Unfinished
-4 3 2 1 0
-Stream 0 Finished
-0 4 3 2 1
-Stream 1 Unfinished
-1 0 4 3 2
-Stream 2 Finished
-2 1 0 4 3
-Stream 3 Unfinished
-3 2 1 0 4
-Stream 4 Finished
-4 3 2 1 0
-Stream 0 Finished
-0 4 3 2 1
-Stream 1 Finished
-1 0 4 3 2
-Stream 2 Finished
-2 1 0 4 3
-Stream 3 Unfinished
-3 2 1 0 4
-Stream 4 Finished
-4 3 2 1 0
-Stream 0 Finished
-0 4 3 2 1
-Stream 1 Finished
-1 0 4 3 2
-Stream 2 Finished
-2 1 0 4 3
-Stream 3 Finished
-3 2 1 0 4
-Stream 4 Unfinished
-4 3 2 1 0
-Stream 0 Finished
-0 4 3 2 1
-Stream 1 Unfinished
-1 0 4 3 2
-Stream 2 Finished
-2 1 0 4 3
-Stream 3 Unfinished
-3 2 1 0 4
-Stream 4 Finished
-4 3 2 1 0
-Stream 0 Finished
-0 4 3 2 1
-Stream 1 Finished
-1 0 4 3 2
-Stream 2 Finished
-2 1 0 4 3
-Stream 3 Unfinished
-3 2 1 0 4
-Stream 4 Finished
-4 3 2 1 0
-Stream 0 Finished
-0 4 3 2 1
-Stream 1 Finished
-1 0 4 3 2
-Stream 2 Finished
-2 1 0 4 3
-Stream 3 Finished
-3 2 1 0 4
-Stream 4 Unfinished
-4 3 2 1 0
-Stream 0 Finished
-0 4 3 2 1
-Stream 1 Unfinished
-1 0 4 3 2
-Stream 2 Finished
-2 1 0 4 3
-Stream 3 Unfinished
-3 2 1 0 4
-Stream 4 Finished
-4 3 2 1 0
-Stream 0 Finished
-0 4 3 2 1
-Stream 1 Finished
-1 0 4 3 2
-Stream 2 Finished
-2 1 0 4 3
-Stream 3 Unfinished
-3 2 1 0 4
-Stream 4 Finished
-4 3 2 1 0
-Stream 0 Finished
-0 4 3 2 1
-Stream 1 Finished
-1 0 4 3 2
-Stream 2 Finished
-2 1 0 4 3
-Stream 3 Finished
-3 2 1 0 4
-Stream 4 Unfinished
-4 3 2 1 0
-Stream 0 Finished
-0 4 3 2 1
-Stream 1 Unfinished
-1 0 4 3 2
-Stream 2 Finished
-2 1 0 4 3
-Stream 3 Unfinished
-3 2 1 0 4
-Stream 4 Finished
-4 3 2 1 0
-Stream 0 Finished
-0 4 3 2 1
-Stream 1 Finished
-1 0 4 3 2
-Stream 2 Finished
-2 1 0 4 3
-Stream 3 Unfinished
-3 2 1 0 4
-Stream 4 Finished
-4 3 2 1 0
-Stream 0 Finished
-0 4 3 2 1
-Stream 1 Finished
-1 0 4 3 2
-Stream 2 Finished
-2 1 0 4 3
-Stream 3 Finished
-3 2 1 0 4
-Stream 4 Unfinished
-4 3 2 1 0
-Stream 0 Finished
-0 4 3 2 1
-Stream 1 Unfinished
-1 0 4 3 2
-Stream 2 Finished
-2 1 0 4 3
-Stream 3 Unfinished
-3 2 1 0 4
-Stream 4 Finished
-4 3 2 1 0
-Stream 0 Finished
-0 4 3 2 1
-Stream 1 Finished
-1 0 4 3 2
-Stream 2 Finished
-2 1 0 4 3
-Stream 3 Unfinished
-3 2 1 0 4
-Stream 4 Finished
-4 3 2 1 0
-Stream 0 Finished
-0 4 3 2 1
-Stream 1 Finished
-1 0 4 3 2
-Stream 2 Finished
-2 1 0 4 3
-Stream 3 Finished
-3 2 1 0 4
-Stream 4 Unfinished
-4 3 2 1 0
-Stream 0 Finished
-0 4 3 2 1
-Stream 1 Unfinished
-1 0 4 3 2
-Stream 2 Finished
-2 1 0 4 3
-Stream 3 Unfinished
-3 2 1 0 4
-Stream 4 Finished
-4 3 2 1 0
-Stream 0 Finished
-0 4 3 2 1
-Stream 1 Finished
-1 0 4 3 2
-Stream 2 Finished
-2 1 0 4 3
-Stream 3 Unfinished
-3 2 1 0 4
-Stream 4 Finished
-4 3 2 1 0
-Stream 0 Finished
-0 4 3 2 1
-Stream 1 Finished
-1 0 4 3 2
-Stream 2 Finished
-2 1 0 4 3
-Stream 3 Finished
-3 2 1 0 4
-Stream 4 Unfinished
-4 3 2 1 0
-Stream 0 Finished
-0 4 3 2 1
-Stream 1 Unfinished
-1 0 4 3 2
-Stream 2 Finished
-2 1 0 4 3
-Stream 3 Unfinished
-3 2 1 0 4
-Stream 4 Finished
-4 3 2 1 0
-Stream 0 Finished
-0 4 3 2 1
-Stream 1 Finished
-1 0 4 3 2
-Stream 2 Finished
-2 1 0 4 3
-Stream 3 Unfinished
-3 2 1 0 4
-Stream 4 Finished
-4 3 2 1 0
-Stream 0 Finished
-0 4 3 2 1
-Stream 1 Finished
-1 0 4 3 2
-Stream 2 Finished
-2 1 0 4 3
-Stream 3 Finished
-3 2 1 0 4
-Stream 4 Unfinished
-4 3 2 1 0
-Stream 0 Finished
-0 4 3 2 1
-Stream 1 Unfinished
-1 0 4 3 2
-Stream 2 Finished
-2 1 0 4 3
-Stream 3 Unfinished
-3 2 1 0 4
-Stream 4 Finished
-4 3 2 1 0
-Stream 0 Finished
-0 4 3 2 1
-Stream 1 Finished
-1 0 4 3 2
-Stream 2 Finished
-2 1 0 4 3
-Stream 3 Unfinished
-3 2 1 0 4
-Stream 4 Finished
-4 3 2 1 0
-Stream 0 Finished
-0 4 3 2 1
-Stream 1 Finished
-1 0 4 3 2
-Stream 2 Finished
-2 1 0 4 3
-Stream 3 Finished
-3 2 1 0 4
-Stream 4 Unfinished
-4 3 2 1 0
-Stream 0 Finished
-0 4 3 2 1
-Stream 1 Unfinished
-1 0 4 3 2
-Stream 2 Finished
-2 1 0 4 3
-Stream 3 Unfinished
-3 2 1 0 4
-Stream 4 Finished
-4 3 2 1 0
-Stream 0 Finished
-0 4 3 2 1
-Stream 1 Finished
-1 0 4 3 2
-Stream 2 Finished
-2 1 0 4 3
-Stream 3 Unfinished
-3 2 1 0 4
-Stream 4 Finished
-4 3 2 1 0
-Stream 0 Finished
-0 4 3 2 1
-Stream 1 Finished
-1 0 4 3 2
-Stream 2 Finished
-2 1 0 4 3
-Stream 3 Finished
-3 2 1 0 4
-Stream 4 Unfinished
-4 3 2 1 0
-Stream 0 Finished
-0 4 3 2 1
-Stream 1 Unfinished
-1 0 4 3 2
-Stream 2 Finished
-2 1 0 4 3
-Stream 3 Unfinished
-3 2 1 0 4
-Stream 4 Finished
-4 3 2 1 0
-Stream 0 Finished
-0 4 3 2 1
-Stream 1 Finished
-1 0 4 3 2
-Stream 2 Finished
-2 1 0 4 3
-Stream 3 Unfinished
-3 2 1 0 4
-Stream 4 Finished
-4 3 2 1 0
-Stream 0 Finished
-0 4 3 2 1
-Stream 1 Finished
-1 0 4 3 2
-Stream 2 Finished
-2 1 0 4 3
-Stream 3 Finished
-3 2 1 0 4
-Stream 4 Unfinished
-4 3 2 1 0
-Stream 0 Finished
-0 4 3 2 1
-Stream 1 Unfinished
-1 0 4 3 2
-Stream 2 Finished
-2 1 0 4 3
-Stream 3 Unfinished
-3 2 1 0 4
-Stream 4 Finished
-4 3 2 1 0
-Stream 0 Finished
-0 4 3 2 1
-Stream 1 Finished
-1 0 4 3 2
-Stream 2 Finished
-2 1 0 4 3
-Stream 3 Unfinished
-3 2 1 0 4
-Stream 4 Finished
-4 3 2 1 0
-Stream 0 Finished
-0 4 3 2 1
-Stream 1 Finished
-1 0 4 3 2
-Stream 2 Finished
-2 1 0 4 3
-Stream 3 Finished
-3 2 1 0 4
-Stream 4 Unfinished
-4 3 2 1 0
-Stream 0 Finished
-0 4 3 2 1
-Stream 1 Unfinished
-1 0 4 3 2
-Stream 2 Finished
-2 1 0 4 3
-Stream 3 Unfinished
-3 2 1 0 4
-Stream 4 Finished
-4 3 2 1 0
-Stream 0 Finished
-0 4 3 2 1
-Stream 1 Finished
-1 0 4 3 2
-Stream 2 Finished
-2 1 0 4 3
-Stream 3 Unfinished
-3 2 1 0 4
-Stream 4 Finished
-4 3 2 1 0
-Stream 0 Finished
-0 4 3 2 1
-Stream 1 Finished
-1 0 4 3 2
-Stream 2 Finished
-2 1 0 4 3
-Stream 3 Finished
-3 2 1 0 4
-Stream 4 Unfinished
-4 3 2 1 0
-Stream 0 Finished
-0 4 3 2 1
-Stream 1 Unfinished
-1 0 4 3 2
-Stream 2 Finished
-2 1 0 4 3
-Stream 3 Unfinished
-3 2 1 0 4
-Stream 4 Finished
-4 3 2 1 0
-Stream 0 Finished
-0 4 3 2 1
-Stream 1 Finished
-1 0 4 3 2
-Stream 2 Finished
-2 1 0 4 3
-Stream 3 Unfinished
-3 2 1 0 4
-Stream 4 Finished
-4 3 2 1 0
-Stream 0 Finished
-0 4 3 2 1
-Stream 1 Finished
-1 0 4 3 2
-Stream 2 Finished
-2 1 0 4 3
-Stream 3 Finished
-3 2 1 0 4
-Stream 4 Unfinished
-4 3 2 1 0
-Stream 0 Finished
-0 4 3 2 1
-Stream 1 Unfinished
-1 0 4 3 2
-Stream 2 Finished
-2 1 0 4 3
-Stream 3 Unfinished
-3 2 1 0 4
-Stream 4 Finished
-4 3 2 1 0
-Stream 0 Finished
-0 4 3 2 1
-Stream 1 Finished
-1 0 4 3 2
-Stream 2 Finished
-2 1 0 4 3
-Stream 3 Unfinished
-3 2 1 0 4
-Stream 4 Finished
-4 3 2 1 0
-Stream 0 Finished
-0 4 3 2 1
-Stream 1 Finished
-1 0 4 3 2
-Stream 2 Finished
-2 1 0 4 3
-Stream 3 Finished
-3 2 1 0 4
-Stream 4 Unfinished
-4 3 2 1 0
-Stream 0 Finished
-0 4 3 2 1
-Stream 1 Unfinished
-1 0 4 3 2
-Stream 2 Finished
-2 1 0 4 3
-Stream 3 Unfinished
-3 2 1 0 4
-Stream 4 Finished
-4 3 2 1 0
-Stream 0 Finished
-0 4 3 2 1
-Stream 1 Finished
-1 0 4 3 2
-Stream 2 Finished
-2 1 0 4 3
-Stream 3 Unfinished
-3 2 1 0 4
-Stream 4 Finished
-4 3 2 1 0
-Stream 0 Finished
-0 4 3 2 1
-Stream 1 Finished
-1 0 4 3 2
-Stream 2 Finished
-2 1 0 4 3
-Stream 3 Finished
-3 2 1 0 4
-Stream 4 Unfinished
-4 3 2 1 0
-Stream 0 Finished
-0 4 3 2 1
-Stream 1 Unfinished
-1 0 4 3 2
-Stream 2 Finished
-2 1 0 4 3
-Stream 3 Unfinished
-3 2 1 0 4
-Stream 4 Finished
-4 3 2 1 0
-Stream 0 Finished
-0 4 3 2 1
-Stream 1 Finished
-1 0 4 3 2
-Stream 2 Finished
-2 1 0 4 3
-Stream 3 Unfinished
-3 2 1 0 4
-Stream 4 Finished
-4 3 2 1 0
-Stream 0 Finished
-0 4 3 2 1
-Stream 1 Finished
-1 0 4 3 2
-Stream 2 Finished
-2 1 0 4 3
-Stream 3 Finished
-3 2 1 0 4
-Stream 4 Unfinished
-4 3 2 1 0
-Stream 0 Finished
-0 4 3 2 1
-Stream 1 Unfinished
-1 0 4 3 2
-Stream 2 Finished
-2 1 0 4 3
-Stream 3 Unfinished
-3 2 1 0 4
-Stream 4 Finished
-4 3 2 1 0
-Stream 0 Finished
-0 4 3 2 1
-Stream 1 Finished
-1 0 4 3 2
-Stream 2 Finished
-2 1 0 4 3
-Stream 3 Unfinished
-3 2 1 0 4
-Stream 4 Finished
-4 3 2 1 0
-Stream 0 Finished
-0 4 3 2 1
-Stream 1 Finished
-1 0 4 3 2
-Stream 2 Finished
-2 1 0 4 3
-Stream 3 Finished
-3 2 1 0 4
-Stream 4 Unfinished
-4 3 2 1 0
-Stream 0 Finished
-0 4 3 2 1
-Stream 1 Unfinished
-1 0 4 3 2
-Stream 2 Finished
-2 1 0 4 3
-Stream 3 Unfinished
-3 2 1 0 4
-Stream 4 Finished
-4 3 2 1 0
-Stream 0 Finished
-0 4 3 2 1
-Stream 1 Finished
-1 0 4 3 2
-Stream 2 Finished
-2 1 0 4 3
-Stream 3 Unfinished
-3 2 1 0 4
-Stream 4 Finished
-4 3 2 1 0
-Stream 0 Finished
-0 4 3 2 1
-Stream 1 Finished
-1 0 4 3 2
-Stream 2 Finished
-2 1 0 4 3
-Stream 3 Finished
-3 2 1 0 4
-Stream 4 Unfinished
-4 3 2 1 0
-Stream 0 Finished
-0 4 3 2 1
-Stream 1 Unfinished
-1 0 4 3 2
-Stream 2 Finished
-2 1 0 4 3
-Stream 3 Unfinished
-3 2 1 0 4
-Stream 4 Finished
-4 3 2 1 0
-Stream 0 Finished
-0 4 3 2 1
-Stream 1 Finished
-1 0 4 3 2
-Stream 2 Finished
-2 1 0 4 3
-Stream 3 Unfinished
-3 2 1 0 4
-Stream 4 Finished
-4 3 2 1 0
-Stream 0 Finished
-0 4 3 2 1
-Stream 1 Finished
-1 0 4 3 2
-Stream 2 Finished
-2 1 0 4 3
-Stream 3 Finished
-3 2 1 0 4
-Stream 4 Unfinished
-4 3 2 1 0
-Stream 0 Finished
-0 4 3 2 1
-Stream 1 Unfinished
-1 0 4 3 2
-Stream 2 Finished
-2 1 0 4 3
-Stream 3 Unfinished
-3 2 1 0 4
-Stream 4 Finished
-4 3 2 1 0
-Stream 0 Finished
-0 4 3 2 1
-Stream 1 Finished
-1 0 4 3 2
-Stream 2 Finished
-2 1 0 4 3
-Stream 3 Unfinished
-3 2 1 0 4
-Stream 4 Finished
-4 3 2 1 0
-Stream 0 Finished
-0 4 3 2 1
-Stream 1 Finished
-1 0 4 3 2
-Stream 2 Finished
-2 1 0 4 3
-Stream 3 Finished
-3 2 1 0 4
-Stream 4 Unfinished
-4 3 2 1 0
-Stream 0 Finished
-0 4 3 2 1
-Stream 1 Unfinished
-1 0 4 3 2
-Stream 2 Finished
-2 1 0 4 3
-Stream 3 Unfinished
-3 2 1 0 4
-Stream 4 Finished
-4 3 2 1 0
-Stream 0 Finished
-0 4 3 2 1
-Stream 1 Finished
-1 0 4 3 2
-Stream 2 Finished
-2 1 0 4 3
-Stream 3 Unfinished
-3 2 1 0 4
-Stream 4 Finished
-4 3 2 1 0
-Stream 0 Finished
-0 4 3 2 1
-Stream 1 Finished
-1 0 4 3 2
-Stream 2 Finished
-2 1 0 4 3
-Stream 3 Finished
-3 2 1 0 4
-Stream 4 Unfinished
-4 3 2 1 0
-Stream 0 Finished
-0 4 3 2 1
-Stream 1 Unfinished
-1 0 4 3 2
-Stream 2 Finished
-2 1 0 4 3
-Stream 3 Unfinished
-3 2 1 0 4
-Stream 4 Finished
-4 3 2 1 0
-Stream 0 Finished
-0 4 3 2 1
-Stream 1 Finished
-1 0 4 3 2
-Stream 2 Finished
-2 1 0 4 3
-Stream 3 Unfinished
-3 2 1 0 4
-Stream 4 Finished
-4 3 2 1 0
-Stream 0 Finished
-0 4 3 2 1
-Stream 1 Finished
-1 0 4 3 2
-Stream 2 Finished
-2 1 0 4 3
-Stream 3 Finished
-3 2 1 0 4
-Stream 4 Unfinished
-4 3 2 1 0
-Stream 0 Finished
-0 4 3 2 1
-Stream 1 Unfinished
-1 0 4 3 2
-Stream 2 Finished
-2 1 0 4 3
-Stream 3 Unfinished
-3 2 1 0 4
-Stream 4 Finished
-4 3 2 1 0
-Stream 0 Finished
-0 4 3 2 1
-Stream 1 Finished
-1 0 4 3 2
-Stream 2 Finished
-2 1 0 4 3
-Stream 3 Unfinished
-3 2 1 0 4
-Stream 4 Finished
-4 3 2 1 0
-Stream 0 Finished
-0 4 3 2 1
-Stream 1 Finished
-1 0 4 3 2
-Stream 2 Finished
-2 1 0 4 3
-Stream 3 Finished
-3 2 1 0 4
-Stream 4 Unfinished
-4 3 2 1 0
-Stream 0 Finished
-0 4 3 2 1
-Stream 1 Unfinished
-1 0 4 3 2
-Stream 2 Finished
-2 1 0 4 3
-Stream 3 Unfinished
-3 2 1 0 4
-Stream 4 Finished
-4 3 2 1 0
-Stream 0 Finished
-0 4 3 2 1
-Stream 1 Finished
-1 0 4 3 2
-Stream 2 Finished
-2 1 0 4 3
-Stream 3 Unfinished
-3 2 1 0 4
-Stream 4 Finished
-4 3 2 1 0
-Stream 0 Finished
-0 4 3 2 1
-Stream 1 Finished
-1 0 4 3 2
-Stream 2 Finished
-2 1 0 4 3
-Stream 3 Finished
-3 2 1 0 4
-Stream 4 Unfinished
-4 3 2 1 0
-Stream 0 Finished
-0 4 3 2 1
-Stream 1 Unfinished
-1 0 4 3 2
-Stream 2 Finished
-2 1 0 4 3
-Stream 3 Unfinished
-3 2 1 0 4
-Stream 4 Finished
-4 3 2 1 0
-Stream 0 Finished
-0 4 3 2 1
-Stream 1 Finished
-1 0 4 3 2
-Stream 2 Finished
-2 1 0 4 3
-Stream 3 Unfinished
-3 2 1 0 4
-Stream 4 Finished
-4 3 2 1 0
-Stream 0 Finished
-0 4 3 2 1
-Stream 1 Finished
-1 0 4 3 2
-Stream 2 Finished
-2 1 0 4 3
-Stream 3 Finished
-3 2 1 0 4
-Stream 4 Unfinished
-4 3 2 1 0
-Stream 0 Finished
-0 4 3 2 1
-Stream 1 Unfinished
-1 0 4 3 2
-Stream 2 Finished
-2 1 0 4 3
-Stream 3 Unfinished
-3 2 1 0 4
-Stream 4 Finished
-4 3 2 1 0
-Stream 0 Finished
-0 4 3 2 1
-Stream 1 Finished
-1 0 4 3 2
-Stream 2 Finished
-2 1 0 4 3
-Stream 3 Unfinished
-3 2 1 0 4
-Stream 4 Finished
-4 3 2 1 0
-Stream 0 Finished
-0 4 3 2 1
-Stream 1 Finished
-1 0 4 3 2
-Stream 2 Finished
-2 1 0 4 3
-Stream 3 Finished
-3 2 1 0 4
-Stream 4 Unfinished
-4 3 2 1 0
-Stream 0 Finished
-0 4 3 2 1
-Stream 1 Unfinished
-1 0 4 3 2
-Stream 2 Finished
-2 1 0 4 3
-Stream 3 Unfinished
-3 2 1 0 4
-Stream 4 Finished
-4 3 2 1 0
-Stream 0 Finished
-0 4 3 2 1
-Stream 1 Finished
-1 0 4 3 2
-Stream 2 Finished
-2 1 0 4 3
-Stream 3 Unfinished
-3 2 1 0 4
-Stream 4 Finished
-4 3 2 1 0
-Stream 0 Finished
-0 4 3 2 1
-Stream 1 Finished
-1 0 4 3 2
-Stream 2 Finished
-2 1 0 4 3
-Stream 3 Finished
-3 2 1 0 4
-Stream 4 Unfinished
-4 3 2 1 0
-Stream 0 Finished
-0 4 3 2 1
-Stream 1 Unfinished
-1 0 4 3 2
-Stream 2 Finished
-2 1 0 4 3
-Stream 3 Unfinished
-3 2 1 0 4
-Stream 4 Finished
-4 3 2 1 0
-Stream 0 Finished
-0 4 3 2 1
-Stream 1 Finished
-1 0 4 3 2
-Stream 2 Finished
-2 1 0 4 3
-Stream 3 Unfinished
-3 2 1 0 4
-Stream 4 Finished
-4 3 2 1 0
-Stream 0 Finished
-0 4 3 2 1
-Stream 1 Finished
-1 0 4 3 2
-Stream 2 Finished
-2 1 0 4 3
-Stream 3 Finished
-3 2 1 0 4
-Stream 4 Unfinished
-4 3 2 1 0
-Stream 0 Finished
-0 4 3 2 1
-Stream 1 Unfinished
-1 0 4 3 2
-Stream 2 Finished
-2 1 0 4 3
-Stream 3 Unfinished
-3 2 1 0 4
-Stream 4 Finished
-4 3 2 1 0
-Stream 0 Finished
-0 4 3 2 1
-Stream 1 Finished
-1 0 4 3 2
-Stream 2 Finished
-2 1 0 4 3
-Stream 3 Unfinished
-3 2 1 0 4
-Stream 4 Finished
-4 3 2 1 0
-Stream 0 Finished
-0 4 3 2 1
-Stream 1 Finished
-1 0 4 3 2
-Stream 2 Finished
-2 1 0 4 3
-Stream 3 Finished
-3 2 1 0 4
-Stream 4 Unfinished
-4 3 2 1 0
-Stream 0 Finished
-0 4 3 2 1
-Stream 1 Unfinished
-1 0 4 3 2
-Stream 2 Finished
-2 1 0 4 3
-Stream 3 Unfinished
-3 2 1 0 4
-Stream 4 Finished
-4 3 2 1 0
-Stream 0 Finished
-0 4 3 2 1
-Stream 1 Finished
-1 0 4 3 2
-Stream 2 Finished
-2 1 0 4 3
-Stream 3 Unfinished
-3 2 1 0 4
-Stream 4 Finished
-4 3 2 1 0
-Stream 0 Finished
-0 4 3 2 1
-Stream 1 Finished
-1 0 4 3 2
-Stream 2 Finished
-2 1 0 4 3
-Stream 3 Finished
-3 2 1 0 4
-Stream 4 Unfinished
-4 3 2 1 0
-Stream 0 Finished
-0 4 3 2 1
-Stream 1 Unfinished
-1 0 4 3 2
-Stream 2 Finished
-2 1 0 4 3
-Stream 3 Unfinished
-3 2 1 0 4
-Stream 4 Finished
-4 3 2 1 0
-Stream 0 Finished
-0 4 3 2 1
-Stream 1 Finished
-1 0 4 3 2
-Stream 2 Finished
-2 1 0 4 3
-Stream 3 Unfinished
-3 2 1 0 4
-Stream 4 Finished
-4 3 2 1 0
-Stream 0 Finished
-0 4 3 2 1
-Stream 1 Finished
-1 0 4 3 2
-Stream 2 Finished
-2 1 0 4 3
-Stream 3 Finished
-3 2 1 0 4
-Stream 4 Unfinished
-4 3 2 1 0
-Stream 0 Finished
-0 4 3 2 1
-Stream 1 Unfinished
-1 0 4 3 2
-Stream 2 Finished
-2 1 0 4 3
-Stream 3 Unfinished
-3 2 1 0 4
-Stream 4 Finished
-4 3 2 1 0
-Stream 0 Finished
-0 4 3 2 1
-Stream 1 Finished
-1 0 4 3 2
-Stream 2 Finished
-2 1 0 4 3
-Stream 3 Unfinished
-3 2 1 0 4
-Stream 4 Finished
-4 3 2 1 0
-Stream 0 Finished
-0 4 3 2 1
-Stream 1 Finished
-1 0 4 3 2
-Stream 2 Finished
-2 1 0 4 3
-Stream 3 Finished
-3 2 1 0 4
-Stream 4 Unfinished
-4 3 2 1 0
-Stream 0 Finished
-0 4 3 2 1
-Stream 1 Unfinished
-1 0 4 3 2
-Stream 2 Finished
-2 1 0 4 3
-Stream 3 Unfinished
-3 2 1 0 4
-Stream 4 Finished
-4 3 2 1 0
-Stream 0 Finished
-0 4 3 2 1
-Stream 1 Finished
-1 0 4 3 2
-Stream 2 Finished
-2 1 0 4 3
-Stream 3 Unfinished
-3 2 1 0 4
-Stream 4 Finished
-4 3 2 1 0
-Stream 0 Finished
-0 4 3 2 1
-Stream 1 Finished
-1 0 4 3 2
-Stream 2 Finished
-2 1 0 4 3
-Stream 3 Finished
-3 2 1 0 4
-Stream 4 Unfinished
-4 3 2 1 0
-Stream 0 Finished
-0 4 3 2 1
-Stream 1 Unfinished
-1 0 4 3 2
-Stream 2 Finished
-2 1 0 4 3
-Stream 3 Unfinished
-3 2 1 0 4
-Stream 4 Finished
-4 3 2 1 0
-Stream 0 Finished
-0 4 3 2 1
-Stream 1 Finished
-1 0 4 3 2
-Stream 2 Finished
-2 1 0 4 3
-Stream 3 Unfinished
-3 2 1 0 4
-Stream 4 Finished
-4 3 2 1 0
-Stream 0 Finished
-0 4 3 2 1
-Stream 1 Finished
-1 0 4 3 2
-Stream 2 Finished
-2 1 0 4 3
-Stream 3 Finished
-3 2 1 0 4
-Stream 4 Unfinished
-4 3 2 1 0
-Stream 0 Finished
-0 4 3 2 1
-Stream 1 Unfinished
-1 0 4 3 2
-Stream 2 Finished
-2 1 0 4 3
-Stream 3 Unfinished
-3 2 1 0 4
-Stream 4 Finished
-4 3 2 1 0
-Stream 0 Finished
-0 4 3 2 1
-Stream 1 Finished
-1 0 4 3 2
-Stream 2 Finished
-2 1 0 4 3
-Stream 3 Unfinished
-3 2 1 0 4
-Stream 4 Finished
-4 3 2 1 0
-Stream 0 Finished
-0 4 3 2 1
-Stream 1 Finished
-1 0 4 3 2
-Stream 2 Finished
-2 1 0 4 3
-Stream 3 Finished
-3 2 1 0 4
-Stream 4 Unfinished
-4 3 2 1 0
-Stream 0 Finished
-0 4 3 2 1
-Stream 1 Unfinished
-1 0 4 3 2
-Stream 2 Finished
-2 1 0 4 3
-Stream 3 Unfinished
-3 2 1 0 4
-Stream 4 Finished
-4 3 2 1 0
-Stream 0 Finished
-0 4 3 2 1
-Stream 1 Finished
-1 0 4 3 2
-Stream 2 Finished
-2 1 0 4 3
-Stream 3 Unfinished
-3 2 1 0 4
-Stream 4 Finished
-4 3 2 1 0
-Stream 0 Finished
-0 4 3 2 1
-Stream 1 Finished
-1 0 4 3 2
-Stream 2 Finished
-2 1 0 4 3
-Stream 3 Finished
-3 2 1 0 4
-Stream 4 Unfinished
-4 3 2 1 0
-Stream 0 Finished
-0 4 3 2 1
-Stream 1 Unfinished
-1 0 4 3 2
-Stream 2 Finished
-2 1 0 4 3
-Stream 3 Unfinished
-3 2 1 0 4
-Stream 4 Finished
-4 3 2 1 0
-Stream 0 Finished
-0 4 3 2 1
-Stream 1 Finished
-1 0 4 3 2
-Stream 2 Finished
-2 1 0 4 3
-Stream 3 Unfinished
-3 2 1 0 4
-Stream 4 Finished
-4 3 2 1 0
-Stream 0 Finished
-0 4 3 2 1
-Stream 1 Finished
-1 0 4 3 2
-Stream 2 Finished
-2 1 0 4 3
-Stream 3 Finished
-3 2 1 0 4
-Stream 4 Unfinished
-4 3 2 1 0
-Stream 0 Finished
-0 4 3 2 1
-Stream 1 Unfinished
-1 0 4 3 2
-Stream 2 Finished
-2 1 0 4 3
-Stream 3 Unfinished
-3 2 1 0 4
-Stream 4 Finished
-4 3 2 1 0
-Stream 0 Finished
-0 4 3 2 1
-Stream 1 Finished
-1 0 4 3 2
-Stream 2 Finished
-2 1 0 4 3
-Stream 3 Unfinished
-3 2 1 0 4
-Stream 4 Finished
-4 3 2 1 0
-Stream 0 Finished
-0 4 3 2 1
-Stream 1 Finished
-1 0 4 3 2
-Stream 2 Finished
-2 1 0 4 3
-Stream 3 Finished
-3 2 1 0 4
-Stream 4 Unfinished
-4 3 2 1 0
-Stream 0 Finished
-0 4 3 2 1
-Stream 1 Unfinished
-1 0 4 3 2
-Stream 2 Finished
-2 1 0 4 3
-Stream 3 Unfinished
-3 2 1 0 4
-Stream 4 Finished
-4 3 2 1 0
-Stream 0 Finished
-0 4 3 2 1
-Stream 1 Finished
-1 0 4 3 2
-Stream 2 Finished
-2 1 0 4 3
-Stream 3 Unfinished
-3 2 1 0 4
-Stream 4 Finished
-4 3 2 1 0
-Stream 0 Finished
-0 4 3 2 1
-Stream 1 Finished
-1 0 4 3 2
-Stream 2 Finished
-2 1 0 4 3
-Stream 3 Finished
-3 2 1 0 4
+Launching Kernel: number of samples: 425814
 WinMME StopStream: waiting for background thread.
 TerminateHostApis in 
 TerminateHostApis out

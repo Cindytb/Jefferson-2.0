@@ -101,7 +101,7 @@ void closePA() {
 #endif
 }
 void callback_func(float *output, Data *p){
-	checkCudaErrors(cudaStreamSynchronize(p->streams[(p->blockNo - 2) % FLIGHT_NUM * 2]));
+	checkCudaErrors(cudaStreamSynchronize(p->streams[p->blockNo % FLIGHT_NUM * 2]));
 	/*Copy into p->x pinned memory*/
 	if (p->count + FRAMES_PER_BUFFER < p->length){
 		memcpy(p->x + HRTF_LEN - 1, p->buf + p->count, FRAMES_PER_BUFFER * sizeof(float));
@@ -141,19 +141,20 @@ void callback_func(float *output, Data *p){
 		p->gain, 
 		p->streams+ (p->blockNo - 1) % FLIGHT_NUM * 2
 	);
+	/*Idle blocks depending on flight number*/
 	/*Return*/
 	checkCudaErrors(cudaMemcpyAsync(
 		p->intermediate, 
-		p->d_output[(p->blockNo - 2) % FLIGHT_NUM], 
+		p->d_output[(p->blockNo - FLIGHT_NUM + 1) % FLIGHT_NUM], 
 		FRAMES_PER_BUFFER * 2 * sizeof(float), 
 		cudaMemcpyDeviceToHost, 
-		p->streams[(p->blockNo - 2) % FLIGHT_NUM * 2])
+		p->streams[(p->blockNo - FLIGHT_NUM + 1) % FLIGHT_NUM * 2])
 	);
 	/*Overlap-save*/
 	memcpy(p->x, p->x + FRAMES_PER_BUFFER, (HRTF_LEN - 1) * sizeof(float));
 	p->blockNo++;
 
-	//sf_writef_float(p->sndfile, output, framesPerBuffer);
+	sf_writef_float(p->sndfile, output, FRAMES_PER_BUFFER);
 	return;
 }
 static int paCallback(const void *inputBuffer, void *outputBuffer,
