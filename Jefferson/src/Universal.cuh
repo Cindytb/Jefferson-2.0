@@ -11,11 +11,13 @@
 #define FRAMES_PER_BUFFER 512  //buffer in portaudio i/o buffer
 #define HRTF_CHN    2
 const int COPY_AMT = 2 * (FRAMES_PER_BUFFER + HRTF_LEN - 1);
-#define FLIGHT_NUM 5
+#define FLIGHT_NUM 3
 
-//Value of 0 allows everything
-//Value of 1 is graphics-only debugging
-//Value of 2 is audio-only debugging
+/* 
+	0 - Run everything, no debugging
+ 	1 - graphics-only
+	2 - audio-only
+*/
 #define DEBUGMODE 0
 
 struct Data_tag {
@@ -33,8 +35,9 @@ struct Data_tag {
 	float *intermediate;			/*Host data of the output*/
 	float *d_input[FLIGHT_NUM];		/*FRAMES_PER_BUFFER + HRTF_LEN - 1 sized for the input*/
 	float *d_output[FLIGHT_NUM];	/*FRAMES_PER_BUFFER * 2 sized for the output*/
-	int blockNo = 0;
-	cudaStream_t *streams;
+	/*TODO: Fix blockNo to prevent overflow. Doing it the hacky way for now*/
+	unsigned long long blockNo = 0; /*Block number for number of blocks in flight for GPU processing*/
+	cudaStream_t *streams;			/*Streams associated with each block in flight*/
 };
 typedef struct Data_tag Data;
 void closeEverything();

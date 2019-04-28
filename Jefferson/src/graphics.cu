@@ -540,7 +540,7 @@ void cleanup()
 	{
 		deleteVBO(&vbo, cuda_vbo_resource);
 	}
-
+	cudaDeviceReset();
 }
 ////////////////////////////////////////////////////////////////////////////////
 //! Keyboard events handler
