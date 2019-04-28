@@ -12,8 +12,6 @@
 #include "cudaPart.cuh"
 
 #include <cuda_runtime.h>
-#include <cufft.h>
-#include <cufftXt.h>
 #include <helper_functions.h>
 #include <helper_cuda.h>
 
@@ -35,6 +33,6 @@ int convolve_hrtf(float *input, int hrtf_idx, float *output, int outputLen, floa
 ////////////////////////////////////////////////////////////////////////////////
 /*NOTE: GPU Convolution was not fast enough because of the large overhead
 of FFT and IFFT. Keeping the code here for future purposes*/
-//void GPUconvolve_hrtf(float *x, int x_len, int hrtf_idx, float *output, int y_len, float gain);
+void GPUconvolve_hrtf(float *input, int hrtf_idx, float *output, int outputLen, float gain, cudaStream_t *stream);
 ////////////////////////////////////////////////////////////////////////////////
 #endif /* __HRTF_SIGNALS_CUDA */

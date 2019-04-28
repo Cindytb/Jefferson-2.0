@@ -65,7 +65,7 @@ int readFile(const char *name, float **buf, int &numCh) {
 void cudaFFT(int argc, char **argv, Data *p) {
 
 	std::string input = "media/Taiklatalvi.wav";
-	std::string reverb = "media/s1_r1_b_441_mono.wav";
+	std::string reverb = "media/medieval_church.wav";
 	if (argc == 2) {
 		if (argv[1][1] != '>')
 			input = argv[1];
@@ -135,9 +135,9 @@ void cudaFFT(int argc, char **argv, Data *p) {
 
 	// CUFFT plan simple API
 	cufftHandle plan;
-	checkCudaErrors(cufftPlan1d(&plan, new_size, CUFFT_R2C, 1));
+	CHECK_CUFFT_ERRORS(cufftPlan1d(&plan, new_size, CUFFT_R2C, 1));
 	cufftHandle outplan;
-	checkCudaErrors(cufftPlan1d(&outplan, new_size, CUFFT_C2R, 1));
+	CHECK_CUFFT_ERRORS(cufftPlan1d(&outplan, new_size, CUFFT_C2R, 1));
 
 	/*Create complex arrays*/
 	cufftComplex *d_sig_complex;
@@ -147,8 +147,8 @@ void cudaFFT(int argc, char **argv, Data *p) {
 
 	/*FFT*/
 	printf("Transforming signal cufftExecR2C\n");
-	checkCudaErrors(cufftExecR2C(plan, (cufftReal *)d_signal, d_sig_complex));
-	checkCudaErrors(cufftExecR2C(plan, (cufftReal *)d_filter_kernel, d_filter_complex));
+	CHECK_CUFFT_ERRORS(cufftExecR2C(plan, (cufftReal *)d_signal, d_sig_complex));
+	CHECK_CUFFT_ERRORS(cufftExecR2C(plan, (cufftReal *)d_filter_kernel, d_filter_complex));
 
 	/*CONVOLUTION*/
 	// Multiply the coefficients together and normalize the result
@@ -162,7 +162,7 @@ void cudaFFT(int argc, char **argv, Data *p) {
 	/*IFFT*/
 	// Transform signal back
 	printf("Transforming signal back cufftExecC2R\n");
-	checkCudaErrors(cufftExecC2R(outplan, d_sig_complex, d_signal));
+	CHECK_CUFFT_ERRORS(cufftExecC2R(outplan, d_sig_complex, d_signal));
 
 	if (cudaDeviceSynchronize() != cudaSuccess) {
 		fprintf(stderr, "Cuda error: failed to synchronize\n");
@@ -199,8 +199,8 @@ void cudaFFT(int argc, char **argv, Data *p) {
 	//file.write(obuf, new_size);
 
 	/*Destroy CUFFT context*/
-	checkCudaErrors(cufftDestroy(plan));
-	checkCudaErrors(cufftDestroy(outplan));
+	CHECK_CUFFT_ERRORS(cufftDestroy(plan));
+	CHECK_CUFFT_ERRORS(cufftDestroy(outplan));
 
 	/*Free memory*/
 
