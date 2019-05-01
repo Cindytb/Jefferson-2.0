@@ -101,64 +101,69 @@ void closePA() {
 #endif
 }
 void callback_func(float *output, Data *p){
-	//fprintf(stderr, "%llu %s\n", p->blockNo, cudaStreamQuery(p->streams[p->blockNo % FLIGHT_NUM * 2]) ? "Unfinished" : "Finished");
-		
-	checkCudaErrors(cudaStreamSynchronize(p->streams[p->blockNo % FLIGHT_NUM * 2]));
-	checkCudaErrors(cudaStreamSynchronize(p->streams[p->blockNo % FLIGHT_NUM * 2 + 1]));
-	/*Copy into p->x pinned memory*/
-	if (p->count + FRAMES_PER_BUFFER < p->length){
-		memcpy(p->x[p->blockNo % FLIGHT_NUM] + HRTF_LEN - 1, p->buf + p->count, FRAMES_PER_BUFFER * sizeof(float));
-		p->count += FRAMES_PER_BUFFER;
+	for(int i = 0; i < FRAMES_PER_BUFFER * 2; i++){
+		output[i] = 0.0f;
 	}
-	else{
-		int rem = p->length - p->count;
-		memcpy(p->x[p->blockNo % FLIGHT_NUM] + HRTF_LEN - 1, p->buf + p->count, rem * sizeof(float));
-		memcpy(p->x[p->blockNo % FLIGHT_NUM] + HRTF_LEN - 1 + rem, p->buf, (FRAMES_PER_BUFFER - rem) * sizeof(float));
-		p->count = FRAMES_PER_BUFFER - rem;
-	}
-
-    /*Enable pausing of audio*/
-	if (p->pauseStatus == true) {
-		for (int i = 0; i < FRAMES_PER_BUFFER; i++) {
-			output[2 * i] = 0;
-			output[2 * i + 1] = 0;
+	for (int source_no = 0; source_no < p->num_sources; source_no++){
+		/*Enable pausing of audio*/
+		if (p->pauseStatus == true) {
+			for (int i = 0; i < FRAMES_PER_BUFFER; i++) {
+				output[2 * i] = 0;
+				output[2 * i + 1] = 0;
+			}
+			break;
 		}
-		return;
+		source_info *curr_source = &(p->all_sources[source_no]);
+		checkCudaErrors(cudaStreamSynchronize(curr_source->streams[p->blockNo % FLIGHT_NUM * 2]));
+		checkCudaErrors(cudaStreamSynchronize(curr_source->streams[p->blockNo % FLIGHT_NUM * 2 + 1]));
+		/*Copy into curr_source->x pinned memory*/
+		if (curr_source->count + FRAMES_PER_BUFFER < curr_source->length){
+			memcpy(curr_source->x[p->blockNo % FLIGHT_NUM] + HRTF_LEN - 1, curr_source->buf + curr_source->count, FRAMES_PER_BUFFER * sizeof(float));
+			curr_source->count += FRAMES_PER_BUFFER;
+		}
+		else{
+			int rem = curr_source->length - curr_source->count;
+			memcpy(curr_source->x[p->blockNo % FLIGHT_NUM] + HRTF_LEN - 1, curr_source->buf + curr_source->count, rem * sizeof(float));
+			memcpy(curr_source->x[p->blockNo % FLIGHT_NUM] + HRTF_LEN - 1 + rem, curr_source->buf, (FRAMES_PER_BUFFER - rem) * sizeof(float));
+			curr_source->count = FRAMES_PER_BUFFER - rem;
+		}
+		
+		for(int i = 0; i < FRAMES_PER_BUFFER * 2; i++){
+			output[i] += curr_source->intermediate[p->blockNo % FLIGHT_NUM][i];
+		}		
+		/*Send*/
+		checkCudaErrors(cudaMemcpyAsync(
+			curr_source->d_input[p->blockNo % FLIGHT_NUM], 
+			curr_source->x[p->blockNo % FLIGHT_NUM],
+			COPY_AMT * sizeof(float), 
+			cudaMemcpyHostToDevice, 
+			curr_source->streams[(p->blockNo) % FLIGHT_NUM * 2])
+		);
+		/*Process*/
+		GPUconvolve_hrtf(
+			curr_source->d_input[(p->blockNo - 1) % FLIGHT_NUM] + HRTF_LEN, 
+			curr_source->hrtf_idx, 
+			curr_source->d_output[(p->blockNo - 1) % FLIGHT_NUM], 
+			FRAMES_PER_BUFFER, 
+			curr_source->gain, 
+			curr_source->streams+ (p->blockNo - 1) % FLIGHT_NUM * 2
+		);
+		/*Return*/
+		checkCudaErrors(cudaMemcpyAsync(
+			curr_source->intermediate[(p->blockNo - 2) % FLIGHT_NUM],
+			curr_source->d_output[(p->blockNo - 2) % FLIGHT_NUM],
+			FRAMES_PER_BUFFER * 2 * sizeof(float),
+			cudaMemcpyDeviceToHost,
+			curr_source->streams[(p->blockNo - 2) % FLIGHT_NUM * 2])
+		);
+		/*Overlap-save*/
+		memcpy(curr_source->x[(p->blockNo + 1) % FLIGHT_NUM], curr_source->x[p->blockNo % FLIGHT_NUM] + FRAMES_PER_BUFFER, (HRTF_LEN - 1) * sizeof(float));
 	}
-	memcpy(output, p->intermediate[p->blockNo % FLIGHT_NUM], FRAMES_PER_BUFFER * 2 * sizeof(float));
-    
-    /*Send*/
-	checkCudaErrors(cudaMemcpyAsync(
-		p->d_input[p->blockNo % FLIGHT_NUM], 
-		p->x[p->blockNo % FLIGHT_NUM],
-		COPY_AMT * sizeof(float), 
-		cudaMemcpyHostToDevice, 
-		p->streams[(p->blockNo) % FLIGHT_NUM * 2])
-	);
-	/*Process*/
-	GPUconvolve_hrtf(
-		p->d_input[(p->blockNo - 1) % FLIGHT_NUM] + HRTF_LEN, 
-		p->hrtf_idx, 
-		p->d_output[(p->blockNo - 1) % FLIGHT_NUM], 
-		FRAMES_PER_BUFFER, 
-		p->gain, 
-		p->streams+ (p->blockNo - 1) % FLIGHT_NUM * 2
-	);
-	/*Return*/
-	checkCudaErrors(cudaMemcpyAsync(
-		p->intermediate[(p->blockNo - 2) % FLIGHT_NUM],
-		p->d_output[(p->blockNo - 2) % FLIGHT_NUM],
-		FRAMES_PER_BUFFER * 2 * sizeof(float),
-		cudaMemcpyDeviceToHost,
-		p->streams[(p->blockNo - 2) % FLIGHT_NUM * 2])
-	);
-	/*Overlap-save*/
-	memcpy(p->x[(p->blockNo + 1) % FLIGHT_NUM], p->x[p->blockNo % FLIGHT_NUM] + FRAMES_PER_BUFFER, (HRTF_LEN - 1) * sizeof(float));
 	p->blockNo++;
 	if (p->blockNo > FLIGHT_NUM * 2) {
 		p->blockNo -= FLIGHT_NUM;
 	}
-	//sf_writef_float(p->sndfile, output, FRAMES_PER_BUFFER);
+	sf_writef_float(p->sndfile, output, FRAMES_PER_BUFFER);
 	return;
 }
 static int paCallback(const void *inputBuffer, void *outputBuffer,
