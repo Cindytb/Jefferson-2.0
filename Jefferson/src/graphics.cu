@@ -130,13 +130,13 @@ bool runTest(int argc, char **argv, char *ref_file)
 	/*MOVING SIGNAL TO GPU*/
 	// Allocate device memory for signal
 	float *d_signal;
-	checkCudaErrors(cudaMalloc((void **)&d_signal, GP->length * sizeof(float)));
+	checkCudaErrors(cudaMalloc((void **)&d_signal, GP->all_sources[0].length * sizeof(float)));
 
 	// Copy signal from host to device
-	checkCudaErrors(cudaMemcpy(d_signal, GP->buf, GP->length * sizeof(float),
+	checkCudaErrors(cudaMemcpy(d_signal, GP->all_sources[0].buf, GP->all_sources[0].length * sizeof(float),
 		cudaMemcpyHostToDevice));
 
-	obj = new VBO(&d_signal, &translate_x, GP->length, 1 / 44100.0f);
+	obj = new VBO(&d_signal, &translate_x, GP->all_sources[0].length, 1 / 44100.0f);
 	obj->init();
 	obj->averageNum = 100;
 	obj->create();
@@ -341,7 +341,7 @@ void moveBar(Data p) {
 	if (p.pauseStatus == true) {
 		return;
 	}
-	translate_x = (float)p.count * -(obj->ratio);
+	translate_x = (float)p.all_sources[0].count * -(obj->ratio);
 }
 ////////////////////////////////////////////////////////////////////////////////
 //! Display callback
@@ -376,9 +376,9 @@ void display()
 	/*s << "Azimuth: " << obj_azi;
 	s << "Elevation: " << ele;
 	s << "Radius: " << r;*/
-	GP->hrtf_idx = pick_hrtf(ele, obj_azi);
+	GP->all_sources[0].hrtf_idx = pick_hrtf(ele, obj_azi);
 	float newR = r / 100 + 1;
-	GP->gain = 1 / pow(newR, 2);
+	GP->all_sources[0].gain = 1 / pow(newR, 2);
 	
 	float rotateVBO_y = (float)atan2(-ball_z, ball_x) * 180.0f / PI;
 

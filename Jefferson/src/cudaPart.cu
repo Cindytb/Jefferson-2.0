@@ -179,8 +179,8 @@ void cudaFFT(int argc, char **argv, Data *p) {
 	/*MOVE BACK TO CPU & STORE IN STRUCT*/
 	float *obuf = (float*)malloc(sizeof(float) * new_size);
 	checkCudaErrors(cudaMemcpy(obuf, d_signal, new_size * sizeof(float), cudaMemcpyDeviceToHost));
-	p->buf = obuf;
-	p->length = new_size;
+	p->all_sources[0].buf = obuf;
+	p->all_sources[0].length = new_size;
 
 	fprintf(stderr, "Samples: %i\nTotal Bytes: %i\nTotal KB: %f3\nTotal MB: %f3\n\n\n", new_size, mem_size, mem_size / (float)1024, mem_size / (float)1024 / (float)1024);
 
