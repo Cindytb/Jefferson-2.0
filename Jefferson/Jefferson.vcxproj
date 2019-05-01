@@ -11,6 +11,15 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="ASIOSDK2.3.2\common\asio.h" />
+    <ClInclude Include="ASIOSDK2.3.2\common\iasiodrv.h" />
+    <ClInclude Include="ASIOSDK2.3.2\host\asiodrivers.h" />
+    <ClInclude Include="ASIOSDK2.3.2\host\pc\asiolist.h" />
+    <ClInclude Include="portaudio\include\pa_asio.h" />
+    <ClInclude Include="portaudio\include\portaudio.h" />
+    <ClInclude Include="portaudio\src\common\pa_dither.h" />
+    <ClInclude Include="portaudio\src\common\pa_ringbuffer.h" />
+    <ClInclude Include="portaudio\src\common\pa_stream.h" />
     <ClInclude Include="src\Audio.cuh" />
     <ClInclude Include="src\cudaPart.cuh" />
     <ClInclude Include="src\graphics.cuh" />
@@ -28,6 +37,25 @@
     <ClInclude Include="src\vbo.cuh" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="ASIOSDK2.3.2\common\asio.cpp" />
+    <ClCompile Include="ASIOSDK2.3.2\host\asiodrivers.cpp" />
+    <ClCompile Include="ASIOSDK2.3.2\host\pc\asiolist.cpp" />
+    <ClCompile Include="portaudio\src\common\pa_allocation.c" />
+    <ClCompile Include="portaudio\src\common\pa_converters.c" />
+    <ClCompile Include="portaudio\src\common\pa_cpuload.c" />
+    <ClCompile Include="portaudio\src\common\pa_dither.c" />
+    <ClCompile Include="portaudio\src\common\pa_front.c" />
+    <ClCompile Include="portaudio\src\common\pa_process.c" />
+    <ClCompile Include="portaudio\src\common\pa_ringbuffer.c" />
+    <ClCompile Include="portaudio\src\common\pa_stream.c" />
+    <ClCompile Include="portaudio\src\common\pa_trace.c" />
+    <ClCompile Include="portaudio\src\hostapi\asio\pa_asio.cpp" />
+    <ClCompile Include="portaudio\src\os\win\pa_win_coinitialize.c" />
+    <ClCompile Include="portaudio\src\os\win\pa_win_hostapis.c" />
+    <ClCompile Include="portaudio\src\os\win\pa_win_util.c" />
+    <ClCompile Include="portaudio\src\os\win\pa_win_waveformat.c" />
+    <ClCompile Include="portaudio\src\os\win\pa_win_wdmks_utils.c" />
+    <ClCompile Include="portaudio\src\os\win\pa_x86_plain_converters.c" />
     <ClCompile Include="src\hrtf_signals.cpp" />
     <ClCompile Include="src\load_3ds.cpp" />
     <ClCompile Include="src\mat_matr.cpp" />
@@ -77,23 +105,29 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
     <ExecutablePath>D:\Visual Studio Dependences\bin;$(ExecutablePath)</ExecutablePath>
-    <IncludePath>D:\Visual Studio Dependences\include;$(IncludePath)</IncludePath>
+    <IncludePath>D:\Projects\OpenGL\Projects\Jefferson\Jefferson\portaudio\src\os\win;D:\Projects\OpenGL\Projects\Jefferson\Jefferson\portaudio\src\common\;D:\Projects\OpenGL\Projects\Jefferson\Jefferson\portaudio\include;D:\Projects\OpenGL\Projects\Jefferson\Jefferson\ASIOSDK2.3.2\host\pc;D:\Projects\OpenGL\Projects\Jefferson\Jefferson\ASIOSDK2.3.2\host;D:\Projects\OpenGL\Projects\Jefferson\Jefferson\ASIOSDK2.3.2\common;D:\Visual Studio Dependences\include;..\portaudio\include;..\portaudio\src\common;..\portaudio\src\os\win;..\asiosdk2\common;..\asiosdk2\host;..\asiosdk2\host\pc;$(IncludePath)</IncludePath>
+    <LibraryPath>D:\Visual Studio Dependences\lib;$(LibraryPath)</LibraryPath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <LinkIncremental>true</LinkIncremental>
+    <ExecutablePath>D:\Visual Studio Dependences\bin;$(ExecutablePath)</ExecutablePath>
+    <IncludePath>D:\Projects\OpenGL\Projects\Jefferson\Jefferson\portaudio\src\os\win;D:\Projects\OpenGL\Projects\Jefferson\Jefferson\portaudio\src\common\;D:\Projects\OpenGL\Projects\Jefferson\Jefferson\portaudio\include;D:\Projects\OpenGL\Projects\Jefferson\Jefferson\ASIOSDK2.3.2\host\pc;D:\Projects\OpenGL\Projects\Jefferson\Jefferson\ASIOSDK2.3.2\host;D:\Projects\OpenGL\Projects\Jefferson\Jefferson\ASIOSDK2.3.2\common;D:\Visual Studio Dependences\include;..\portaudio\include;..\portaudio\src\common;..\portaudio\src\os\win;..\asiosdk2\common;..\asiosdk2\host;..\asiosdk2\host\pc;$(IncludePath)</IncludePath>
     <LibraryPath>D:\Visual Studio Dependences\lib;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>WIN32;WIN64;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;WIN64;_DEBUG;_CONSOLE;PA_USE_ASIO=1;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Console</SubSystem>
-      <AdditionalDependencies>cufft.lib;cudart_static.lib;glew64.lib;freeglut.lib;libsndfile-1.lib;portaudio_x64.lib;cuda.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>cufft.lib;cudart_static.lib;glew64.lib;freeglut.lib;libsndfile-1.lib;cuda.lib;portaudio_x64.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <CudaCompile>
       <TargetMachinePlatform>64</TargetMachinePlatform>
-      <CodeGeneration>compute_60,sm_60</CodeGeneration>
+      <CodeGeneration>compute_61,sm_61</CodeGeneration>
     </CudaCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -102,17 +136,19 @@
       <Optimization>MaxSpeed</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <PreprocessorDefinitions>WIN32;WIN64;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;WIN64;NDEBUG;_CONSOLE;PA_USE_ASIO=1;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);$(CudaToolkitIncludeDir)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <SubSystem>Console</SubSystem>
-      <AdditionalDependencies>cudart_static.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>cufft.lib;cudart_static.lib;glew64.lib;freeglut.lib;libsndfile-1.lib;cuda.lib;portaudio_x64.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <CudaCompile>
       <TargetMachinePlatform>64</TargetMachinePlatform>
+      <CodeGeneration>compute_61,sm_61</CodeGeneration>
     </CudaCompile>
   </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

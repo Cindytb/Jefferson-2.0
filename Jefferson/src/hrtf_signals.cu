@@ -6,7 +6,7 @@ float *d_hrtf;
 int elevation_pos[NUM_ELEV] =
 { -40,  -30,  -20,  -10,    0,   10,   20,   30,   40,   50,    60,    70,    80,  90 };
 float azimuth_inc[NUM_ELEV] =
-{ 6.43, 6.00, 5.00, 5.00, 5.00, 5.00, 5.00, 6.00, 6.43, 8.00, 10.00, 15.00, 30.00, 181 };
+{ 6.43f, 6.00f, 5.00f, 5.00f, 5.00f, 5.00f, 5.00f, 6.00f, 6.43f, 8.00f, 10.00f, 15.00f, 30.00f, 181.0f };
 int azimuth_offset[NUM_ELEV + 1];
 
 /*Read hrtf signals on CPU/RAM*/
@@ -90,7 +90,7 @@ int pick_hrtf(float obj_ele, float obj_azi)
 
 	/* find closest elevation position */
 	obj_ele = std::round(obj_ele / 10) * 10;
-	dmin = 1e37;
+	dmin = 1e37f;
 	for (i = 0; i<NUM_ELEV; i++) {
 		d = obj_ele - elevation_pos[i];
 		d = d > 0 ? d : -d;
@@ -101,7 +101,7 @@ int pick_hrtf(float obj_ele, float obj_azi)
 	}
 	/* find closest azimuth position */
 	obj_azi = std::round(obj_azi);
-	dmin = 1e37;
+	dmin = 1e37f;
 	n = azimuth_offset[ele_idx + 1] - azimuth_offset[ele_idx];
 	for (i = 0; i<n; i++) {
 		d = obj_azi - i*azimuth_inc[ele_idx];
