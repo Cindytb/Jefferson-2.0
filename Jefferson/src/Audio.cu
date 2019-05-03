@@ -113,7 +113,9 @@ void callback_func(float *output, Data *p){
 			}
 			break;
 		}
+		
 		source_info *curr_source = &(p->all_sources[source_no]);
+		fprintf(stderr, "%s\n", cudaStreamQuery(curr_source->streams[p->blockNo % FLIGHT_NUM * 2]) ? "Unfinished" : "Finished");
 		checkCudaErrors(cudaStreamSynchronize(curr_source->streams[p->blockNo % FLIGHT_NUM * 2]));
 		checkCudaErrors(cudaStreamSynchronize(curr_source->streams[p->blockNo % FLIGHT_NUM * 2 + 1]));
 		/*Copy into curr_source->x pinned memory*/
