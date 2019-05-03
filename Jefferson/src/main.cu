@@ -62,7 +62,9 @@ int main(int argc, char *argv[]){
 		}
 		for (int i = 0; i < FLIGHT_NUM; i++) {
 			for (int j = 0; j < data.num_sources; j++) {
-				memset(p->all_sources[j].x[i], 0.0f, (HRTF_LEN - 1) * sizeof(float));
+				for (int k = 0; k < FRAMES_PER_BUFFER + HRTF_LEN - 1; k++) {
+					p->all_sources[j].x[i][k] = 0.0f;
+				}
 			}
 		}
 		
