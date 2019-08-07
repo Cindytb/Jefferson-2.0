@@ -1,3 +1,5 @@
 .vscode/ipch/*
 Jefferson/.vscode/ipch/*
 .vs/*
+*.log
+*.wav
