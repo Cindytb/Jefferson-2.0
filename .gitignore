@@ -1,9 +1,10 @@
 .vs/*
 .vscode/*
+Jefferson/.vscode/*
 Jefferson/x64/*
 Jefferson/*.log
 Jefferson/Jefferson.vxcproj
 Jefferson.vcxproj.filters
-Jefferson/ofile.wav
+Jefferson/*.wav
 x64/*
 Jefferson/ASIOSDK2.3.2
