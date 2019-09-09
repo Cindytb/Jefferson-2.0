@@ -201,16 +201,24 @@ bool initGL(int *argc, char **argv)
 	gluPerspective(60.0, (GLfloat)window_width / (GLfloat)window_height, 0.1, 10.0);
 
 	/*Attempting to create a face*/
-	printf("...Loading body\n");
-	ObjLoad("media/body.3ds");
-	printf("...Loading eyes\n");
-	ObjLoad("media/eyes.3ds");
-	printf("...Loading smile\n");
-	ObjLoad("media/smile.3ds");
-	printf("...Loading letter\n");
-	ObjLoad("media/letter.3ds");
-	printf("...Loading hat\n");
-	ObjLoad("media/hat.3ds");
+	printf("...Loading Body\n");
+	ObjLoad("media/Body.3ds");
+	printf("...Loading Cane\n");
+	ObjLoad("media/Cane.3ds");
+	printf("...Loading Ears\n");
+	ObjLoad("media/Ears.3ds");
+	printf("...Loading Eyes\n");
+	ObjLoad("media/Eyes.3ds");
+	printf("...Loading Monocle String\n");
+	ObjLoad("media/Monocle String.3ds");
+	printf("...Loading Monocle\n");
+	ObjLoad("media/Monocle.3ds");
+	printf("...Loading Mouth\n");
+	ObjLoad("media/Mouth.3ds");
+	printf("...Loading Top Hat Band\n");
+	ObjLoad("media/Top Hat Band.3ds");
+	printf("...Loading Top Hat\n");
+	ObjLoad("media/Top Hat.3ds");
 	// glewInit();
 	SDK_CHECK_ERROR_GL();
 
