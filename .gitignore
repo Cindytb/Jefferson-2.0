@@ -1,5 +1,6 @@
 .vs/*
 .vscode/*
+Jefferson/.vscode/*
 Jefferson/x64/*
 Jefferson/Jefferson.log
 Jefferson/Jefferson.vxcproj
