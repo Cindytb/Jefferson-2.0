@@ -421,14 +421,49 @@ void display()
 	for (int i = 0; i<obj_qty; i++)
 	{
 		//glTranslatef(0.0, 0.0, 0.0);
-		if(i == 0) glColor3f(60.0f / 256.0f, 52.0f / 256.0f, 96.0f / 256.0f);
-		else if (i == 1) glColor3f(0.0f, 1.0f, 1.0f);
-		else if (i == 4) glColor3f(0.0f, 0.0f, 0.0f);
-		else glColor3f(1.0f, 1.0f, 1.0f);
+		switch(i) {
+		case 0:
+			//Body
+			glColor3f(60.0f / 256.0f, 52.0f / 256.0f, 96.0f / 256.0f);
+			break;
+		case 1:
+			//Cane
+			glColor3f(0.0f, 0.0f, 0.0f);
+			break;
+		case 2:
+			//Ears
+			glColor3f(61.0f / 256.0f, 53.0f / 256.0f, 97.0f / 256.0f);
+			break;
+		case 3:
+			//Eyes
+			glColor3f(1.0f, 1.0f, 1.0f);
+			break;
+		case 4:
+			//Monacle String
+			glColor3f(0.0f, 0.0f, 0.0f);
+			break;
+		case 5:
+			//Monacle
+			glColor3f(1.0f, 1.0f, 1.0f);
+			break;
+		case 6:
+			//Mouth
+			glColor3f(0.0f, 0.0f, 0.0f);
+			break;
+		case 7:
+			//Top Hat Band
+			glColor3f(10.0 / 255.0f, 10.0 / 255.0f, 10.0 / 255.0f);
+			break;
+		case 8:
+			//Top hat
+			glColor3f(0.0f, 0.0f, 0.0f);
+			break;
+		}
 		glPushMatrix(); // We save the current matrix
-		glScalef(0.5f, 0.5f, 0.5f);
+		glScalef(0.15f, 0.15f, 0.15f);
 		//glTranslatef(ball_x, ball_y, ball_z);
-		glTranslatef(0.0, 0.0, 0.0);
+		glRotatef(-90.0, 1.0, 0, 0);
+		glTranslatef(0.0, 0.0, -1.0);
 		glMultMatrixf(&object[i].matrix[0][0]); // Now let's multiply the object matrix by the identity-first matrix
 
 		if (object[i].id_texture != -1)
