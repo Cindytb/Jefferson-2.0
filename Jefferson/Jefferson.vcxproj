@@ -55,7 +55,7 @@
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Console</SubSystem>
-      <AdditionalDependencies>cufft.lib;cudart_static.lib;glew64.lib;freeglut.lib;libsndfile-1.lib;portaudio_x64.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>zlibstatic.lib;IrrXML.lib;assimp-vc140-mt.lib;cufft.lib;cudart_static.lib;glew64.lib;freeglut.lib;libsndfile-1.lib;portaudio_x64.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <CudaCompile>
       <TargetMachinePlatform>64</TargetMachinePlatform>
@@ -96,24 +96,15 @@
     <ClInclude Include="src\graphics.cuh" />
     <ClInclude Include="src\hrtf_signals.cuh" />
     <ClInclude Include="src\hrtf_signals.h" />
+    <ClInclude Include="src\import_model.h" />
     <ClInclude Include="src\kernels.cuh" />
-    <ClInclude Include="src\load_3ds.h" />
-    <ClInclude Include="src\load_bmp.h" />
     <ClInclude Include="src\main.cuh" />
-    <ClInclude Include="src\mat_matr.h" />
-    <ClInclude Include="src\mat_vect.h" />
-    <ClInclude Include="src\object.h" />
-    <ClInclude Include="src\texture.h" />
     <ClInclude Include="src\Universal.cuh" />
     <ClInclude Include="src\vbo.cuh" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\hrtf_signals.cpp" />
-    <ClCompile Include="src\load_3ds.cpp" />
-    <ClCompile Include="src\mat_matr.cpp" />
-    <ClCompile Include="src\mat_vect.cpp" />
-    <ClCompile Include="src\object.cpp" />
-    <ClCompile Include="src\texture.cpp" />
+    <ClCompile Include="src\import_model.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

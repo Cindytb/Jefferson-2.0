@@ -36,11 +36,11 @@ double rotation_z = 0, rotation_z_increment = 0.03;
 // Flag for rendering as lines or filled polygons
 int filling = 1; //0=OFF 1=ON
 
-				 //Lights settings
-GLfloat light_ambient[] = { 0.3f, 0.3f, 0.3f, 0.3f };
-GLfloat light_diffuse[] = { 0.2f, 0.2f, 0.2f, 0.2f };
-GLfloat light_specular[] = { 0.2f, 0.2f, 0.2f, 0.2f };
-GLfloat light_position[] = { 0.0f, 50.0f, 1.0f, 1.0f };
+//Lights settings
+GLfloat light_ambient[] = { 0.0f, 0.0f, 0.0f, 1.0f };
+GLfloat light_diffuse[] = { 0.1f, 0.1f, 0.1f, 1.0f };
+GLfloat light_specular[] = { 1.0f, 1.0f, 1.0f, 1.0f };
+GLfloat light_position[] = { 200.0f, 200.0f, 200.0f, 1.0f };
 
 //Materials settings
 GLfloat mat_ambient[] = { 0.1f, 0.1f, 0.1f, 0.0f };
@@ -136,6 +136,29 @@ void computeFPS()
 	glutSetWindowTitle(fps);
 }
 
+void loadModel() {
+	aiLogStream stream;
+	/* get a handle to the predefined STDOUT log stream and attach
+   it to the logging system. It remains active for all further
+   calls to aiImportFile(Ex) and aiApplyPostProcessing. */
+	stream = aiGetPredefinedLogStream(aiDefaultLogStream_STDOUT, NULL);
+	aiAttachLogStream(&stream);
+
+	/* ... same procedure, but this stream now writes the
+	   log messages to assimp_log.txt */
+	stream = aiGetPredefinedLogStream(aiDefaultLogStream_FILE, "assimp_log.txt");
+	aiAttachLogStream(&stream);
+
+	/* the model name can be specified on the command line. If none
+	  is specified, we try to locate one of the more expressive test
+	  models from the repository (/models-nonbsd may be missing in
+	  some distributions so we need a fallback from /models!). */
+	if (0 != loadasset("../../media/Jefferson_Colored.fbx")) {
+		printf("ERROR LOADING FBX FILE\n");
+		exit(EXIT_SUCCESS);
+		
+	}
+}
 ////////////////////////////////////////////////////////////////////////////////
 //! Initialize GL
 ////////////////////////////////////////////////////////////////////////////////
@@ -176,49 +199,29 @@ bool initGL(int *argc, char **argv)
 	glLightfv(GL_LIGHT1, GL_SPECULAR, light_specular);
 	glLightfv(GL_LIGHT1, GL_POSITION, light_position);
 	glEnable(GL_LIGHTING);
-	glEnable(GL_LIGHT0);
+	//glEnable(GL_LIGHT0);
 	glEnable(GL_LIGHT1);
-	glEnable(GL_LIGHT2);
-	glEnable(GL_LIGHT3);
 
 	//Materials initialization and activation
-	glMaterialfv(GL_FRONT, GL_AMBIENT, mat_ambient);
+	/*glMaterialfv(GL_FRONT, GL_AMBIENT, mat_ambient);
 	glMaterialfv(GL_FRONT, GL_DIFFUSE, mat_diffuse);
 	glMaterialfv(GL_FRONT, GL_SPECULAR, mat_specular);
 	glMaterialfv(GL_FRONT, GL_SHININESS, mat_shininess);
 
-	glEnable(GL_COLOR_MATERIAL);
+	glEnable(GL_COLOR_MATERIAL);*/
 	//Other initializations
 	glShadeModel(GL_SMOOTH); // Type of shading for the polygons
 	glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST); // Texture mapping perspective correction (OpenGL... thank you so much!)
 	glEnable(GL_TEXTURE_2D); // Texture mapping ON
 	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL); // Polygon rasterization mode (polygon filled)
-	glEnable(GL_CULL_FACE); // Enable the back face culling
+	//glEnable(GL_CULL_FACE); // Enable the back face culling
 
 	// projection
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
 	gluPerspective(60.0, (GLfloat)window_width / (GLfloat)window_height, 0.1, 10.0);
 
-	/*Attempting to create a face*/
-	printf("...Loading Body\n");
-	ObjLoad("media/Body.3ds");
-	printf("...Loading Cane\n");
-	ObjLoad("media/Cane.3ds");
-	printf("...Loading Ears\n");
-	ObjLoad("media/Ears.3ds");
-	printf("...Loading Eyes\n");
-	ObjLoad("media/Eyes.3ds");
-	printf("...Loading Monocle String\n");
-	ObjLoad("media/Monocle String.3ds");
-	printf("...Loading Monocle\n");
-	ObjLoad("media/Monocle.3ds");
-	printf("...Loading Mouth\n");
-	ObjLoad("media/Mouth.3ds");
-	printf("...Loading Top Hat Band\n");
-	ObjLoad("media/Top Hat Band.3ds");
-	printf("...Loading Top Hat\n");
-	ObjLoad("media/Top Hat.3ds");
+	loadModel();
 	// glewInit();
 	SDK_CHECK_ERROR_GL();
 
@@ -359,7 +362,7 @@ void display()
 	sdkStartTimer(&timer);
 
 	// run CUDA kernel to generate vertex positions
-	runCuda(&cuda_vbo_resource);
+	//runCuda(&cuda_vbo_resource);
 
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -373,6 +376,10 @@ void display()
 	/*Rotating around the mesh's axis*/
 	glRotatef(rotate_x, 1.0, 0.0, 0.0);
 	glRotatef(rotate_y, 0.0, 1.0, 0.0);
+	/*Step up the phase for the sinusoidal waves*/
+	g_fAnim += 0.01f;
+
+	
 	moveBar(*GP);
 #if(DEBUGMODE != 1)
 	/*Calculate the radius, distance, elevation, and azimuth*/
@@ -380,7 +387,7 @@ void display()
 	float horizR = std::sqrt(ball_x * ball_x + ball_z * ball_z);
 	float ele = (float)atan2(ball_y, horizR) * 180.0f / PI;
 	//s.str(std::string());
-	float obj_azi = (float)atan2(ball_x / r, ball_z / r) * 180.0f / PI;
+	float obj_azi = (float)atan2(-ball_x / r, ball_z / r) * 180.0f / PI;
 	/*s << "Azimuth: " << obj_azi;
 	s << "Elevation: " << ele;
 	s << "Radius: " << r;*/
@@ -393,172 +400,78 @@ void display()
 	if (rotateVBO_y < 0) {
 		rotateVBO_y += 360;
 	}
-	//printf("x: %3f\ty: %3f\tz: %3f\tX: %3f\tY: %3f\tZ: %3f\n", ball_x, ball_y, ball_z, rotateVBO_x, rotateVBO_y, rotateVBO_z);
-#endif
 	obj->averageNum = 100;
 	obj->update();
 	obj->draw(rotateVBO_y, ele, 0.0f);
+	//printf("x: %3f\ty: %3f\tz: %3f\tX: %3f\tY: %3f\tZ: %3f\n", ball_x, ball_y, ball_z, rotateVBO_x, rotateVBO_y, rotateVBO_z);
+#endif
+	
 
-	// render from the vbo
+	
+
+	glPushMatrix();
+	/*SINE WAVE COLORS*/
+	//render from the vbo
 	glBindBuffer(GL_ARRAY_BUFFER, vbo);
 	glVertexPointer(4, GL_FLOAT, 0, 0);
 	glEnableClientState(GL_VERTEX_ARRAY);
-
-	/*SINE WAVE COLORS*/
 	glColor3f( 47.0f/256.0f, 63.0f/256.0f, 45.0f/256.0f );
 	glDrawArrays(GL_POINTS, 0, mesh_width * mesh_height);
 	glDisableClientState(GL_VERTEX_ARRAY);
+	glPopMatrix();
 
-	
+	glPushMatrix();
+	/* scale the whole asset to fit into our view frustum */
+	float tmp = scene_max.x - scene_min.x;
+	tmp = aisgl_max(scene_max.y - scene_min.y, tmp);
+	tmp = aisgl_max(scene_max.z - scene_min.z, tmp);
+	tmp = 1.f / tmp;
+
+	glTranslatef(0.0f, -0.2f, 0.0f);
+	glScalef(tmp, tmp, tmp);
+	glTranslatef(-scene_center.x, -scene_center.y, -scene_center.z);
+	/* center the model */
+
+	/* if the display list has not been made yet, create a new one and
+			fill it with scene contents */
+	if (scene_list == 0) {
+		scene_list = glGenLists(1);
+		glNewList(scene_list, GL_COMPILE);
+		/* now begin at the root node of the imported data and traverse
+			   the scenegraph by multiplying subsequent local transforms
+			   together on GL's matrix stack. */
+		recursive_render(scene, scene->mRootNode);
+		glEndList();
+	}
+	glCallList(scene_list);
+	glPopMatrix();
+
+	glPushMatrix();
+	/*SOUND SOURCE SPHERE*/
+	//Source RGB: 119, 207, 131
 	// Enable depth test
 	glEnable(GL_DEPTH_TEST);
+	glMaterialfv(GL_FRONT, GL_AMBIENT, mat_ambient);
+	glMaterialfv(GL_FRONT, GL_DIFFUSE, mat_diffuse);
+	glMaterialfv(GL_FRONT, GL_SPECULAR, mat_specular);
+	glMaterialfv(GL_FRONT, GL_SHININESS, mat_shininess);
+
+	glEnable(GL_COLOR_MATERIAL);
 	GLUquadricObj *quadric;
 	quadric = gluNewQuadric();
 	gluQuadricTexture(quadric, GL_TRUE);
 	gluQuadricNormals(quadric, GLU_SMOOTH);
-
-	/*IT'S JEFFERSON*/
-	for (int i = 0; i<obj_qty; i++)
-	{
-		//glTranslatef(0.0, 0.0, 0.0);
-		switch(i) {
-		case 0:
-			//Body
-			glColor3f(60.0f / 256.0f, 52.0f / 256.0f, 96.0f / 256.0f);
-			break;
-		case 1:
-			//Cane
-			glColor3f(0.0f, 0.0f, 0.0f);
-			break;
-		case 2:
-			//Ears
-			glColor3f(61.0f / 256.0f, 53.0f / 256.0f, 97.0f / 256.0f);
-			break;
-		case 3:
-			//Eyes
-			glColor3f(1.0f, 1.0f, 1.0f);
-			break;
-		case 4:
-			//Monacle String
-			glColor3f(0.0f, 0.0f, 0.0f);
-			break;
-		case 5:
-			//Monacle
-			glColor3f(1.0f, 1.0f, 1.0f);
-			break;
-		case 6:
-			//Mouth
-			glColor3f(0.0f, 0.0f, 0.0f);
-			break;
-		case 7:
-			//Top Hat Band
-			glColor3f(10.0 / 255.0f, 10.0 / 255.0f, 10.0 / 255.0f);
-			break;
-		case 8:
-			//Top hat
-			glColor3f(0.0f, 0.0f, 0.0f);
-			break;
-		}
-		glPushMatrix(); // We save the current matrix
-		glScalef(0.15f, 0.15f, 0.15f);
-		//glTranslatef(ball_x, ball_y, ball_z);
-		glRotatef(-90.0, 1.0, 0, 0);
-		glTranslatef(0.0, 0.0, -1.0);
-		glMultMatrixf(&object[i].matrix[0][0]); // Now let's multiply the object matrix by the identity-first matrix
-
-		if (object[i].id_texture != -1)
-		{
-			glBindTexture(GL_TEXTURE_2D, object[i].id_texture); // We set the active texture 
-			glEnable(GL_TEXTURE_2D); // Texture mapping ON
-		}
-		else
-			glDisable(GL_TEXTURE_2D); // Texture mapping OFF
-
-		glBegin(GL_TRIANGLES); // glBegin and glEnd delimit the vertices that define a primitive (in our case triangles)
-		for (int j = 0; j<object[i].polygons_qty; j++)
-		{
-			//----------------- FIRST VERTEX -----------------
-			//Normal coordinates of the first vertex
-			glNormal3f(object[i].normal[object[i].polygon[j].a].x,
-				object[i].normal[object[i].polygon[j].a].y,
-				object[i].normal[object[i].polygon[j].a].z);
-			// Texture coordinates of the first vertex
-			glTexCoord2f(object[i].mapcoord[object[i].polygon[j].a].u,
-				object[i].mapcoord[object[i].polygon[j].a].v);
-			// Coordinates of the first vertex
-			glVertex3f(object[i].vertex[object[i].polygon[j].a].x,
-				object[i].vertex[object[i].polygon[j].a].y,
-				object[i].vertex[object[i].polygon[j].a].z);
-
-			//----------------- SECOND VERTEX -----------------
-			//Normal coordinates of the second vertex
-			glNormal3f(object[i].normal[object[i].polygon[j].b].x,
-				object[i].normal[object[i].polygon[j].b].y,
-				object[i].normal[object[i].polygon[j].b].z);
-			// Texture coordinates of the second vertex
-			glTexCoord2f(object[i].mapcoord[object[i].polygon[j].b].u,
-				object[i].mapcoord[object[i].polygon[j].b].v);
-			// Coordinates of the second vertex
-			glVertex3f(object[i].vertex[object[i].polygon[j].b].x,
-				object[i].vertex[object[i].polygon[j].b].y,
-				object[i].vertex[object[i].polygon[j].b].z);
-
-			//----------------- THIRD VERTEX -----------------
-			//Normal coordinates of the third vertex
-			glNormal3f(object[i].normal[object[i].polygon[j].c].x,
-				object[i].normal[object[i].polygon[j].c].y,
-				object[i].normal[object[i].polygon[j].c].z);
-			// Texture coordinates of the third vertex
-			glTexCoord2f(object[i].mapcoord[object[i].polygon[j].c].u,
-				object[i].mapcoord[object[i].polygon[j].c].v);
-			// Coordinates of the Third vertex
-			glVertex3f(object[i].vertex[object[i].polygon[j].c].x,
-				object[i].vertex[object[i].polygon[j].c].y,
-				object[i].vertex[object[i].polygon[j].c].z);
-
-		}
-		glEnd();
-		glPopMatrix(); // Restore the previous matrix 
-	}
-
-	/*SOUND SOURCE SPHERE*/
-	//Source RGB: 119, 207, 131
+	
 	float red = 119.0f / 256.0f;
 	float green = 207.0f / 256.0f;
 	float blue = 131.0f / 256.0f;
+	
 	glColor3f(red, green, blue);
-	glPushMatrix();
 	glTranslatef(ball_x, ball_y, ball_z);
 	gluSphere(quadric, 0.1, 20, 50);
 	glPopMatrix();
 
-
-	/*GL Setup to display text onto the screen for debugging purposes*/
-	//glMatrixMode(GL_PROJECTION);
-	//glPushMatrix();
-	//glLoadIdentity();
-	//glMatrixMode(GL_MODELVIEW);
-	//glPushMatrix();
-	//glLoadIdentity();
-	//glDisable(GL_DEPTH_TEST);
-
-	//glColor3f(255, 255, 255);
-	//glRasterPos2f(0,0);
-	//std::string temp = s.str();
-	//int len = (int) temp.length();
-	//for (int i = 0; i < len; i++) {
-	//	glutBitmapCharacter(GLUT_BITMAP_TIMES_ROMAN_24, temp.at(i));
-	//}
-	//glEnable(GL_DEPTH_TEST); // Turn depth testing back on
-
-	//glMatrixMode(GL_PROJECTION);
-	//glPopMatrix(); // revert back to the matrix I had before.
-	//glMatrixMode(GL_MODELVIEW);
-	//glPopMatrix();
-
-	/*Step up the phase for the sinusoidal waves*/
-	g_fAnim += 0.01f;
-
+	
 	/*Push out the OpenGL buffer*/
 	glutSwapBuffers();
 	sdkStopTimer(&timer);
