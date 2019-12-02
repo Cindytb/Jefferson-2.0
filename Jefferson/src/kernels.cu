@@ -37,7 +37,7 @@ __global__ void simple_vbo_kernel(float4 *pos, unsigned int width, unsigned int 
 	float w = sinf(u*freq + time) * cosf(v*freq + time) * 0.5f;
 
 	// write output vertex
-	pos[y*width + x] = make_float4(u, w, v, 1.0f);
+	pos[y*width + x] = make_float4(u, -0.55f, v, 1.0f);
 }
 
 // cufftComplex pointwise multiplication

@@ -8,6 +8,7 @@
 #include "hrtf_signals.cuh"
 #include "Audio.cuh"
 #include "kernels.cuh"
+#include "import_model.h"
 
 #include <glm/glm.hpp>
 

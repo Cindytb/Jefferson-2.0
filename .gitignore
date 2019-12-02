@@ -7,3 +7,6 @@ Jefferson.vcxproj.filters
 Jefferson/ofile.wav
 x64/*
 Jefferson/ASIOSDK2.3.2
+assimp_log.txt
+Jefferson.log
+enc_temp_folder/*
