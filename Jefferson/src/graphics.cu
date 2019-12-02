@@ -149,13 +149,10 @@ void loadModel() {
 	stream = aiGetPredefinedLogStream(aiDefaultLogStream_FILE, "assimp_log.txt");
 	aiAttachLogStream(&stream);
 
-	/* the model name can be specified on the command line. If none
-	  is specified, we try to locate one of the more expressive test
-	  models from the repository (/models-nonbsd may be missing in
-	  some distributions so we need a fallback from /models!). */
-	if (0 != loadasset("../../media/Jefferson_Colored.fbx")) {
+	/*Load the model*/
+	if (0 != loadasset("media/Jefferson_Colored.fbx")) {
 		printf("ERROR LOADING FBX FILE\n");
-		exit(EXIT_SUCCESS);
+		exit(EXIT_FAILURE);
 		
 	}
 }
