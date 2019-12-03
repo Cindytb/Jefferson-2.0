@@ -1,7 +1,6 @@
 #pragma once
 #ifndef _GRAPHICS_H
 #define _GRAPHICS_H
-
 #include <helper_gl.h>
 #include "vbo.cuh"
 #include "Universal.cuh"
@@ -9,6 +8,8 @@
 #include "Audio.cuh"
 #include "kernels.cuh"
 #include "import_model.h"
+
+#include <glm/glm.hpp>
 
 #include <glm/glm.hpp>
 

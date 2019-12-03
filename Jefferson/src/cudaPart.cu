@@ -64,8 +64,8 @@ int readFile(const char *name, float **buf, int &numCh) {
 
 void cudaFFT(int argc, char **argv, Data *p) {
 
-	std::string input = "Taiklatalvi.wav";
-	std::string reverb = "s1_r1_b_441_mono.wav";
+	std::string input = "media/Taiklatalvi.wav";
+	std::string reverb = "media/medieval_church.wav";
 	if (argc == 2) {
 		if (argv[1][1] != '>')
 			input = argv[1];
@@ -135,9 +135,9 @@ void cudaFFT(int argc, char **argv, Data *p) {
 
 	// CUFFT plan simple API
 	cufftHandle plan;
-	checkCudaErrors(cufftPlan1d(&plan, new_size, CUFFT_R2C, 1));
+	CHECK_CUFFT_ERRORS(cufftPlan1d(&plan, new_size, CUFFT_R2C, 1));
 	cufftHandle outplan;
-	checkCudaErrors(cufftPlan1d(&outplan, new_size, CUFFT_C2R, 1));
+	CHECK_CUFFT_ERRORS(cufftPlan1d(&outplan, new_size, CUFFT_C2R, 1));
 
 	/*Create complex arrays*/
 	cufftComplex *d_sig_complex;
@@ -147,8 +147,8 @@ void cudaFFT(int argc, char **argv, Data *p) {
 
 	/*FFT*/
 	printf("Transforming signal cufftExecR2C\n");
-	checkCudaErrors(cufftExecR2C(plan, (cufftReal *)d_signal, d_sig_complex));
-	checkCudaErrors(cufftExecR2C(plan, (cufftReal *)d_filter_kernel, d_filter_complex));
+	CHECK_CUFFT_ERRORS(cufftExecR2C(plan, (cufftReal *)d_signal, d_sig_complex));
+	CHECK_CUFFT_ERRORS(cufftExecR2C(plan, (cufftReal *)d_filter_kernel, d_filter_complex));
 
 	/*CONVOLUTION*/
 	// Multiply the coefficients together and normalize the result
@@ -162,7 +162,7 @@ void cudaFFT(int argc, char **argv, Data *p) {
 	/*IFFT*/
 	// Transform signal back
 	printf("Transforming signal back cufftExecC2R\n");
-	checkCudaErrors(cufftExecC2R(outplan, d_sig_complex, d_signal));
+	CHECK_CUFFT_ERRORS(cufftExecC2R(outplan, d_sig_complex, d_signal));
 
 	if (cudaDeviceSynchronize() != cudaSuccess) {
 		fprintf(stderr, "Cuda error: failed to synchronize\n");
@@ -179,28 +179,18 @@ void cudaFFT(int argc, char **argv, Data *p) {
 	/*MOVE BACK TO CPU & STORE IN STRUCT*/
 	float *obuf = (float*)malloc(sizeof(float) * new_size);
 	checkCudaErrors(cudaMemcpy(obuf, d_signal, new_size * sizeof(float), cudaMemcpyDeviceToHost));
-	p->buf = obuf;
-	p->length = new_size;
-
-	/*Store pointer to pointer of signal on device in struct*/
-	//p->d_buf = &d_signal;
+	p->all_sources[0].buf = obuf;
+	p->all_sources[0].length = new_size;
 
 	fprintf(stderr, "Samples: %i\nTotal Bytes: %i\nTotal KB: %f3\nTotal MB: %f3\n\n\n", new_size, mem_size, mem_size / (float)1024, mem_size / (float)1024 / (float)1024);
-	////////////////////////////////////////////////////////////////////////////////
-	///*NOTE: GPU Convolution was not fast enough because of the large overhead
-	//of FFT and IFFT. Keeping the code here for future purposes*/
-	//
-	/*Convolved signal on device*/
-	//p->dbuf = d_signal;
-	////////////////////////////////////////////////////////////////////////////////
 
 	/*Write reverberated sound file*/
 	//SndfileHandle file = SndfileHandle("output.wav", SFM_WRITE, isfinfo.format, isfinfo.channels, isfinfo.samplerate);
 	//file.write(obuf, new_size);
 
 	/*Destroy CUFFT context*/
-	checkCudaErrors(cufftDestroy(plan));
-	checkCudaErrors(cufftDestroy(outplan));
+	CHECK_CUFFT_ERRORS(cufftDestroy(plan));
+	CHECK_CUFFT_ERRORS(cufftDestroy(outplan));
 
 	/*Free memory*/
 

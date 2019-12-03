@@ -9,9 +9,6 @@
 #include <string.h>
 
 
-/*Portaudio defines*/
-#define FRAMES_PER_BUFFER 512  //buffer in portaudio i/o buffer
-
 
 /*PortAudio stuff*/
 

@@ -1,7 +1,8 @@
 .vs/*
 .vscode/*
+Jefferson/.vscode/*
 Jefferson/x64/*
-Jefferson/*.log
+Jefferson/Jefferson.log
 Jefferson/Jefferson.vxcproj
 Jefferson.vcxproj.filters
 Jefferson/ofile.wav

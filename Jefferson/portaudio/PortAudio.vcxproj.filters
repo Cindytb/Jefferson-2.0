@@ -1,0 +1,660 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;hm;inl;inc;xsd</Extensions>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav</Extensions>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="bindings\cpp\example\devs.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="bindings\cpp\example\sine.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="bindings\cpp\source\portaudiocpp\AsioDeviceAdapter.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="bindings\cpp\source\portaudiocpp\BlockingStream.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="bindings\cpp\source\portaudiocpp\CallbackInterface.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="bindings\cpp\source\portaudiocpp\CallbackStream.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="bindings\cpp\source\portaudiocpp\CFunCallbackStream.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="bindings\cpp\source\portaudiocpp\CppFunCallbackStream.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="bindings\cpp\source\portaudiocpp\Device.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="bindings\cpp\source\portaudiocpp\DirectionSpecificStreamParameters.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="bindings\cpp\source\portaudiocpp\Exception.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="bindings\cpp\source\portaudiocpp\HostApi.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="bindings\cpp\source\portaudiocpp\InterfaceCallbackStream.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="bindings\cpp\source\portaudiocpp\MemFunCallbackStream.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="bindings\cpp\source\portaudiocpp\Stream.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="bindings\cpp\source\portaudiocpp\StreamParameters.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="bindings\cpp\source\portaudiocpp\System.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="bindings\cpp\source\portaudiocpp\SystemDeviceIterator.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="bindings\cpp\source\portaudiocpp\SystemHostApiIterator.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="bindings\java\c\src\com_portaudio_BlockingStream.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="bindings\java\c\src\com_portaudio_PortAudio.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="bindings\java\c\src\jpa_tools.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="examples\paex_sine_c++.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="examples\paex_mono_asio_channel_select.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="examples\paex_ocean_shore.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="examples\paex_pink.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="examples\paex_read_write_wire.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="examples\paex_record.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="examples\paex_record_file.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="examples\paex_saw.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="examples\paex_sine.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="examples\paex_wmme_ac3.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="examples\paex_wmme_surround.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="examples\paex_write_sine.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="examples\paex_write_sine_nonint.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="examples\pa_devs.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="examples\pa_fuzz.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="pablio\pablio.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="pablio\test_rw.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="pablio\test_rw_echo.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="pablio\test_w_saw.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="pablio\test_w_saw8.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="qa\paqa_devs.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="qa\paqa_errs.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="qa\paqa_latency.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="qa\loopback\src\audio_analyzer.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="qa\loopback\src\biquad_filter.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="qa\loopback\src\paqa.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="qa\loopback\src\paqa_tools.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="qa\loopback\src\test_audio_analyzer.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="qa\loopback\src\write_wav.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\common\pa_allocation.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\common\pa_converters.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\common\pa_cpuload.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\common\pa_debugprint.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\common\pa_dither.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\common\pa_front.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\common\pa_process.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\common\pa_ringbuffer.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\common\pa_stream.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\common\pa_trace.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\hostapi\alsa\pa_linux_alsa.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\hostapi\asihpi\pa_linux_asihpi.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\hostapi\asio\iasiothiscallresolver.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\hostapi\asio\pa_asio.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\hostapi\coreaudio\pa_mac_core.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\hostapi\coreaudio\pa_mac_core_blocking.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\hostapi\coreaudio\pa_mac_core_old.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\hostapi\coreaudio\pa_mac_core_utilities.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\hostapi\dsound\pa_win_ds.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\hostapi\dsound\pa_win_ds_dynlink.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\hostapi\jack\pa_jack.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\hostapi\oss\pa_unix_oss.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\hostapi\oss\recplay.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\hostapi\skeleton\pa_hostapi_skeleton.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\hostapi\wasapi\pa_win_wasapi.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\hostapi\wdmks\pa_win_wdmks.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\hostapi\wmme\pa_win_wmme.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\os\unix\pa_unix_hostapis.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\os\unix\pa_unix_util.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\os\win\pa_win_coinitialize.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\os\win\pa_win_hostapis.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\os\win\pa_win_util.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\os\win\pa_win_waveformat.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\os\win\pa_win_wdmks_utils.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\os\win\pa_x86_plain_converters.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="test\patest1.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="test\patest_buffer.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="test\patest_callbackstop.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="test\patest_clip.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="test\patest_converters.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="test\patest_dither.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="test\patest_dsound_find_best_latency_params.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="test\patest_dsound_low_level_latency_params.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="test\patest_dsound_surround.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="test\patest_hang.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="test\patest_in_overflow.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="test\patest_jack_wasapi.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="test\patest_latency.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="test\patest_leftright.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="test\patest_longsine.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="test\patest_many.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="test\patest_maxsines.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="test\patest_mono.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="test\patest_multi_sine.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="test\patest_out_underflow.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="test\patest_prime.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="test\patest_read_record.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="test\patest_ringmix.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="test\patest_sine8.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="test\patest_sine_channelmaps.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="test\patest_sine_formats.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="test\patest_sine_srate.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="test\patest_sine_time.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="test\patest_start_stop.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="test\patest_stop.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="test\patest_stop_playout.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="test\patest_suggested_vs_streaminfo_latency.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="test\patest_sync.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="test\patest_timing.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="test\patest_toomanysines.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="test\patest_two_rates.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="test\patest_underflow.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="test\patest_unplug.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="test\patest_wire.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="test\patest_wmme_find_best_latency_params.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="test\patest_wmme_low_level_latency_params.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="test\patest_write_stop.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="test\patest_write_stop_hang_illegal.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="test\pa_minlat.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="build\msvc\portaudio.def">
+      <Filter>Source Files</Filter>
+    </None>
+    <None Include="cmake_support\template_portaudio.def">
+      <Filter>Source Files</Filter>
+    </None>
+    <None Include="pablio\pablio.def">
+      <Filter>Source Files</Filter>
+    </None>
+    <None Include="index.html" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="bindings\cpp\include\portaudiocpp\AsioDeviceAdapter.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="bindings\cpp\include\portaudiocpp\AutoSystem.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="bindings\cpp\include\portaudiocpp\BlockingStream.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="bindings\cpp\include\portaudiocpp\CallbackInterface.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="bindings\cpp\include\portaudiocpp\CallbackStream.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="bindings\cpp\include\portaudiocpp\CFunCallbackStream.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="bindings\cpp\include\portaudiocpp\CppFunCallbackStream.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="bindings\cpp\include\portaudiocpp\Device.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="bindings\cpp\include\portaudiocpp\DirectionSpecificStreamParameters.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="bindings\cpp\include\portaudiocpp\Exception.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="bindings\cpp\include\portaudiocpp\HostApi.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="bindings\cpp\include\portaudiocpp\InterfaceCallbackStream.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="bindings\cpp\include\portaudiocpp\MemFunCallbackStream.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="bindings\cpp\include\portaudiocpp\PortAudioCpp.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="bindings\cpp\include\portaudiocpp\SampleDataFormat.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="bindings\cpp\include\portaudiocpp\Stream.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="bindings\cpp\include\portaudiocpp\StreamParameters.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="bindings\cpp\include\portaudiocpp\System.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="bindings\cpp\include\portaudiocpp\SystemDeviceIterator.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="bindings\cpp\include\portaudiocpp\SystemHostApiIterator.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="bindings\java\c\src\com_portaudio_BlockingStream.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="bindings\java\c\src\com_portaudio_PortAudio.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="bindings\java\c\src\jpa_tools.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\pa_asio.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\pa_jack.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\pa_linux_alsa.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\pa_mac_core.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\pa_win_ds.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\pa_win_wasapi.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\pa_win_waveformat.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\pa_win_wdmks.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\pa_win_wmme.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\portaudio.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="pablio\pablio.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="qa\loopback\src\audio_analyzer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="qa\loopback\src\biquad_filter.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="qa\loopback\src\paqa_tools.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="qa\loopback\src\qa_tools.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="qa\loopback\src\test_audio_analyzer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="qa\loopback\src\write_wav.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\common\pa_allocation.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\common\pa_converters.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\common\pa_cpuload.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\common\pa_debugprint.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\common\pa_dither.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\common\pa_endianness.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\common\pa_gitrevision.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\common\pa_hostapi.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\common\pa_memorybarrier.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\common\pa_process.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\common\pa_ringbuffer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\common\pa_stream.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\common\pa_trace.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\common\pa_types.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\common\pa_util.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\hostapi\asio\iasiothiscallresolver.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\hostapi\coreaudio\pa_mac_core_blocking.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\hostapi\coreaudio\pa_mac_core_internal.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\hostapi\coreaudio\pa_mac_core_utilities.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\hostapi\dsound\pa_win_ds_dynlink.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\hostapi\wasapi\mingw-include\audioclient.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\hostapi\wasapi\mingw-include\devicetopology.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\hostapi\wasapi\mingw-include\endpointvolume.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\hostapi\wasapi\mingw-include\functiondiscoverykeys.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\hostapi\wasapi\mingw-include\ks.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\hostapi\wasapi\mingw-include\ksguid.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\hostapi\wasapi\mingw-include\ksmedia.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\hostapi\wasapi\mingw-include\ksproxy.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\hostapi\wasapi\mingw-include\ksuuids.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\hostapi\wasapi\mingw-include\mmdeviceapi.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\hostapi\wasapi\mingw-include\propkeydef.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\hostapi\wasapi\mingw-include\propsys.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\hostapi\wasapi\mingw-include\rpcsal.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\hostapi\wasapi\mingw-include\sal.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\hostapi\wasapi\mingw-include\structuredquery.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\os\unix\pa_unix_util.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\os\win\pa_win_coinitialize.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\os\win\pa_win_wdmks_utils.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\os\win\pa_x86_plain_converters.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+</Project>

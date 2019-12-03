@@ -2,7 +2,7 @@
 FILENAMES=("graphics" "hrtf_signals" "kernels" "main" "vbo" "Audio" "cudaPart" )
 INC="-I/usr/local/cuda/samples/common/inc"
 CUDA_LIBS="-lcufft -lcudart_static"
-C_LIBS="-lglut -lGL -lGLU -lGLEW -lsndfile -lportaudio -lrt -lm -ljack -lpthread"
+C_LIBS="-lglut -lGL -lGLU -lGLEW -lsndfile -lportaudio -lrt -lasound -ljack -lm -lpthread "
 C_FILENAMES=("mat_matr" "mat_vect" "object" "load_3ds")
 
 if [[ $# != 0 ]]; then

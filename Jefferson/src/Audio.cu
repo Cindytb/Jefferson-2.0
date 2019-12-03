@@ -1,5 +1,5 @@
 #include "Audio.cuh"
-
+#include <cuda.h>
 PaStream *stream;
 
 void initializePA(int fs) {
@@ -100,7 +100,74 @@ void closePA() {
 	}
 #endif
 }
-
+void callback_func(float *output, Data *p){
+	for(int i = 0; i < FRAMES_PER_BUFFER * 2; i++){
+		output[i] = 0.0f;
+	}
+	for (int source_no = 0; source_no < p->num_sources; source_no++){
+		/*Enable pausing of audio*/
+		if (p->pauseStatus == true) {
+			for (int i = 0; i < FRAMES_PER_BUFFER; i++) {
+				output[2 * i] = 0;
+				output[2 * i + 1] = 0;
+			}
+			break;
+		}
+		
+		source_info *curr_source = &(p->all_sources[source_no]);
+		fprintf(stderr, "%s\n", cudaStreamQuery(curr_source->streams[p->blockNo % FLIGHT_NUM * 2]) ? "Unfinished" : "Finished");
+		checkCudaErrors(cudaStreamSynchronize(curr_source->streams[p->blockNo % FLIGHT_NUM * 2]));
+		checkCudaErrors(cudaStreamSynchronize(curr_source->streams[p->blockNo % FLIGHT_NUM * 2 + 1]));
+		/*Copy into curr_source->x pinned memory*/
+		if (curr_source->count + FRAMES_PER_BUFFER < curr_source->length){
+			memcpy(curr_source->x[p->blockNo % FLIGHT_NUM] + HRTF_LEN - 1, curr_source->buf + curr_source->count, FRAMES_PER_BUFFER * sizeof(float));
+			curr_source->count += FRAMES_PER_BUFFER;
+		}
+		else{
+			int rem = curr_source->length - curr_source->count;
+			memcpy(curr_source->x[p->blockNo % FLIGHT_NUM] + HRTF_LEN - 1, curr_source->buf + curr_source->count, rem * sizeof(float));
+			memcpy(curr_source->x[p->blockNo % FLIGHT_NUM] + HRTF_LEN - 1 + rem, curr_source->buf, (FRAMES_PER_BUFFER - rem) * sizeof(float));
+			curr_source->count = FRAMES_PER_BUFFER - rem;
+		}
+		
+		for(int i = 0; i < FRAMES_PER_BUFFER * 2; i++){
+			output[i] += curr_source->intermediate[p->blockNo % FLIGHT_NUM][i];
+		}		
+		/*Send*/
+		checkCudaErrors(cudaMemcpyAsync(
+			curr_source->d_input[p->blockNo % FLIGHT_NUM], 
+			curr_source->x[p->blockNo % FLIGHT_NUM],
+			COPY_AMT * sizeof(float), 
+			cudaMemcpyHostToDevice, 
+			curr_source->streams[(p->blockNo) % FLIGHT_NUM * 2])
+		);
+		/*Process*/
+		GPUconvolve_hrtf(
+			curr_source->d_input[(p->blockNo - 1) % FLIGHT_NUM] + HRTF_LEN, 
+			curr_source->hrtf_idx, 
+			curr_source->d_output[(p->blockNo - 1) % FLIGHT_NUM], 
+			FRAMES_PER_BUFFER, 
+			curr_source->gain, 
+			curr_source->streams+ (p->blockNo - 1) % FLIGHT_NUM * 2
+		);
+		/*Return*/
+		checkCudaErrors(cudaMemcpyAsync(
+			curr_source->intermediate[(p->blockNo - 2) % FLIGHT_NUM],
+			curr_source->d_output[(p->blockNo - 2) % FLIGHT_NUM],
+			FRAMES_PER_BUFFER * 2 * sizeof(float),
+			cudaMemcpyDeviceToHost,
+			curr_source->streams[(p->blockNo - 2) % FLIGHT_NUM * 2])
+		);
+		/*Overlap-save*/
+		memcpy(curr_source->x[(p->blockNo + 1) % FLIGHT_NUM], curr_source->x[p->blockNo % FLIGHT_NUM] + FRAMES_PER_BUFFER, (HRTF_LEN - 1) * sizeof(float));
+	}
+	p->blockNo++;
+	if (p->blockNo > FLIGHT_NUM * 2) {
+		p->blockNo -= FLIGHT_NUM;
+	}
+	sf_writef_float(p->sndfile, output, FRAMES_PER_BUFFER);
+	return;
+}
 static int paCallback(const void *inputBuffer, void *outputBuffer,
 	unsigned long framesPerBuffer,
 	const PaStreamCallbackTimeInfo* timeInfo,
@@ -110,64 +177,7 @@ static int paCallback(const void *inputBuffer, void *outputBuffer,
 	/* Cast data passed through stream to our structure. */
 	Data *p = (Data *)userData;
 	float *output = (float *)outputBuffer;
-	//float *input = (float *)inputBuffer; /* input not used in this code */
-	float *px;
-	unsigned int i;
-	float *buf = (float*)malloc(sizeof(float) * 2 * framesPerBuffer - HRTF_LEN);
-
-	/*CPU/RAM Copy data loop*/
-	for (int i = 0; i < framesPerBuffer; i++) {
-		p->x[HRTF_LEN - 1 + i] = p->buf[p->count];
-		p->count++;
-		if (p->count == p->length) {
-			p->count = 0;
-		}
-	}
-	/*convolve with HRTF on CPU*/
-	convolve_hrtf(&p->x[HRTF_LEN], p->hrtf_idx, output, framesPerBuffer, p->gain);
-
-	/*Enable pausing of audio*/
-	if (p->pauseStatus == true) {
-		for (i = 0; i < framesPerBuffer; i++) {
-			output[2 * i] = 0;
-			output[2 * i + 1] = 0;
-		}
-		return 0;
-	}
-
-	////////////////////////////////////////////////////////////////////////////////
-	////////////////////////////////////////////////////////////////////////////////
-	/*NOTE: GPU Convolution was not fast enough because of the large overhead
-	of FFT and IFFT. Keeping the code here for future purposes*/
-	/*CUDA Copy*/
-	//cudaThreadSynchronize();
-	//int blockSize = 256;
-	//int numBlocks = (framesPerBuffer + blockSize - 1) / blockSize;
-	//if(p->count + framesPerBuffer <= p->length) {
-	//	copyMe << < numBlocks, blockSize >> > (framesPerBuffer, p->d_x, &p->dbuf[p->count]);
-	//	cudaThreadSynchronize();
-	//	p->count += framesPerBuffer;
-	//}
-	//
-	//else {
-	//	int remainder = p->length - p->count - framesPerBuffer;
-	//	copyMe << < numBlocks, blockSize >> > (p->length - p->count, p->d_x, &p->dbuf[p->count]);
-	//	p->count = 0;
-	//	copyMe << < numBlocks, blockSize >> > (remainder, p->d_x, &p->dbuf[p->count]);
-	//	p->count += remainder;
-	//}
-	/*Convolve on GPU*/
-	//GPUconvolve_hrtf(p->d_x, framesPerBuffer, p->hrtf_idx, output, framesPerBuffer, p->gain);
-	////////////////////////////////////////////////////////////////////////////////
-	////////////////////////////////////////////////////////////////////////////////
-
-
-	/* copy last HRTF_LEN-1 samples of x data to "history" part of x for use next time */
-	px = p->x;
-	for (i = 0; i<HRTF_LEN - 1; i++) {
-		px[i] = px[framesPerBuffer + i];
-	}
-	//sf_writef_float(p->sndfile, output, framesPerBuffer);
+	callback_func(output, p);
 	return 0;
 }
 
