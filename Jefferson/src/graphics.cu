@@ -375,19 +375,15 @@ void display()
 	glRotatef(rotate_y, 0.0, 1.0, 0.0);
 	/*Step up the phase for the sinusoidal waves*/
 	g_fAnim += 0.01f;
-
 	
+	/*Setup animation for waveform VBO*/
 	moveBar(*GP);
 #if(DEBUGMODE != 1)
 	/*Calculate the radius, distance, elevation, and azimuth*/
 	float r = std::sqrt(ball_x * ball_x + ball_z * ball_z + ball_y * ball_y);
 	float horizR = std::sqrt(ball_x * ball_x + ball_z * ball_z);
 	float ele = (float)atan2(ball_y, horizR) * 180.0f / PI;
-	//s.str(std::string());
 	float obj_azi = (float)atan2(-ball_x / r, ball_z / r) * 180.0f / PI;
-	/*s << "Azimuth: " << obj_azi;
-	s << "Elevation: " << ele;
-	s << "Radius: " << r;*/
 	GP->hrtf_idx = pick_hrtf(ele, obj_azi);
 	float newR = r / 100 + 1;
 	GP->gain = 1 / pow(newR, 2);
@@ -400,15 +396,13 @@ void display()
 	obj->averageNum = 100;
 	obj->update();
 	obj->draw(rotateVBO_y, ele, 0.0f);
-	//printf("x: %3f\ty: %3f\tz: %3f\tX: %3f\tY: %3f\tZ: %3f\n", ball_x, ball_y, ball_z, rotateVBO_x, rotateVBO_y, rotateVBO_z);
 #endif
 	
-
-	
+	/////////////////////////////////////////////////////////
+	/*Render the floor mesh*/
+	/////////////////////////////////////////////////////////
 
 	glPushMatrix();
-	/*SINE WAVE COLORS*/
-	//render from the vbo
 	glBindBuffer(GL_ARRAY_BUFFER, vbo);
 	glVertexPointer(4, GL_FLOAT, 0, 0);
 	glEnableClientState(GL_VERTEX_ARRAY);
@@ -417,17 +411,23 @@ void display()
 	glDisableClientState(GL_VERTEX_ARRAY);
 	glPopMatrix();
 
+
+	/////////////////////////////////////////////////////////
+	/*Render Jefferson*/
+	/////////////////////////////////////////////////////////
 	glPushMatrix();
-	/* scale the whole asset to fit into our view frustum */
 	float tmp = scene_max.x - scene_min.x;
 	tmp = aisgl_max(scene_max.y - scene_min.y, tmp);
 	tmp = aisgl_max(scene_max.z - scene_min.z, tmp);
 	tmp = 1.f / tmp;
 
+	/*Move Jefferson down so his ears are at the the origin*/
 	glTranslatef(0.0f, -0.2f, 0.0f);
+	/*Scale Jefferson to a proper size*/
 	glScalef(tmp, tmp, tmp);
-	glTranslatef(-scene_center.x, -scene_center.y, -scene_center.z);
 	/* center the model */
+	glTranslatef(-scene_center.x, -scene_center.y, -scene_center.z);
+	
 
 	/* if the display list has not been made yet, create a new one and
 			fill it with scene contents */
@@ -443,22 +443,19 @@ void display()
 	glCallList(scene_list);
 	glPopMatrix();
 
+	/*Sound source sphere*/
 	glPushMatrix();
-	/*SOUND SOURCE SPHERE*/
-	//Source RGB: 119, 207, 131
-	// Enable depth test
 	glEnable(GL_DEPTH_TEST);
 	glMaterialfv(GL_FRONT, GL_AMBIENT, mat_ambient);
 	glMaterialfv(GL_FRONT, GL_DIFFUSE, mat_diffuse);
 	glMaterialfv(GL_FRONT, GL_SPECULAR, mat_specular);
 	glMaterialfv(GL_FRONT, GL_SHININESS, mat_shininess);
-
 	glEnable(GL_COLOR_MATERIAL);
 	GLUquadricObj *quadric;
 	quadric = gluNewQuadric();
 	gluQuadricTexture(quadric, GL_TRUE);
 	gluQuadricNormals(quadric, GLU_SMOOTH);
-	
+	//Source RGB: 119, 207, 131
 	float red = 119.0f / 256.0f;
 	float green = 207.0f / 256.0f;
 	float blue = 131.0f / 256.0f;
