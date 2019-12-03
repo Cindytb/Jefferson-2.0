@@ -7,40 +7,45 @@
 #include <sndfile.hh>
 #include <portaudio.h>
 
-#define HRTF_LEN	128
-#define FRAMES_PER_BUFFER 512  //buffer in portaudio i/o buffer
-#define HRTF_CHN    2
+const int HRTF_LEN = 128;
+const int FRAMES_PER_BUFFER = 256;  //buffer in portaudio i/o buffer
+const int HRTF_CHN = 2;
+const int COPY_AMT = 2 * (FRAMES_PER_BUFFER + HRTF_LEN - 1);
+const int FLIGHT_NUM = 10;
 
-//Value of 0 allows everything
-//Value of 1 is graphics-only debugging
-//Value of 2 is audio-only debugging
+/* 
+	0 - Run everything, no debugging
+ 	1 - graphics-only
+	2 - audio-only
+*/
 #define DEBUGMODE 0
+struct source_info {
+	//float *samples; 				/*IO Buffer for ALSA. Unnecessary for PortAudio*/
+	
+	float *buf;						/*Reverberated signal on host*/
+	float *x[FLIGHT_NUM];			/*Buffer for PA output on host, mono, pinned memory, FRAMES_PER_BUFFER + HRTF_LEN -1 size */
+	float *intermediate[FLIGHT_NUM];/*Host data of the output*/
+	float *d_input[FLIGHT_NUM];		/*FRAMES_PER_BUFFER + HRTF_LEN - 1 sized for the input*/
+	float *d_output[FLIGHT_NUM];	/*FRAMES_PER_BUFFER * 2 sized for the output*/
 
+	cudaStream_t *streams;			/*Streams associated with each block in flight*/
+	
+	int count;						/*Current frame count for the audio callback*/
+	int hrtf_idx; 					/*Index to the correct HRTF elevation/azimuth*/
+	int length;						/*Length of the input signal*/
+	float gain;						/*Gain for distance away*/
+	float ele;						/*Elevation of the sound source*/
+};
 struct Data_tag {
-	int hrtf_idx;
-	SNDFILE *sndfile;
-	SF_INFO osfinfo;
-	/*Reverberated signal on host*/
-	float *buf;
-	/*Buffer for PA output on host*/
-	float x[HRTF_LEN - 1 + FRAMES_PER_BUFFER]; /* sound object buffer, mono */
-	int count;
-	int length;
-	float gain;
-	float ele;
+	SNDFILE *sndfile;				/*Soundfile object for output file*/
+	source_info *all_sources;		/*Array of structs for all sound sources*/
+	int blockNo;
+	int num_sources;
+	float ele;						/*Elevation of the sound source*/
 	bool pauseStatus = false;
-	////////////////////////////////////////////////////////////////////////////////
-	///*NOTE: GPU Convolution was not fast enough because of the large overhead
-	//of FFT and IFFT. Keeping the code here for future purposes*/
-	//
-	///*Convolved signal on device*/
-	//float *dbuf;
-	///*Buffer for PA output on device*/
-	//float *d_x;
-	////////////////////////////////////////////////////////////////////////////////
 };
 typedef struct Data_tag Data;
-
+void closeEverything();
 
 const float ratio = 1 / (float)44100;
 #endif

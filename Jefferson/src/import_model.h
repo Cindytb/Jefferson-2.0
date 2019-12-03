@@ -1,4 +1,3 @@
-#include "Universal.cuh"
 /*ASSIMP library includes*/
 #include <assimp/cimport.h>
 #include <assimp/postprocess.h>
