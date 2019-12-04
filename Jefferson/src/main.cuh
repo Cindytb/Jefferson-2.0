@@ -8,9 +8,10 @@
 #include "graphics.cuh"
 #include "hrtf_signals.cuh"
 #include "Audio.cuh"
+#include "DataTag.cuh"
 
 #define SAMPLE_RATE 44100
 /*Initialize data structure*/
-Data data, *p = &data;
+extern Data data, *p;
 
 #endif

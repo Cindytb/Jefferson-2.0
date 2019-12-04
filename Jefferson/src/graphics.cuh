@@ -8,11 +8,9 @@
 #include "Audio.cuh"
 #include "kernels.cuh"
 #include "import_model.h"
+#include "DataTag.cuh"
 
 #include <glm/glm.hpp>
-
-#include <glm/glm.hpp>
-
 
 
  //includes, system
@@ -109,9 +107,7 @@ const unsigned int window_height = 1080;
 
 const unsigned int mesh_width = 1024;
 const unsigned int mesh_height = 1024;
-#ifndef PI
-#define PI 3.14159265358979323846264338327950288
-#endif
+
 
 //
 //__global__ void myNewKernel(int id, float4 *pos, float *d_buf, unsigned int size, double ratio, int magicNumber);

@@ -129,17 +129,17 @@ bool runTest(int argc, char **argv, char *ref_file)
 #if(DEBUGMODE != 1)
 	/*MOVING SIGNAL TO GPU*/
 	// Allocate device memory for signal
+	SoundSource* source = &(GP->all_sources[0]);
 	float *d_signal;
-	checkCudaErrors(cudaMalloc((void **)&d_signal, GP->all_sources[0].length * sizeof(float)));
+	checkCudaErrors(cudaMalloc((void **)&d_signal, source->length * sizeof(float)));
 
 	// Copy signal from host to device
-	checkCudaErrors(cudaMemcpy(d_signal, GP->all_sources[0].buf, GP->all_sources[0].length * sizeof(float),
+	checkCudaErrors(cudaMemcpy(d_signal, source->buf, source->length * sizeof(float),
 		cudaMemcpyHostToDevice));
-
-	obj = new VBO(&d_signal, &translate_x, GP->all_sources[0].length, 1 / 44100.0f);
-	obj->init();
-	obj->averageNum = 100;
-	obj->create();
+	source->waveform = new VBO(&d_signal, &translate_x, source->length, 1 / 44100.0f);
+	source->waveform->init();
+	source->waveform->averageNum = 100;
+	source->waveform->create();
 #endif
 	// create sine wave VBO
 	createVBO(&vbo, &cuda_vbo_resource, cudaGraphicsMapFlagsWriteDiscard);
@@ -251,13 +251,6 @@ bool initGL(int *argc, char **argv)
 	//glEnable(GL_LIGHT0);
 	glEnable(GL_LIGHT1);
 
-	//Materials initialization and activation
-	/*glMaterialfv(GL_FRONT, GL_AMBIENT, mat_ambient);
-	glMaterialfv(GL_FRONT, GL_DIFFUSE, mat_diffuse);
-	glMaterialfv(GL_FRONT, GL_SPECULAR, mat_specular);
-	glMaterialfv(GL_FRONT, GL_SHININESS, mat_shininess);
-
-	glEnable(GL_COLOR_MATERIAL);*/
 	//Other initializations
 	glShadeModel(GL_SMOOTH); // Type of shading for the polygons
 	glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST); // Texture mapping perspective correction (OpenGL... thank you so much!)
@@ -349,7 +342,7 @@ void moveBar(Data p) {
 	if (p.pauseStatus == true) {
 		return;
 	}
-	translate_x = (float)p.all_sources[0].count * -(obj->ratio);
+	translate_x = (float)p.all_sources[0].count * -(GP->all_sources[0].waveform->ratio);
 }
 ////////////////////////////////////////////////////////////////////////////////
 //! Display callback
@@ -379,26 +372,12 @@ void display()
 	/*Setup animation for waveform VBO*/
 	moveBar(*GP);
 #if(DEBUGMODE != 1)
-	/*Calculate the radius, distance, elevation, and azimuth*/
-	float r = std::sqrt(ball_x * ball_x + ball_z * ball_z + ball_y * ball_y);
-	float horizR = std::sqrt(ball_x * ball_x + ball_z * ball_z);
-	float ele = (float)atan2(ball_y, horizR) * 180.0f / PI;
-	float obj_azi = (float)atan2(-ball_x / r, ball_z / r) * 180.0f / PI;
-	if (obj_azi < 0) {
-		obj_azi += 360;
-	}
-	GP->all_sources[0].hrtf_idx = pick_hrtf(ele, obj_azi);
-	float newR = r / 100 + 1;
-	GP->all_sources[0].gain = 1 / pow(newR, 2);
-	
-	float rotateVBO_y = (float)atan2(-ball_z, ball_x) * 180.0f / PI;
-
-	if (rotateVBO_y < 0) {
-		rotateVBO_y += 360;
-	}
-	obj->averageNum = 100;
-	obj->update();
-	obj->draw(rotateVBO_y, ele, 0.0f);
+	SoundSource* source = &(GP->all_sources[0]);
+	source->coordinates.x = ball_x;
+	source->coordinates.y = ball_y;
+	source->coordinates.z = ball_z;
+	source->updateInfo();
+	source->drawWaveform();
 #endif
 	
 	/////////////////////////////////////////////////////////

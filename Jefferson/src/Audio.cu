@@ -1,6 +1,7 @@
 #include "Audio.cuh"
 #include <cuda.h>
 PaStream *stream;
+extern Data data;
 
 void initializePA(int fs) {
 	PaError err;
@@ -114,52 +115,52 @@ void callback_func(float *output, Data *p){
 			break;
 		}
 		
-		source_info *curr_source = &(p->all_sources[source_no]);
-		fprintf(stderr, "%s\n", cudaStreamQuery(curr_source->streams[p->blockNo % FLIGHT_NUM * 2]) ? "Unfinished" : "Finished");
-		checkCudaErrors(cudaStreamSynchronize(curr_source->streams[p->blockNo % FLIGHT_NUM * 2]));
-		checkCudaErrors(cudaStreamSynchronize(curr_source->streams[p->blockNo % FLIGHT_NUM * 2 + 1]));
-		/*Copy into curr_source->x pinned memory*/
-		if (curr_source->count + FRAMES_PER_BUFFER < curr_source->length){
-			memcpy(curr_source->x[p->blockNo % FLIGHT_NUM] + HRTF_LEN - 1, curr_source->buf + curr_source->count, FRAMES_PER_BUFFER * sizeof(float));
-			curr_source->count += FRAMES_PER_BUFFER;
+		//SoundSource curr_source = p->all_sources[source_no];
+		//fprintf(stderr, "%s\n", cudaStreamQuery(p->all_sources[source_no].streams[p->blockNo % FLIGHT_NUM * 2]) ? "Unfinished" : "Finished");
+		checkCudaErrors(cudaStreamSynchronize(p->all_sources[source_no].streams[p->blockNo % FLIGHT_NUM * 2]));
+		checkCudaErrors(cudaStreamSynchronize(p->all_sources[source_no].streams[p->blockNo % FLIGHT_NUM * 2 + 1]));
+		/*Copy into p->all_sources[source_no].x pinned memory*/
+		if (p->all_sources[source_no].count + FRAMES_PER_BUFFER < p->all_sources[source_no].length) {
+			memcpy(p->all_sources[source_no].x[p->blockNo % FLIGHT_NUM] + HRTF_LEN - 1, p->all_sources[source_no].buf + p->all_sources[source_no].count, FRAMES_PER_BUFFER * sizeof(float));
+			p->all_sources[source_no].count += FRAMES_PER_BUFFER;
 		}
-		else{
-			int rem = curr_source->length - curr_source->count;
-			memcpy(curr_source->x[p->blockNo % FLIGHT_NUM] + HRTF_LEN - 1, curr_source->buf + curr_source->count, rem * sizeof(float));
-			memcpy(curr_source->x[p->blockNo % FLIGHT_NUM] + HRTF_LEN - 1 + rem, curr_source->buf, (FRAMES_PER_BUFFER - rem) * sizeof(float));
-			curr_source->count = FRAMES_PER_BUFFER - rem;
+		else {
+			int rem = p->all_sources[source_no].length - p->all_sources[source_no].count;
+			memcpy(p->all_sources[source_no].x[p->blockNo % FLIGHT_NUM] + HRTF_LEN - 1, p->all_sources[source_no].buf + p->all_sources[source_no].count, rem * sizeof(float));
+			memcpy(p->all_sources[source_no].x[p->blockNo % FLIGHT_NUM] + HRTF_LEN - 1 + rem, p->all_sources[source_no].buf, (FRAMES_PER_BUFFER - rem) * sizeof(float));
+			p->all_sources[source_no].count = FRAMES_PER_BUFFER - rem;
 		}
-		
-		for(int i = 0; i < FRAMES_PER_BUFFER * 2; i++){
-			output[i] += curr_source->intermediate[p->blockNo % FLIGHT_NUM][i];
-		}		
+
+		for (int i = 0; i < FRAMES_PER_BUFFER * 2; i++) {
+			output[i] += p->all_sources[source_no].intermediate[p->blockNo % FLIGHT_NUM][i];
+		}
 		/*Send*/
 		checkCudaErrors(cudaMemcpyAsync(
-			curr_source->d_input[p->blockNo % FLIGHT_NUM], 
-			curr_source->x[p->blockNo % FLIGHT_NUM],
-			COPY_AMT * sizeof(float), 
-			cudaMemcpyHostToDevice, 
-			curr_source->streams[(p->blockNo) % FLIGHT_NUM * 2])
+			p->all_sources[source_no].d_input[p->blockNo % FLIGHT_NUM],
+			p->all_sources[source_no].x[p->blockNo % FLIGHT_NUM],
+			COPY_AMT * sizeof(float),
+			cudaMemcpyHostToDevice,
+			p->all_sources[source_no].streams[(p->blockNo) % FLIGHT_NUM * 2])
 		);
 		/*Process*/
 		GPUconvolve_hrtf(
-			curr_source->d_input[(p->blockNo - 1) % FLIGHT_NUM] + HRTF_LEN, 
-			curr_source->hrtf_idx, 
-			curr_source->d_output[(p->blockNo - 1) % FLIGHT_NUM], 
-			FRAMES_PER_BUFFER, 
-			curr_source->gain, 
-			curr_source->streams+ (p->blockNo - 1) % FLIGHT_NUM * 2
+			p->all_sources[source_no].d_input[(p->blockNo - 1) % FLIGHT_NUM] + HRTF_LEN,
+			p->all_sources[source_no].hrtf_idx,
+			p->all_sources[source_no].d_output[(p->blockNo - 1) % FLIGHT_NUM],
+			FRAMES_PER_BUFFER,
+			p->all_sources[source_no].gain,
+			p->all_sources[source_no].streams + (p->blockNo - 1) % FLIGHT_NUM * 2
 		);
 		/*Return*/
 		checkCudaErrors(cudaMemcpyAsync(
-			curr_source->intermediate[(p->blockNo - 2) % FLIGHT_NUM],
-			curr_source->d_output[(p->blockNo - 2) % FLIGHT_NUM],
+			p->all_sources[source_no].intermediate[(p->blockNo - 2) % FLIGHT_NUM],
+			p->all_sources[source_no].d_output[(p->blockNo - 2) % FLIGHT_NUM],
 			FRAMES_PER_BUFFER * 2 * sizeof(float),
 			cudaMemcpyDeviceToHost,
-			curr_source->streams[(p->blockNo - 2) % FLIGHT_NUM * 2])
+			p->all_sources[source_no].streams[(p->blockNo - 2) % FLIGHT_NUM * 2])
 		);
 		/*Overlap-save*/
-		memcpy(curr_source->x[(p->blockNo + 1) % FLIGHT_NUM], curr_source->x[p->blockNo % FLIGHT_NUM] + FRAMES_PER_BUFFER, (HRTF_LEN - 1) * sizeof(float));
+		memcpy(p->all_sources[source_no].x[(p->blockNo + 1) % FLIGHT_NUM], p->all_sources[source_no].x[p->blockNo % FLIGHT_NUM] + FRAMES_PER_BUFFER, (HRTF_LEN - 1) * sizeof(float));
 	}
 	p->blockNo++;
 	if (p->blockNo > FLIGHT_NUM * 2) {

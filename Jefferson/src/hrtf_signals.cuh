@@ -2,14 +2,12 @@
 #ifndef __HRTF_SIGNALS_CUDA
 #define __HRTF_SIGNALS_CUDA
 #include "Universal.cuh"
-
 #include <stdio.h>
 #include <math.h>       /* round, floor, ceil */
 #include <stdlib.h>     /* malloc() */
 #include <stdbool.h>    /* true, false */
 #include <string.h>     /* memset() */
 #include <sndfile.h>    /* libsndfile */
-#include "cudaPart.cuh"
 
 #include <cuda_runtime.h>
 #include <helper_functions.h>

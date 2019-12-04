@@ -4,6 +4,8 @@
 
 #include "Universal.cuh"
 #include "hrtf_signals.cuh"
+#include "main.cuh"
+#include "DataTag.cuh"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -11,10 +13,6 @@
 
 
 /*PortAudio stuff*/
-
-extern Data data;
-
-
 static int paCallback(const void *inputBuffer, void *outputBuffer,
 	unsigned long framesPerBuffer,
 	const PaStreamCallbackTimeInfo* timeInfo,

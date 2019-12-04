@@ -3,6 +3,7 @@
 #define _CUDAPART_H_
 #include "Universal.cuh"
 #include "hrtf_signals.cuh"
+#include "DataTag.cuh"
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -24,8 +25,6 @@
 #include <cmath>
 
 #include "kernels.cuh"
-// Complex data type
-typedef struct Data_tag Data;
 
 
 /*Forward Declarations*/

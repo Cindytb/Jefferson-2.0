@@ -22,12 +22,14 @@
     <ClInclude Include="portaudio\src\common\pa_stream.h" />
     <ClInclude Include="src\Audio.cuh" />
     <ClInclude Include="src\cudaPart.cuh" />
+    <ClInclude Include="src\DataTag.cuh" />
     <ClInclude Include="src\graphics.cuh" />
     <ClInclude Include="src\hrtf_signals.cuh" />
     <ClInclude Include="src\hrtf_signals.h" />
     <ClInclude Include="src\import_model.h" />
     <ClInclude Include="src\kernels.cuh" />
     <ClInclude Include="src\main.cuh" />
+    <ClInclude Include="src\SoundSource.cuh" />
     <ClInclude Include="src\Universal.cuh" />
     <ClInclude Include="src\vbo.cuh" />
   </ItemGroup>
@@ -138,6 +140,7 @@
     <CudaCompile Include="src\hrtf_signals.cu" />
     <CudaCompile Include="src\kernels.cu" />
     <CudaCompile Include="src\main.cu" />
+    <CudaCompile Include="src\SoundSource.cu" />
     <CudaCompile Include="src\vbo.cu" />
     <CudaInclude Include="src\Audio.cuh" />
     <CudaInclude Include="src\cudaPart.cuh" />

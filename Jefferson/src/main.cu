@@ -3,19 +3,22 @@
 #include <thread>
 #include <cuda.h>
 #include <cuda_profiler_api.h>
+
+struct Data data;
+struct Data* p = &data;
 int main(int argc, char *argv[]){
 	if (argc > 3 ) {
 		fprintf(stderr, "Usage: %s input.wav reverb.wav", argv[0]);
 		return 0;
 	}
-	data.num_sources = 1;
-	data.all_sources = new source_info[data.num_sources];
-	for (int i = 0; i < data.num_sources; i++) {
-
-		data.all_sources[i].count = 0;
-		data.all_sources[i].length = 0;
-		data.all_sources[i].gain = 0.99074;
-		data.all_sources[i].hrtf_idx = 314;
+	p->num_sources = 1;
+	p->all_sources = new SoundSource[p->num_sources];
+	for (int i = 0; i < p->num_sources; i++) {
+		p->all_sources[i].count = 0;
+		p->all_sources[i].length = 0;
+		p->all_sources[i].gain = 0.99074;
+		//p->all_sources[i].hrtf_idx = 314;
+		p->all_sources[i].hrtf_idx = 100;
 	}
 	#if(DEBUGMODE != 1)
 		/*Initialize & read files*/
@@ -39,13 +42,13 @@ int main(int argc, char *argv[]){
 
 		printf("Blocks in flight: %i\n", FLIGHT_NUM);
 		cudaProfilerStart();
-		for (int i = 0; i < data.num_sources; i++) {
+		for (int i = 0; i < p->num_sources; i++) {
 
 			p->all_sources[i].streams = new cudaStream_t[FLIGHT_NUM * 2];
 		}
 
 		for (int i = 0; i < FLIGHT_NUM; i++){
-			for (int j = 0; j < data.num_sources; j++) {
+			for (int j = 0; j < p->num_sources; j++) {
 				/*Allocating memory for the inputs*/
 				checkCudaErrors(cudaMalloc(&(p->all_sources[j].d_input[i]), COPY_AMT * sizeof(float)));
 				/*Allocating memory for the outputs*/
@@ -61,7 +64,7 @@ int main(int argc, char *argv[]){
 			}
 		}
 		for (int i = 0; i < FLIGHT_NUM; i++) {
-			for (int j = 0; j < data.num_sources; j++) {
+			for (int j = 0; j < p->num_sources; j++) {
 				for (int k = 0; k < FRAMES_PER_BUFFER + HRTF_LEN - 1; k++) {
 					p->all_sources[j].x[i][k] = 0.0f;
 				}
@@ -70,7 +73,7 @@ int main(int argc, char *argv[]){
 		
 		p->blockNo = 0;
 		for (int i = 0; i < FLIGHT_NUM; i++) {
-			for(int j = 0; j < data.num_sources; j++){
+			for(int j = 0; j < p->num_sources; j++){
 				/*Copy new input chunk into pinned memory*/
 				memcpy(p->all_sources[j].x[p->blockNo] + HRTF_LEN - 1, p->all_sources[j].buf + p->all_sources[j].count, FRAMES_PER_BUFFER * sizeof(float));
 				p->all_sources[j].count += FRAMES_PER_BUFFER;

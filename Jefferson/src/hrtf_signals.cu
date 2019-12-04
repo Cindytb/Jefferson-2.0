@@ -81,6 +81,7 @@ int read_and_error_check(char* input, float* hrtf) {
 	/* close file */
 	sf_close(sndfile);
 
+	return 0;
 }
 int read_hrtf_signals(void) {
 	float* hrtf = new float[NUM_HRFT * HRTF_CHN * HRTF_LEN];   /* de-interleaved HRTF impulse responses */
