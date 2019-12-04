@@ -7,8 +7,8 @@
 #include <sndfile.hh>
 #include <portaudio.h>
 
-const int HRTF_LEN = 128;
-const int FRAMES_PER_BUFFER = 256;  //buffer in portaudio i/o buffer
+const int HRTF_LEN = 512;
+const int FRAMES_PER_BUFFER = 1024;  //buffer in portaudio i/o buffer
 const int HRTF_CHN = 2;
 const int COPY_AMT = 2 * (FRAMES_PER_BUFFER + HRTF_LEN - 1);
 const int FLIGHT_NUM = 10;

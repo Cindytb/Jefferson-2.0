@@ -384,6 +384,9 @@ void display()
 	float horizR = std::sqrt(ball_x * ball_x + ball_z * ball_z);
 	float ele = (float)atan2(ball_y, horizR) * 180.0f / PI;
 	float obj_azi = (float)atan2(-ball_x / r, ball_z / r) * 180.0f / PI;
+	if (obj_azi < 0) {
+		obj_azi += 360;
+	}
 	GP->all_sources[0].hrtf_idx = pick_hrtf(ele, obj_azi);
 	float newR = r / 100 + 1;
 	GP->all_sources[0].gain = 1 / pow(newR, 2);

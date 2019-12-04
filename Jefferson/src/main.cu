@@ -15,7 +15,7 @@ int main(int argc, char *argv[]){
 		data.all_sources[i].count = 0;
 		data.all_sources[i].length = 0;
 		data.all_sources[i].gain = 0.99074;
-		data.all_sources[i].hrtf_idx = 151;
+		data.all_sources[i].hrtf_idx = 314;
 	}
 	#if(DEBUGMODE != 1)
 		/*Initialize & read files*/

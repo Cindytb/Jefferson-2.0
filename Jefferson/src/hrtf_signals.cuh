@@ -15,19 +15,17 @@
 #include <helper_functions.h>
 #include <helper_cuda.h>
 
-#define HRTF_DIR	"compact"
+#define HRTF_DIR	"full"
 
 #define SAMP_RATE   44100
 #define NUM_ELEV    14
-#define NUM_HRFT    366
+#define NUM_HRFT	710
 
 #define PATH_LEN    256
 
 /* function prototypes */
 int read_hrtf_signals(void);
 int pick_hrtf(float obj_ele, float obj_azi);
-/*Convolution on CPU*/
-int convolve_hrtf(float *input, int hrtf_idx, float *output, int outputLen, float gain);
 
 
 ////////////////////////////////////////////////////////////////////////////////
