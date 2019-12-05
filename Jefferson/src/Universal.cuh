@@ -5,7 +5,7 @@
 #include <sndfile.h>
 #include <sndfile.hh>
 #include <portaudio.h>
-
+extern float* d_hrtf;
 const int HRTF_LEN = 512;
 const int FRAMES_PER_BUFFER = 1024;  //buffer in portaudio i/o buffer
 const int HRTF_CHN = 2;

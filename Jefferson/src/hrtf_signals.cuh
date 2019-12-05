@@ -9,9 +9,11 @@
 #include <string.h>     /* memset() */
 #include <sndfile.h>    /* libsndfile */
 
+/*CUDA Includes*/
 #include <cuda_runtime.h>
 #include <helper_functions.h>
 #include <helper_cuda.h>
+
 
 #define HRTF_DIR	"full"
 
@@ -25,10 +27,5 @@
 int read_hrtf_signals(void);
 int pick_hrtf(float obj_ele, float obj_azi);
 
-
-////////////////////////////////////////////////////////////////////////////////
-/*NOTE: GPU Convolution was not fast enough because of the large overhead
-of FFT and IFFT. Keeping the code here for future purposes*/
 void GPUconvolve_hrtf(float *input, int hrtf_idx, float *output, int outputLen, float gain, cudaStream_t *stream);
-////////////////////////////////////////////////////////////////////////////////
 #endif /* __HRTF_SIGNALS_CUDA */

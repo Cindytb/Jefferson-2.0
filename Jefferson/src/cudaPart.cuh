@@ -2,7 +2,6 @@
 #ifndef _CUDAPART_H_
 #define _CUDAPART_H_
 #include "Universal.cuh"
-#include "hrtf_signals.cuh"
 #include "DataTag.cuh"
 
 #include <stdlib.h>
@@ -30,7 +29,7 @@
 /*Forward Declarations*/
 void cudaFFT(int argc, char **argv, Data *p);
 
-
+void transform_hrtfs();
 // cuFFT API errors
 static const char *_ctb_cudaGetErrorEnum(cufftResult error)
 {

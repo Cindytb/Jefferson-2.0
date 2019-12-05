@@ -5,7 +5,7 @@ int elevation_pos[NUM_ELEV] =
 { -40,  -30,  -20,  -10,    0,   10,   20,   30,   40,   50,    60,    70,    80,  90 };
 float azimuth_inc[NUM_ELEV] =
 { 6.43f, 6.00f, 5.00f, 5.00f, 5.00f, 5.00f, 5.00f, 6.00f, 6.43f, 8.00f, 10.00f, 15.00f, 30.00f, 361.0f };
-//56	+ 60	+ 72 + 72	+ 72	+ 72  + 72		+ 60	+ 56 + 45 + 35		+ 24	+ 12	+ 1 = 709
+//56	+ 60	+ 72 + 72	+ 72	+ 72  + 72		+ 60	+ 56 + 45 + 36		+ 24	+ 12	+ 1 = 710
 int azimuth_offset[NUM_ELEV + 1];
 
 
@@ -84,7 +84,8 @@ int read_and_error_check(char* input, float* hrtf) {
 	return 0;
 }
 int read_hrtf_signals(void) {
-	float* hrtf = new float[NUM_HRFT * HRTF_CHN * HRTF_LEN];   /* de-interleaved HRTF impulse responses */
+	/*adding + 2 padding for the FFT*/
+	float* hrtf = new float[NUM_HRFT * HRTF_CHN * (HRTF_LEN + 2)];
 	char hrtf_file[PATH_LEN];
 	int i, j, ele, num_samples;
 	float azi;
@@ -92,7 +93,7 @@ int read_hrtf_signals(void) {
 
 	j = 0;
 	azimuth_offset[0] = 0;
-	size_t size = sizeof(float) * NUM_HRFT * HRTF_LEN * HRTF_CHN;
+	size_t size = sizeof(float) * NUM_HRFT * HRTF_CHN * (HRTF_LEN + 2);
 	checkCudaErrors(cudaMalloc((void**)&d_hrtf, size));
 	for (i = 0; i < NUM_ELEV; i++) {
 		ele = elevation_pos[i];
@@ -101,14 +102,14 @@ int read_hrtf_signals(void) {
 
 			sprintf(hrtf_file, "%s/elev%d/L%de%03da.wav", HRTF_DIR, ele, ele, (int)round(azi));
 			/* Print file information */
-			printf("%3d %3d %s\n", i, j, hrtf_file);
-			if (read_and_error_check(hrtf_file, hrtf + j * HRTF_CHN * HRTF_LEN)) {
+			//printf("%3d %3d %s\n", i, j, hrtf_file);
+			if (read_and_error_check(hrtf_file, hrtf + j * HRTF_CHN * (HRTF_LEN + 2))) {
 				return -1;
 			}
 
 			sprintf(hrtf_file, "%s/elev%d/R%de%03da.wav", HRTF_DIR, ele, ele, (int)round(azi));
-			printf("%3d %3d %s\n", i, j, hrtf_file);
-			if (read_and_error_check(hrtf_file, hrtf + j * HRTF_CHN * HRTF_LEN + HRTF_LEN)) {
+			//printf("%3d %3d %s\n", i, j, hrtf_file);
+			if (read_and_error_check(hrtf_file, hrtf + j * HRTF_CHN * (HRTF_LEN + 2) + HRTF_LEN + 2)) {
 				return -1;
 			}
 			j++;
@@ -125,8 +126,6 @@ int read_hrtf_signals(void) {
 	delete[] hrtf;
 	return 0;
 }
-////////////////////////////////////////////////////////////////////////////////
-
 
 
 __global__ void timeDomainConvolutionNaive(float* ibuf, float* rbuf, float* obuf, long long oframes,
@@ -151,7 +150,7 @@ void GPUconvolve_hrtf(float* input, int hrtf_idx, float* d_output, int outputLen
 	int numThread = FRAMES_PER_BUFFER / numBlocks;
 	timeDomainConvolutionNaive << < numBlocks, numThread, 0, streams[0] >> > (
 		input,
-		d_hrtf + hrtf_idx * HRTF_CHN * HRTF_LEN,
+		d_hrtf + hrtf_idx * HRTF_CHN * (HRTF_LEN + 2),
 		d_output,
 		outputLen,
 		HRTF_LEN,
@@ -159,7 +158,7 @@ void GPUconvolve_hrtf(float* input, int hrtf_idx, float* d_output, int outputLen
 		gain);
 	timeDomainConvolutionNaive << < numBlocks, numThread, 0, streams[1] >> > (
 		input,
-		d_hrtf + hrtf_idx * HRTF_CHN * HRTF_LEN + HRTF_LEN,
+		d_hrtf + hrtf_idx * HRTF_CHN * (HRTF_LEN + 2) + HRTF_LEN + 2,
 		d_output,
 		outputLen,
 		HRTF_LEN,

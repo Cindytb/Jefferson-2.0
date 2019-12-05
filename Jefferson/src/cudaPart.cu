@@ -207,3 +207,18 @@ void cudaFFT(int argc, char **argv, Data *p) {
 
 
 }
+
+
+void transform_hrtfs() {
+
+	cufftHandle plan;
+
+	int n[] = { 512 };
+	CHECK_CUFFT_ERRORS(cufftPlanMany(&plan,
+		1, n,
+		NULL, 1, 1,
+		NULL, 1, 1,
+		CUFFT_R2C, NUM_HRFT * 2
+	));
+	CHECK_CUFFT_ERRORS(cufftExecR2C(plan, (cufftReal*)d_hrtf, (cufftComplex*) d_hrtf));
+}
