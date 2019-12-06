@@ -2,7 +2,7 @@
 #ifndef __KERNELS__
 #define __KERNELS__
 #include "Universal.cuh"
-
+#include "cufftDefines.cuh"
 /*CUDA Includes*/
 #include <cuda_runtime.h>
 #include <cufft.h>
@@ -28,5 +28,6 @@ int PadData(const float *signal, float **padded_signal, int signal_size,
 	const float *filter_kernel, float **padded_filter_kernel, int filter_kernel_size);
 __global__ void averagingKernel(float4 *pos, float *d_buf, unsigned int size, double ratio, int averageSize);
 __global__ void ComplexPointwiseMulAndScale(cufftComplex *a, const cufftComplex *b, int size, float scale);
+__global__ void ComplexPointwiseMul(cufftComplex* a, const cufftComplex* b, cufftComplex* c, int size);
 
 #endif

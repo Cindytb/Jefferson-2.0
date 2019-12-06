@@ -7,7 +7,7 @@
 //#include <sndfile.h>    /* libsndfile */
 //#include "hrtf_signals.h"
 //
-//float hrtf[NUM_HRFT][HRTF_LEN*HRTF_CHN];   /* interleaved HRTF impulse responses */
+//float hrtf[NUM_HRTF][HRTF_LEN*HRTF_CHN];   /* interleaved HRTF impulse responses */
 //
 //int elevation_pos[NUM_ELEV] =
 //{ -40,  -30,  -20,  -10,    0,   10,   20,   30,   40,   50,    60,    70,    80,  90 };

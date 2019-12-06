@@ -18,7 +18,7 @@
 //
 //#define SAMP_RATE   44100
 //#define NUM_ELEV    14
-//#define NUM_HRFT    366
+//#define NUM_HRTF    366
 //
 //#define PATH_LEN    256
 //

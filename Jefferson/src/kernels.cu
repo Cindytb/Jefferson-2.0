@@ -51,6 +51,25 @@ __global__ void ComplexPointwiseMulAndScale(cufftComplex *a, const cufftComplex 
 		a[i] = cufftComplexScale(cufftComplexMul(a[i], b[i]), scale);
 	}
 }
+__global__ void interleave(float* a, float* b, int size) {
+	const int numThreads = blockDim.x * gridDim.x;
+	const int threadID = blockIdx.x * blockDim.x + threadIdx.x;
+
+	for (int i = threadID; i < size; i += numThreads) {
+		b[2 * i] = a[i];
+		b[2 * i + 1] = a[size + 2 + i];
+	}
+}
+// cufftComplex pointwise multiplication
+__global__ void ComplexPointwiseMul(cufftComplex* a, const cufftComplex* b, cufftComplex* c, int size){
+	const int numThreads = blockDim.x * gridDim.x;
+	const int threadID = blockIdx.x * blockDim.x + threadIdx.x;
+
+	for (int i = threadID; i < size; i += numThreads)
+	{
+		c[i] = cufftComplexMul(a[i], b[i]);
+	}
+}
 __global__ void MyFloatScale(float *a, int size, float scale) {
 	const int numThreads = blockDim.x * gridDim.x;
 	const int threadID = blockIdx.x * blockDim.x + threadIdx.x;
@@ -126,3 +145,5 @@ __global__ void averagingKernel(float4 *pos, float *d_buf, unsigned int size, do
 
 	}
 }
+
+__device__ __host__ void interleave(float*)

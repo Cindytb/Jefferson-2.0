@@ -22,6 +22,7 @@
     <ClInclude Include="portaudio\src\common\pa_stream.h" />
     <ClInclude Include="src\Audio.cuh" />
     <ClInclude Include="src\cudaPart.cuh" />
+    <ClInclude Include="src\cufftDefines.cuh" />
     <ClInclude Include="src\DataTag.cuh" />
     <ClInclude Include="src\graphics.cuh" />
     <ClInclude Include="src\hrtf_signals.cuh" />

@@ -208,17 +208,41 @@ void cudaFFT(int argc, char **argv, Data *p) {
 
 }
 
-
 void transform_hrtfs() {
 
 	cufftHandle plan;
 
-	int n[] = { 512 };
-	CHECK_CUFFT_ERRORS(cufftPlanMany(&plan,
-		1, n,
-		NULL, 1, 1,
-		NULL, 1, 1,
-		CUFFT_R2C, NUM_HRFT * 2
-	));
-	CHECK_CUFFT_ERRORS(cufftExecR2C(plan, (cufftReal*)d_hrtf, (cufftComplex*) d_hrtf));
+	int n = PAD_LEN;
+	/*cufftResult cufftPlanMany(cufftHandle *plan, int rank, int *n,
+		int *inembed, int istride, int idist,
+		int *onembed, int ostride, int odist,
+		cufftType type, int batch);*/
+		/*stride = skip length. Ex 1 = every element, 2 = every other element*/
+			/*use for interleaving???*/
+		/*idist/odist is space between batches of transforms*/
+			/*need to check if odist is in terms of complex numbers or floats*/
+		/*inembed/onembed are for 2D/3D, num elements per dimension*/
+	/*CHECK_CUFFT_ERRORS(
+		cufftPlanMany(&plan, 1, &n,
+			&n, 1, n + 2,
+			&n, 1, n / 2 + 1,
+			CUFFT_R2C, NUM_HRTF * 2)
+	);
+	CHECK_CUFFT_ERRORS(cufftExecR2C(plan, (cufftReal*)d_hrtf, (cufftComplex*)d_hrtf));*/
+
+	CHECK_CUFFT_ERRORS(cufftPlan1d(&plan, PAD_LEN, CUFFT_R2C, NUM_HRTF * 2));
+	size_t size = sizeof(float) * NUM_HRTF * HRTF_CHN * (PAD_LEN + 2);
+	float* d_dummy,* d_dummy2;
+	checkCudaErrors(cudaMalloc((void**)&d_dummy, size));
+	checkCudaErrors(cudaMalloc((void**)&d_dummy2, size));
+	for (int i = 0; i < NUM_HRTF; i++) {
+		cufftReal* lbuf = d_dummy2 + i * HRTF_CHN * (PAD_LEN + 2);
+		cufftReal* rbuf = d_dummy2 + i * HRTF_CHN * (PAD_LEN + 2) + PAD_LEN + 2;
+		CHECK_CUFFT_ERRORS(cufftExecR2C(plan, (cufftReal*) lbuf, (cufftComplex*)lbuf));
+		checkCudaErrors(cudaDeviceSynchronize());
+		CHECK_CUFFT_ERRORS(cufftExecR2C(plan, (cufftReal*) rbuf, (cufftComplex*)rbuf));
+		checkCudaErrors(cudaDeviceSynchronize());
+	}
+	
+	CHECK_CUFFT_ERRORS(cufftDestroy(plan));
 }

@@ -19,7 +19,7 @@
 
 #define SAMP_RATE   44100
 #define NUM_ELEV    14
-#define NUM_HRFT	710
+
 
 #define PATH_LEN    256
 

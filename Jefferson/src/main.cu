@@ -17,13 +17,14 @@ int main(int argc, char *argv[]){
 		p->all_sources[i].count = 0;
 		p->all_sources[i].length = 0;
 		p->all_sources[i].gain = 0.99074;
-		//p->all_sources[i].hrtf_idx = 314;
-		p->all_sources[i].hrtf_idx = 100;
+		p->all_sources[i].hrtf_idx = 314;
+		//p->all_sources[i].hrtf_idx = 100;
 	}
 	#if(DEBUGMODE != 1)
 		/*Initialize & read files*/
 		cudaFFT(argc, argv, p);
 	
+		
 		fprintf(stderr, "Opening and Reading HRTF signals\n");
 		/*Open & read hrtf files*/
 
@@ -31,6 +32,7 @@ int main(int argc, char *argv[]){
 			exit(EXIT_FAILURE);
 		}
 
+		transform_hrtfs();
 
 		fprintf(stderr, "Opening output file\n");
 		SF_INFO osfinfo;
@@ -49,24 +51,29 @@ int main(int argc, char *argv[]){
 
 		for (int i = 0; i < FLIGHT_NUM; i++){
 			for (int j = 0; j < p->num_sources; j++) {
-				/*Allocating memory for the inputs*/
-				checkCudaErrors(cudaMalloc(&(p->all_sources[j].d_input[i]), COPY_AMT * sizeof(float)));
-				/*Allocating memory for the outputs*/
-				checkCudaErrors(cudaMalloc(&(p->all_sources[j].d_output[i]), FRAMES_PER_BUFFER * HRTF_CHN * sizeof(float)));
-				/*Creating the streams*/
-				checkCudaErrors(cudaStreamCreate(&(p->all_sources[j].streams[i * 2])));
-				checkCudaErrors(cudaStreamCreate(&(p->all_sources[j].streams[i * 2 + 1])));
-				/*Allocating pinned memory for outgoing transfer*/
-				checkCudaErrors(cudaMallocHost(&(p->all_sources[j].intermediate[i]), FRAMES_PER_BUFFER * HRTF_CHN * sizeof(float)));
-
+				SoundSource* curr_source = &(p->all_sources[j]);
 				/*Allocating pinned memory for incoming transfer*/
-				checkCudaErrors(cudaMallocHost(&(p->all_sources[j].x[i]), COPY_AMT * sizeof(float)));
+				checkCudaErrors(cudaMallocHost(&(curr_source->x[i]), (PAD_LEN + 2) * sizeof(float)));
+				/*Allocating memory for the inputs*/
+				checkCudaErrors(cudaMalloc(&(curr_source->d_input[i]), (PAD_LEN + 2) * sizeof(float)));
+				/*Allocating memory for raw, uncropped convolution output*/
+				//checkCudaErrors(cudaMalloc(&(curr_source->d_uninterleaved[i]), 2 * (PAD_LEN + 2) * sizeof(float)));
+				/*Allocating memory for the outputs*/
+				checkCudaErrors(cudaMalloc(&(curr_source->d_output[i]), 2 * (PAD_LEN + 2) * sizeof(float)));
+				/*Creating the streams*/
+				checkCudaErrors(cudaStreamCreate(&(curr_source->streams[i * 2])));
+				checkCudaErrors(cudaStreamCreate(&(curr_source->streams[i * 2 + 1])));
+				/*Allocating pinned memory for outgoing transfer*/
+				checkCudaErrors(cudaMallocHost(&(curr_source->intermediate[i]), (FRAMES_PER_BUFFER * HRTF_CHN) * sizeof(float)));
+
+				
 			}
 		}
 		for (int i = 0; i < FLIGHT_NUM; i++) {
 			for (int j = 0; j < p->num_sources; j++) {
-				for (int k = 0; k < FRAMES_PER_BUFFER + HRTF_LEN - 1; k++) {
-					p->all_sources[j].x[i][k] = 0.0f;
+				SoundSource* curr_source = &(p->all_sources[j]);
+				for (int k = 0; k < PAD_LEN + 2; k++) {
+					curr_source->x[i][k] = 0.0f;
 				}
 			}
 		}
@@ -74,43 +81,53 @@ int main(int argc, char *argv[]){
 		p->blockNo = 0;
 		for (int i = 0; i < FLIGHT_NUM; i++) {
 			for(int j = 0; j < p->num_sources; j++){
+				SoundSource* curr_source = &(p->all_sources[j]);
 				/*Copy new input chunk into pinned memory*/
-				memcpy(p->all_sources[j].x[p->blockNo] + HRTF_LEN - 1, p->all_sources[j].buf + p->all_sources[j].count, FRAMES_PER_BUFFER * sizeof(float));
-				p->all_sources[j].count += FRAMES_PER_BUFFER;
+				memcpy(
+					curr_source->x[p->blockNo] + (PAD_LEN - FRAMES_PER_BUFFER),  /*Go to the end and work backwards*/
+					curr_source->buf + curr_source->count, 
+					FRAMES_PER_BUFFER * sizeof(float)
+				);
+				curr_source->count += FRAMES_PER_BUFFER;
 
 				/*Send*/
 				checkCudaErrors(cudaMemcpyAsync(
-					p->all_sources[j].d_input[p->blockNo],
-					p->all_sources[j].x[p->blockNo],
-					COPY_AMT * sizeof(float),
+					curr_source->d_input[p->blockNo],
+					curr_source->x[p->blockNo],
+					PAD_LEN * sizeof(float),
 					cudaMemcpyHostToDevice,
-					p->all_sources[j].streams[p->blockNo * 2])
+					curr_source->streams[p->blockNo * 2])
 				);
 				if (i == 0) {
 					goto end;
 				}
 				/*Process*/
-				GPUconvolve_hrtf(
-					p->all_sources[j].d_input[p->blockNo - 1] + HRTF_LEN,
-					p->all_sources[j].hrtf_idx,
-					p->all_sources[j].d_output[(p->blockNo - 1) % FLIGHT_NUM],
+				curr_source->fftConvolve(p->blockNo - 1);
+				/*GPUconvolve_hrtf(
+					curr_source->d_input[p->blockNo - 1],
+					curr_source->hrtf_idx,
+					curr_source->d_output[(p->blockNo - 1) % FLIGHT_NUM],
 					FRAMES_PER_BUFFER,
-					p->all_sources[j].gain,
-					p->all_sources[j].streams + (p->blockNo - 1) * 2
-				);
+					curr_source->gain,
+					curr_source->streams + (p->blockNo - 1) * 2
+				);*/
 				if (i == 1) {
 					goto end;
 				}
 				checkCudaErrors(cudaMemcpyAsync(
-					p->all_sources[j].intermediate[(p->blockNo - 2) % FLIGHT_NUM],
-					p->all_sources[j].d_output[(p->blockNo - 2) % FLIGHT_NUM],
+					curr_source->intermediate[(p->blockNo - 2) % FLIGHT_NUM],
+					curr_source->d_output[(p->blockNo - 2) % FLIGHT_NUM] + 2 * (PAD_LEN - FRAMES_PER_BUFFER),
 					FRAMES_PER_BUFFER * 2 * sizeof(float),
 					cudaMemcpyDeviceToHost,
-					p->all_sources[j].streams[(p->blockNo - 2) % FLIGHT_NUM * 2])
+					curr_source->streams[(p->blockNo - 2) % FLIGHT_NUM * 2])
 				);
 				
 				end: /*overlap-save*/
-				memcpy(p->all_sources[j].x[(p->blockNo + 1) % FLIGHT_NUM], p->all_sources[j].x[p->blockNo] + FRAMES_PER_BUFFER, (HRTF_LEN - 1) * sizeof(float));
+				memcpy(
+					curr_source->x[(p->blockNo + 1) % FLIGHT_NUM], 
+					curr_source->x[p->blockNo] + (PAD_LEN - FRAMES_PER_BUFFER),
+					(HRTF_LEN - 1) * sizeof(float)
+				);
 			}
 			p->blockNo++;
 		}
@@ -127,7 +144,7 @@ int main(int argc, char *argv[]){
 	/*MAIN FUNCTIONAL LOOP*/
 	/*Here to debug without graphics*/
 #if DEBUGMODE == 2
-	std::this_thread::sleep_for(std::chrono::seconds((p->length)/44100));
+	std::this_thread::sleep_for(std::chrono::seconds((p->all_sources[0].length)/44100));
 	//char merp = getchar();
 #else
 	graphicsMain(argc, argv, p);

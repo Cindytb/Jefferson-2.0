@@ -85,31 +85,31 @@ int read_and_error_check(char* input, float* hrtf) {
 }
 int read_hrtf_signals(void) {
 	/*adding + 2 padding for the FFT*/
-	float* hrtf = new float[NUM_HRFT * HRTF_CHN * (HRTF_LEN + 2)];
+	float* hrtf = new float[NUM_HRTF * HRTF_CHN * (PAD_LEN + 2)];
+	for (unsigned int i = 0; i < NUM_HRTF * HRTF_CHN * (PAD_LEN + 2); i++) {
+		hrtf[i] = 0.0f;
+	}
 	char hrtf_file[PATH_LEN];
-	int i, j, ele, num_samples;
 	float azi;
-
-
-	j = 0;
+	int j = 0;
 	azimuth_offset[0] = 0;
-	size_t size = sizeof(float) * NUM_HRFT * HRTF_CHN * (HRTF_LEN + 2);
+	size_t size = sizeof(float) * NUM_HRTF * HRTF_CHN * (PAD_LEN + 2);
 	checkCudaErrors(cudaMalloc((void**)&d_hrtf, size));
-	for (i = 0; i < NUM_ELEV; i++) {
-		ele = elevation_pos[i];
+	for (int i = 0; i < NUM_ELEV; i++) {
+		int ele = elevation_pos[i];
 		for (azi = 0; azi < 360; azi += azimuth_inc[i]) {
 
 
 			sprintf(hrtf_file, "%s/elev%d/L%de%03da.wav", HRTF_DIR, ele, ele, (int)round(azi));
 			/* Print file information */
 			//printf("%3d %3d %s\n", i, j, hrtf_file);
-			if (read_and_error_check(hrtf_file, hrtf + j * HRTF_CHN * (HRTF_LEN + 2))) {
+			if (read_and_error_check(hrtf_file, hrtf + j * HRTF_CHN * (PAD_LEN + 2))) {
 				return -1;
 			}
 
 			sprintf(hrtf_file, "%s/elev%d/R%de%03da.wav", HRTF_DIR, ele, ele, (int)round(azi));
 			//printf("%3d %3d %s\n", i, j, hrtf_file);
-			if (read_and_error_check(hrtf_file, hrtf + j * HRTF_CHN * (HRTF_LEN + 2) + HRTF_LEN + 2)) {
+			if (read_and_error_check(hrtf_file, hrtf + j * HRTF_CHN * (PAD_LEN + 2) + PAD_LEN + 2)) {
 				return -1;
 			}
 			j++;
@@ -117,9 +117,10 @@ int read_hrtf_signals(void) {
 
 		azimuth_offset[i + 1] = j;
 	}
+	
 	checkCudaErrors(cudaMemcpy(d_hrtf, hrtf, size, cudaMemcpyHostToDevice));
 	printf("\nHRTF index offsets for each elevation:\n");
-	for (i = 0; i < NUM_ELEV + 1; i++) {
+	for (int i = 0; i < NUM_ELEV + 1; i++) {
 		printf("%3d ", azimuth_offset[i]);
 	}
 	printf("\n");
