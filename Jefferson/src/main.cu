@@ -12,19 +12,11 @@ int main(int argc, char *argv[]){
 		return 0;
 	}
 	p->num_sources = 1;
-	p->all_sources = new SoundSource[p->num_sources];
-	for (int i = 0; i < p->num_sources; i++) {
-		p->all_sources[i].count = 0;
-		p->all_sources[i].length = 0;
-		p->all_sources[i].gain = 0.99074;
-		p->all_sources[i].hrtf_idx = 314;
-		//p->all_sources[i].hrtf_idx = 100;
-	}
+	p->all_sources = new SoundSource[p->num_sources]; /*Moving all allocation & initialization into the constructor*/
 	#if(DEBUGMODE != 1)
 		/*Initialize & read files*/
 		cudaFFT(argc, argv, p);
-	
-		
+			
 		fprintf(stderr, "Opening and Reading HRTF signals\n");
 		/*Open & read hrtf files*/
 
@@ -43,40 +35,7 @@ int main(int argc, char *argv[]){
 
 
 		printf("Blocks in flight: %i\n", FLIGHT_NUM);
-		cudaProfilerStart();
-		for (int i = 0; i < p->num_sources; i++) {
-
-			p->all_sources[i].streams = new cudaStream_t[FLIGHT_NUM * 2];
-		}
-
-		for (int i = 0; i < FLIGHT_NUM; i++){
-			for (int j = 0; j < p->num_sources; j++) {
-				SoundSource* curr_source = &(p->all_sources[j]);
-				/*Allocating pinned memory for incoming transfer*/
-				checkCudaErrors(cudaMallocHost(&(curr_source->x[i]), (PAD_LEN + 2) * sizeof(float)));
-				/*Allocating memory for the inputs*/
-				checkCudaErrors(cudaMalloc(&(curr_source->d_input[i]), (PAD_LEN + 2) * sizeof(float)));
-				/*Allocating memory for raw, uncropped convolution output*/
-				//checkCudaErrors(cudaMalloc(&(curr_source->d_uninterleaved[i]), 2 * (PAD_LEN + 2) * sizeof(float)));
-				/*Allocating memory for the outputs*/
-				checkCudaErrors(cudaMalloc(&(curr_source->d_output[i]), 2 * (PAD_LEN + 2) * sizeof(float)));
-				/*Creating the streams*/
-				checkCudaErrors(cudaStreamCreate(&(curr_source->streams[i * 2])));
-				checkCudaErrors(cudaStreamCreate(&(curr_source->streams[i * 2 + 1])));
-				/*Allocating pinned memory for outgoing transfer*/
-				checkCudaErrors(cudaMallocHost(&(curr_source->intermediate[i]), (FRAMES_PER_BUFFER * HRTF_CHN) * sizeof(float)));
-
-				
-			}
-		}
-		for (int i = 0; i < FLIGHT_NUM; i++) {
-			for (int j = 0; j < p->num_sources; j++) {
-				SoundSource* curr_source = &(p->all_sources[j]);
-				for (int k = 0; k < PAD_LEN + 2; k++) {
-					curr_source->x[i][k] = 0.0f;
-				}
-			}
-		}
+		cudaProfilerStart();		
 		
 		p->blockNo = 0;
 		for (int i = 0; i < FLIGHT_NUM; i++) {
@@ -122,12 +81,17 @@ int main(int argc, char *argv[]){
 					curr_source->streams[(p->blockNo - 2) % FLIGHT_NUM * 2])
 				);
 				
-				end: /*overlap-save*/
-				memcpy(
+			end: /*overlap-save*/
+				memmove(
+					curr_source->x[(p->blockNo + 1) % FLIGHT_NUM],
+					curr_source->x[(p->blockNo + 1) % FLIGHT_NUM] + FRAMES_PER_BUFFER,
+					sizeof(float) * (PAD_LEN - FRAMES_PER_BUFFER)
+				);
+				/*memcpy(
 					curr_source->x[(p->blockNo + 1) % FLIGHT_NUM], 
 					curr_source->x[p->blockNo] + (PAD_LEN - FRAMES_PER_BUFFER),
 					(HRTF_LEN - 1) * sizeof(float)
-				);
+				);*/
 			}
 			p->blockNo++;
 		}

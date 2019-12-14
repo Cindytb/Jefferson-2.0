@@ -1,4 +1,5 @@
 #include "Audio.cuh"
+#include "pa_asio.h"
 #include <cuda.h>
 PaStream *stream;
 extern Data data;
@@ -9,7 +10,6 @@ void initializePA(int fs) {
 #if DEBUG != 1
 	/*PortAudio setup*/
 	PaStreamParameters outputParams;
-	PaStreamParameters inputParams;
 
 	/* Initializing PortAudio */
 	err = Pa_Initialize();
@@ -21,14 +21,6 @@ void initializePA(int fs) {
 		exit(1);
 	}
 
-	/* Input stream parameters */
-	inputParams.device = Pa_GetDefaultInputDevice();
-	inputParams.channelCount = 1;
-	inputParams.sampleFormat = paFloat32;
-	inputParams.suggestedLatency =
-		Pa_GetDeviceInfo(inputParams.device)->defaultLowInputLatency;
-	inputParams.hostApiSpecificStreamInfo = NULL;
-
 	/* Ouput stream parameters */
 	outputParams.device = Pa_GetDefaultOutputDevice();
 	outputParams.channelCount = 2;
@@ -39,7 +31,7 @@ void initializePA(int fs) {
 
 	/* Open audio stream */
 	err = Pa_OpenStream(&stream,
-		&inputParams, /* no input */
+		NULL, /* no input */
 		&outputParams,
 		fs, FRAMES_PER_BUFFER,
 		paNoFlag, /* flags */
@@ -117,7 +109,7 @@ void callback_func(float *output, Data *p){
 			break;
 		}
 
-		fprintf(stderr, "%s\n", cudaStreamQuery(p->all_sources[source_no].streams[p->blockNo % FLIGHT_NUM * 2]) ? "Unfinished" : "Finished");
+		//fprintf(stderr, "%s\n", cudaStreamQuery(p->all_sources[source_no].streams[p->blockNo % FLIGHT_NUM * 2]) ? "Unfinished" : "Finished");
 		checkCudaErrors(cudaStreamSynchronize(curr_source->streams[p->blockNo % FLIGHT_NUM * 2]));
 		checkCudaErrors(cudaStreamSynchronize(curr_source->streams[p->blockNo % FLIGHT_NUM * 2 + 1]));
 		/*Copy into curr_source->x pinned memory*/
@@ -141,8 +133,12 @@ void callback_func(float *output, Data *p){
 			curr_source->count = FRAMES_PER_BUFFER - rem;
 		}
 
+		//memcpy(output, curr_source->intermediate[p->blockNo % FLIGHT_NUM], FRAMES_PER_BUFFER * 2 * sizeof(float));
 		for (int i = 0; i < FRAMES_PER_BUFFER * 2; i++) {
 			output[i] += curr_source->intermediate[p->blockNo % FLIGHT_NUM][i];
+			if (output[i] > 1.0) {
+				fprintf(stderr, "ALERT! CLIPPING AUDIO!\n");
+			}
 		}
 
 		/*Send*/
@@ -165,11 +161,12 @@ void callback_func(float *output, Data *p){
 			curr_source->streams[(p->blockNo - 2) % FLIGHT_NUM * 2])
 		);
 		/*Overlap-save*/
-		memcpy(
+		memmove(
 			curr_source->x[(p->blockNo + 1) % FLIGHT_NUM],
-			curr_source->x[p->blockNo % FLIGHT_NUM] + (PAD_LEN - FRAMES_PER_BUFFER),
-			(HRTF_LEN - 1) * sizeof(float)
+			curr_source->x[p->blockNo % FLIGHT_NUM] + FRAMES_PER_BUFFER,
+			sizeof(float) * (PAD_LEN - FRAMES_PER_BUFFER)
 		);
+		
 	}
 	p->blockNo++;
 	if (p->blockNo > FLIGHT_NUM * 2) {

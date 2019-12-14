@@ -16,7 +16,7 @@ int azimuth_offset[NUM_ELEV + 1];
 */
 int pick_hrtf(float obj_ele, float obj_azi)
 {
-	int i, n, ele_idx, obj_azi_sign, hrtf_idx;
+	int i, n, ele_idx, hrtf_idx;
 	float d, dmin;
 
 	/* find closest elevation position */
@@ -86,7 +86,7 @@ int read_and_error_check(char* input, float* hrtf) {
 int read_hrtf_signals(void) {
 	/*adding + 2 padding for the FFT*/
 	float* hrtf = new float[NUM_HRTF * HRTF_CHN * (PAD_LEN + 2)];
-	for (unsigned int i = 0; i < NUM_HRTF * HRTF_CHN * (PAD_LEN + 2); i++) {
+	for (int i = 0; i < NUM_HRTF * HRTF_CHN * (PAD_LEN + 2); i++) {
 		hrtf[i] = 0.0f;
 	}
 	char hrtf_file[PATH_LEN];

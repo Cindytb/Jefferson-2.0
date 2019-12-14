@@ -28,6 +28,8 @@ int PadData(const float *signal, float **padded_signal, int signal_size,
 	const float *filter_kernel, float **padded_filter_kernel, int filter_kernel_size);
 __global__ void averagingKernel(float4 *pos, float *d_buf, unsigned int size, double ratio, int averageSize);
 __global__ void ComplexPointwiseMulAndScale(cufftComplex *a, const cufftComplex *b, int size, float scale);
+__global__ void ComplexPointwiseMulAndScaleOutPlace(const cufftComplex* a, const cufftComplex* b, cufftComplex* c, int size, float scale);
 __global__ void ComplexPointwiseMul(cufftComplex* a, const cufftComplex* b, cufftComplex* c, int size);
+__global__ void interleave(float* input, float* output, int size);
 
 #endif

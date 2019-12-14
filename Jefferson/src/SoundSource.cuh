@@ -12,10 +12,9 @@
 class SoundSource {
 public:
 	float* buf;							/*Reverberated signal on host*/
-	float* x[FLIGHT_NUM];				/*Buffer for PA output on host, mono, pinned memory, (FRAMES_PER_BUFFER + HRTF_LEN - 1) to the next power of 2 size */
+	float* x[FLIGHT_NUM];				/*Buffer for PA output on host, mono, pinned memory, PAD_LEN + 2 size */
 	float* intermediate[FLIGHT_NUM];	/*Host data of the output*/
 	float* d_input[FLIGHT_NUM];			/*PAD_LEN + 2 sized for the input*/
-	float* d_uninterleaved[FLIGHT_NUM];	/*2 * (PAD_LEN + 2) sized to store raw convolved output*/
 	float* d_output[FLIGHT_NUM];		/*2 * (PAD_LEN + 2)  sized for the output*/
 
 	cufftHandle in_plan, out_plan;	/*cufft plans*/
