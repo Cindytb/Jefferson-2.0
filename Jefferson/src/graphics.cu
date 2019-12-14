@@ -491,19 +491,23 @@ void keyboard(unsigned char key, int /*x*/, int /*y*/)
 		ball_y = 0.0;
 		ball_z = 0.0;
 		break;
+	case('W'):
 	case('w'):
 		//value is 40 degrees in radians
 		if (ball_y >= 0 || ball_y < 0 && (atan(ball_y / dist) < 0.6981317))
 			ball_y += temp;
 		break;
+	case('S'):
 	case('s'):
 		ball_y -= temp;
 		break;
 		/*TODO: Fix this logic*/
+	case('A'):
 	case('a'):
 		if (ball_y >= 0 || ball_y < 0 && (atan(ball_y / std::sqrt(pow(ball_x - temp, 2) + pow(ball_z, 2)) < tan40)))
 			ball_x -= temp;
 		break;
+	case('D'):
 	case('d'):
 		if (ball_y >= 0 || ball_y < 0 && (atan(ball_y / std::sqrt(pow(ball_x + temp, 2) + pow(ball_z, 2)) < tan40)))
 			ball_x += temp;
