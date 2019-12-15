@@ -61,6 +61,35 @@ __global__ void ComplexPointwiseMulAndScaleOutPlace(const cufftComplex* a, const
 		c[i] = cufftComplexScale(cufftComplexMul(a[i], b[i]), scale);
 	}
 }
+/*
+	R(r) = (1 / (1 + (fs / vs) (r - r0)^2) ) * e^ ((-j2PI (fs/vs) * (r - r0) *k) / N)
+			|----------FRAC-----------------|	  |------------exponent--------------|
+
+	FRAC * e^(exponent)
+	FRAC * (cosine(exponent) - sine(exponent))
+	R[r].x = cosine(exponent) / FRAC
+	R[r].y = -sine(exponent) / FRAC
+	*/
+__global__ void generateDistanceFactor(cufftComplex *in, float frac, float fsvs, float r, int N){
+	const int numThreads = blockDim.x * gridDim.x;
+	const int threadID = blockIdx.x * blockDim.x + threadIdx.x;
+
+	for (int i = threadID; i < N; i += numThreads)
+	{
+		in[i].x = cos(2 * PI * fsvs * r * i / N) / frac;
+		in[i].y = -sin(2 * PI * fsvs * r * i / N) / frac;
+	}
+}
+// cufftComplex pointwise multiplication
+__global__ void ComplexPointwiseMulInPlace(const cufftComplex* in, cufftComplex* out, int size) {
+	const int numThreads = blockDim.x * gridDim.x;
+	const int threadID = blockIdx.x * blockDim.x + threadIdx.x;
+
+	for (int i = threadID; i < size; i += numThreads)
+	{
+		out[i] = cufftComplexMul(out[i], in[i]);
+	}
+}
 __global__ void ComplexPointwiseAdd(cufftComplex* in, cufftComplex* out, int size)
 {
 	const int numThreads = blockDim.x * gridDim.x;
@@ -84,6 +113,7 @@ __global__ void interleave(float* input, float* output, int size) {
 		output[2 * i + 1] = input[size + 2 + i];
 	}
 }
+
 // cufftComplex pointwise multiplication
 __global__ void ComplexPointwiseMul(cufftComplex* a, const cufftComplex* b, cufftComplex* c, int size){
 	const int numThreads = blockDim.x * gridDim.x;

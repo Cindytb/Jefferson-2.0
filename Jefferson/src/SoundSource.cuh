@@ -12,12 +12,13 @@
 
 class SoundSource {
 public:
-	float* buf;							/*Reverberated signal on host*/
-	float* x[FLIGHT_NUM];				/*Buffer for PA output on host, mono, pinned memory, PAD_LEN + 2 size */
-	float* intermediate[FLIGHT_NUM];	/*Host data of the output*/
-	float* d_input[FLIGHT_NUM];			/*PAD_LEN + 2 sized for the input*/
-	float* d_convbufs[FLIGHT_NUM];		/*4 * 2 * (PAD_LEN + 2) sized for each interpolation buffer*/
-	float* d_output[FLIGHT_NUM];		/*2 * (PAD_LEN + 2)  sized for the output*/
+	float* buf;									/*Reverberated signal on host*/
+	float* x[FLIGHT_NUM];						/*Buffer for PA output on host, mono, pinned memory, PAD_LEN + 2 size */
+	float* intermediate[FLIGHT_NUM];			/*Host data of the output*/
+	cufftComplex* distance_factor[FLIGHT_NUM]; 	/*Buffer for the complex factor to account for distance scaling PAD_LEN / 2 + 1 Complex values*/
+	float* d_input[FLIGHT_NUM];					/*PAD_LEN + 2 sized for the input*/
+	cufftComplex* d_convbufs[FLIGHT_NUM];				/*4 * 2 * (PAD_LEN + 2) sized for each interpolation buffer*/
+	float* d_output[FLIGHT_NUM];				/*2 * (PAD_LEN + 2)  sized for the output*/
 
 	cufftHandle in_plan, out_plan;	/*cufft plans*/
 	cudaStream_t* streams;			/*Streams associated with each block in flight*/
@@ -41,7 +42,7 @@ public:
 	void fftConvolve(int blockNo); /*Uses time domain convolution rounding to the nearest HRTF in the database*/
 	void interpolateConvolve(int blockNo); /*Uses Belloch's technique of interpolation*/
 private:
-	void SoundSource::interpolationCalculations(int* hrtf_indices, float* omegas);
-
+	void interpolationCalculations(int* hrtf_indices, float* omegas);
+	void calculateDistanceFactor(int blockNo);
 };
 #endif

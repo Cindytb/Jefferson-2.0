@@ -5,8 +5,11 @@ SoundSource::SoundSource() {
 	length = 0;
 	gain = 0.99074;
 	hrtf_idx = 314;
-	azi = 273;
-	ele = 5;
+	coordinates.x = 1;
+	coordinates.y = 0;
+	coordinates.z = 0;
+	azi = 270;
+	ele = 0;
 	streams = new cudaStream_t[FLIGHT_NUM * STREAMS_PER_FLIGHT];
 	for (int i = 0; i < FLIGHT_NUM; i++) {
 		/*Allocating pinned memory for incoming transfer*/
@@ -15,11 +18,13 @@ SoundSource::SoundSource() {
 		checkCudaErrors(cudaMalloc(d_input + i, (PAD_LEN + 2) * sizeof(float)));
 		/*Allocating memory for the outputs*/
 		checkCudaErrors(cudaMalloc(d_output + i, HRTF_CHN * (PAD_LEN + 2) * sizeof(float)));
+		/*Allocating memory for the distance factor*/
+		checkCudaErrors(cudaMalloc(distance_factor + i, (PAD_LEN / 2 + 1) * sizeof(cufftComplex)));
 		/*Creating the streams*/
 		for(int j = 0; j < STREAMS_PER_FLIGHT; j++){
 			checkCudaErrors(cudaStreamCreate(streams + i * STREAMS_PER_FLIGHT + j));
 		}
-		checkCudaErrors(cudaMalloc(d_convbufs + i, 4 * HRTF_CHN * (PAD_LEN + 2) * sizeof(float)));
+		checkCudaErrors(cudaMalloc(d_convbufs + i, 4 * HRTF_CHN * (PAD_LEN / 2 + 1) * sizeof(cufftComplex)));
 
 		/*Allocating pinned memory for outgoing transfer*/
 		checkCudaErrors(cudaMallocHost(intermediate + i, (FRAMES_PER_BUFFER * HRTF_CHN) * sizeof(float)));
@@ -116,6 +121,33 @@ void SoundSource::interpolationCalculations(int* hrtf_indices, float* omegas) {
 
 }
 /*
+	R(r) = (1 / (1 + (fs / vs) (r - r0)^2) ) * e^ ((-j2PI (fs/vs) * (r - r0) *k) / N)
+			|----------FRAC-----------------|	  |------------exponent------------------|
+
+	FRAC * e^(exponent)
+	FRAC * (cosine(exponent) - sine(exponent))
+	R[r].x = FRAC * cosine(exponent)
+	R[r].y = -FRAC * sine(exponent)
+	*/
+void SoundSource::calculateDistanceFactor(int blockNo){
+	cufftComplex* d_distance_factor = this->distance_factor[blockNo % FLIGHT_NUM];
+	cudaStream_t* streams = this->streams + (blockNo * 2 % FLIGHT_NUM);
+	float r = std::sqrt(
+		coordinates.x * coordinates.x + 
+		coordinates.y * coordinates.y + 
+		coordinates.z * coordinates.z
+	);
+	//r /= 100000000000;
+	r /= 100000000;
+	float fsvs = 44100.0 / 343.0;
+	float frac = 1 + fsvs * pow(r, 2);
+	float N = PAD_LEN / 2 + 1;
+	int numThreads = 256;
+	int numBlocks = (PAD_LEN / 2 + numThreads ) / numThreads;
+	generateDistanceFactor << < numThreads, numBlocks, 0, streams[1] >> > (d_distance_factor, frac, fsvs, r, N);
+
+}
+/*
 This method is a slightly tweaked implementation of Jose Belloch's 
 "Headphone-Based Virtual Spatialization of Sound with a GPU Accelerator"
 paper from the Journal of the Audio Engineering Society,
@@ -125,10 +157,12 @@ void SoundSource::interpolateConvolve(int blockNo) {
 	int hrtf_indices[4];
 	float omegas[6];
 	interpolationCalculations(hrtf_indices, omegas);
+	calculateDistanceFactor(blockNo % FLIGHT_NUM);
 	
+	cufftComplex* d_distance_factor = this->distance_factor[blockNo % FLIGHT_NUM];
 	float* d_input = this->d_input[blockNo % FLIGHT_NUM];
 	float* d_output = this->d_output[blockNo % FLIGHT_NUM];
-	float* d_convbufs = this ->d_convbufs[blockNo % FLIGHT_NUM];
+	cufftComplex* d_convbufs = this ->d_convbufs[blockNo % FLIGHT_NUM];
 	cudaStream_t* streams = this->streams + (blockNo * 2 % FLIGHT_NUM);
 
 
@@ -144,32 +178,40 @@ void SoundSource::interpolateConvolve(int blockNo) {
 	size_t buf_size = PAD_LEN + 2;
 	/*The azi & ele falls exactly on an hrtf resolution*/
 	if (hrtf_indices[0] == hrtf_indices[1] && hrtf_indices[1] == hrtf_indices[2] && hrtf_indices[2] == hrtf_indices[3]) {
+		/*+ Theta 1 Left*/
 		ComplexPointwiseMulAndScaleOutPlace << < numBlocks, numThreads, 0, streams[0] >> > (
 			(cufftComplex*)d_input,
 			(cufftComplex*)(d_hrtf + hrtf_indices[0] * (PAD_LEN + 2) * HRTF_CHN),
-			(cufftComplex*)d_convbufs,
+			d_convbufs,
 			PAD_LEN / 2 + 1,
 			scale
 			);
-
-		ComplexPointwiseMulAndScaleOutPlace << < numBlocks, numThreads, 0, streams[1] >> > (
-			(cufftComplex*)d_input,
-			(cufftComplex*)(d_hrtf + hrtf_indices[0] * (PAD_LEN + 2) * HRTF_CHN + PAD_LEN + 2),
-			(cufftComplex*)(d_convbufs + buf_size),
-			PAD_LEN / 2 + 1,
-			scale
+		ComplexPointwiseMulInPlace << < numBlocks, numThreads, 0, streams[0] >> > (
+			d_distance_factor, 
+			d_convbufs, 
+			PAD_LEN / 2 + 1
 			);
-		/*+ Theta 1 Left*/
-		checkCudaErrors(cudaStreamSynchronize(streams[0]));
 		ComplexPointwiseAdd << < numBlocks, numThreads, 0, streams[0] >> > (
-			(cufftComplex*)d_convbufs,
+			d_convbufs,
 			(cufftComplex*)d_output,
 			PAD_LEN / 2 + 1
 			);
 		/*+ Theta 1 Right*/
-		checkCudaErrors(cudaStreamSynchronize(streams[1]));
+		ComplexPointwiseMulAndScaleOutPlace << < numBlocks, numThreads, 0, streams[1] >> > (
+			(cufftComplex*)d_input,
+			(cufftComplex*)(d_hrtf + hrtf_indices[0] * (PAD_LEN + 2) * HRTF_CHN + PAD_LEN + 2),
+			d_convbufs + buf_size / 2,
+			PAD_LEN / 2 + 1,
+			scale
+			);
+		ComplexPointwiseMulInPlace << < numBlocks, numThreads, 0, streams[1] >> > (
+			d_distance_factor, 
+			d_convbufs + buf_size / 2, 
+			PAD_LEN / 2 + 1
+			);
+		
 		ComplexPointwiseAdd << < numBlocks, numThreads, 0, streams[1] >> > (
-			(cufftComplex*)(d_convbufs + buf_size),
+			d_convbufs + buf_size / 2,
 			(cufftComplex*)(d_output + buf_size),
 			PAD_LEN / 2 + 1
 			);
@@ -192,17 +234,22 @@ void SoundSource::interpolateConvolve(int blockNo) {
 			ComplexPointwiseMulAndScaleOutPlace << < numBlocks, numThreads, 0, streams[buf_no] >> > (
 				(cufftComplex*)d_input,
 				(cufftComplex*)(d_hrtf + hrtf_index * (PAD_LEN + 2) * HRTF_CHN + ((buf_no % 2) * (PAD_LEN + 2))),
-				(cufftComplex*)(d_convbufs + buf_size * buf_no),
+				d_convbufs + buf_size / 2 * buf_no,
 				PAD_LEN / 2 + 1,
 				curr_scale
 				);
+			ComplexPointwiseMulInPlace << < numBlocks, numThreads, 0, streams[buf_no] >> > (
+				d_distance_factor, 
+				d_convbufs + buf_size / 2 * buf_no,
+				PAD_LEN / 2 + 1
+				);
 			ComplexPointwiseAdd << < numBlocks, numThreads, 0, streams[buf_no] >> > (
-				(cufftComplex*)(d_convbufs + buf_size * buf_no),
+				d_convbufs + buf_size / 2 * buf_no,
 				(cufftComplex*)(d_output + buf_size * (buf_no % 2)),
 				PAD_LEN / 2 + 1
 				);
 		}
-		
+
 	}
 	/*If the azimuth falls on the resolution, interpolate the elevation*/
 	else if (hrtf_indices[0] == hrtf_indices[1] && hrtf_indices[0] != hrtf_indices[2]) {
@@ -226,12 +273,17 @@ void SoundSource::interpolateConvolve(int blockNo) {
 			ComplexPointwiseMulAndScaleOutPlace << < numBlocks, numThreads, 0, streams[buf_no] >> > (
 				(cufftComplex*)d_input,
 				(cufftComplex*)(d_hrtf + hrtf_indices[hrtf_index] * (PAD_LEN + 2) * HRTF_CHN + ((buf_no % 2) * (PAD_LEN + 2))),
-				(cufftComplex*)(d_convbufs + buf_size * buf_no),
+				d_convbufs + buf_size / 2 * buf_no,
 				PAD_LEN / 2 + 1,
 				curr_scale
 				);
+			ComplexPointwiseMulInPlace << < numBlocks, numThreads, 0, streams[buf_no] >> > (
+				d_distance_factor,
+				d_convbufs + buf_size / 2 * buf_no,
+				PAD_LEN / 2 + 1
+				);
 			ComplexPointwiseAdd << < numBlocks, numThreads, 0, streams[buf_no] >> > (
-				(cufftComplex*)(d_convbufs + buf_size * buf_no),
+				d_convbufs + buf_size / 2 * buf_no,
 				(cufftComplex*)(d_output + buf_size * (buf_no % 2)),
 				PAD_LEN / 2 + 1
 				);
@@ -260,12 +312,17 @@ void SoundSource::interpolateConvolve(int blockNo) {
 			ComplexPointwiseMulAndScaleOutPlace << < numBlocks, numThreads, 0, streams[buf_no] >> > (
 				(cufftComplex*)d_input,
 				(cufftComplex*)(d_hrtf + hrtf_indices[hrtf_index] * (PAD_LEN + 2) * HRTF_CHN + ((buf_no % 2) * (PAD_LEN + 2))),
-				(cufftComplex*)(d_convbufs + buf_size * buf_no),
+				d_convbufs + buf_size / 2 * buf_no,
 				PAD_LEN / 2 + 1,
 				curr_scale
 				);
+			ComplexPointwiseMulInPlace << < numBlocks, numThreads, 0, streams[buf_no] >> > (
+				d_distance_factor,
+				d_convbufs + buf_size / 2 * buf_no,
+				PAD_LEN / 2 + 1
+				);
 			ComplexPointwiseAdd << < numBlocks, numThreads, 0, streams[buf_no] >> > (
-				(cufftComplex*)(d_convbufs + buf_size * buf_no),
+				d_convbufs + buf_size / 2 * buf_no,
 				(cufftComplex*)(d_output + buf_size * (buf_no % 2)),
 				PAD_LEN / 2 + 1
 				);
