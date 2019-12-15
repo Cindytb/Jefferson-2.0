@@ -63,9 +63,9 @@ int readFile(const char *name, float **buf, int &numCh) {
 }
 
 void cudaFFT(int argc, char **argv, Data *p) {
-
-	std::string input = "media/Taiklatalvi.wav";
-	std::string reverb = "media/medieval_church.wav";
+	
+	std::string input = "media/Castanets-441.wav";
+	std::string reverb = "media/s1_r1_b_441_mono.wav";
 	if (argc == 2) {
 		if (argv[1][1] != '>')
 			input = argv[1];

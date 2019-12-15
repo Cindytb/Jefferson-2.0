@@ -21,7 +21,7 @@ const int STREAMS_PER_FLIGHT = 8;
  	1 - graphics-only
 	2 - audio-only
 */
-#define DEBUGMODE 0
+#define DEBUGMODE 2
 void closeEverything();
 
 const float ratio = 1 / (float)44100;
