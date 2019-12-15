@@ -312,15 +312,13 @@ SoundSource::~SoundSource() {
 	CHECK_CUFFT_ERRORS(cufftDestroy(in_plan));
 	CHECK_CUFFT_ERRORS(cufftDestroy(out_plan));
 	for (int i = 0; i < FLIGHT_NUM; i++) {
-		cudaFreeHost(x[i]);
-		cudaFree(d_input[i]);
-		cudaFree(d_output[i]);
+		checkCudaErrors(cudaFreeHost(x[i]));
+		checkCudaErrors(cudaFree(d_input[i]));
+		checkCudaErrors(cudaFree(d_output[i]));
 		for(int j = 0; j < STREAMS_PER_FLIGHT; j++){
-			cudaStreamDestroy(streams[i * STREAMS_PER_FLIGHT + j]);
+			checkCudaErrors(cudaStreamDestroy(streams[i * STREAMS_PER_FLIGHT + j]));
 		}
-		for(int j = 0; j < 4; j++){
-			cudaFree(d_convbufs[i * 4 + j]);
-		}
-		cudaFreeHost(intermediate[i]);
+		checkCudaErrors(cudaFree(d_convbufs[i]));
+		checkCudaErrors(cudaFreeHost(intermediate[i]));
 	}
 }
