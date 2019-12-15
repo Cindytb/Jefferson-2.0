@@ -137,8 +137,7 @@ void SoundSource::calculateDistanceFactor(int blockNo){
 		coordinates.y * coordinates.y + 
 		coordinates.z * coordinates.z
 	);
-	//r /= 100000000000;
-	r /= 100000000;
+	r /= 5;
 	float fsvs = 44100.0 / 343.0;
 	float frac = 1 + fsvs * pow(r, 2);
 	float N = PAD_LEN / 2 + 1;

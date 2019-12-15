@@ -130,16 +130,16 @@ bool runTest(int argc, char **argv, char *ref_file)
 	/*MOVING SIGNAL TO GPU*/
 	// Allocate device memory for signal
 	SoundSource* source = &(GP->all_sources[0]);
-	float *d_signal;
-	checkCudaErrors(cudaMalloc((void **)&d_signal, source->length * sizeof(float)));
+	//float *d_signal;
+	//checkCudaErrors(cudaMalloc((void **)&d_signal, source->length * sizeof(float)));
 
-	// Copy signal from host to device
-	checkCudaErrors(cudaMemcpy(d_signal, source->buf, source->length * sizeof(float),
-		cudaMemcpyHostToDevice));
-	source->waveform = new VBO(&d_signal, &translate_x, source->length, 1 / 44100.0f);
-	source->waveform->init();
-	source->waveform->averageNum = 100;
-	source->waveform->create();
+	//// Copy signal from host to device
+	//checkCudaErrors(cudaMemcpy(d_signal, source->buf, source->length * sizeof(float),
+	//	cudaMemcpyHostToDevice));
+	//source->waveform = new VBO(&d_signal, &translate_x, source->length, 1 / 44100.0f);
+	//source->waveform->init();
+	//source->waveform->averageNum = 100;
+	//source->waveform->create();
 #endif
 	// create sine wave VBO
 	createVBO(&vbo, &cuda_vbo_resource, cudaGraphicsMapFlagsWriteDiscard);
@@ -370,14 +370,14 @@ void display()
 	g_fAnim += 0.01f;
 	
 	/*Setup animation for waveform VBO*/
-	moveBar(*GP);
+	//moveBar(*GP);
 #if(DEBUGMODE != 1)
 	SoundSource* source = &(GP->all_sources[0]);
 	source->coordinates.x = ball_x;
 	source->coordinates.y = ball_y;
 	source->coordinates.z = ball_z;
 	source->updateInfo();
-	source->drawWaveform();
+	//source->drawWaveform();
 #endif
 	
 	/////////////////////////////////////////////////////////
