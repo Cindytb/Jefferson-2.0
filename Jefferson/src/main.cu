@@ -30,7 +30,7 @@ int main(int argc, char *argv[]){
 			exit(EXIT_FAILURE);
 		}
 
-		//transform_hrtfs();
+		transform_hrtfs();
 
 		fprintf(stderr, "Opening output file\n");
 		SF_INFO osfinfo;
@@ -67,15 +67,8 @@ int main(int argc, char *argv[]){
 					goto end;
 				}
 				/*Process*/
-				curr_source->fftConvolve(p->blockNo - 1);
-				/*GPUconvolve_hrtf(
-					curr_source->d_input[p->blockNo - 1],
-					curr_source->hrtf_idx,
-					curr_source->d_output[(p->blockNo - 1) % FLIGHT_NUM],
-					FRAMES_PER_BUFFER,
-					curr_source->gain,
-					curr_source->streams + (p->blockNo - 1) * 2
-				);*/
+				//curr_source->fftConvolve(p->blockNo - 1);
+				curr_source->interpolateConvolve(p->blockNo - 1);
 				if (i == 1) {
 					goto end;
 				}
@@ -90,7 +83,7 @@ int main(int argc, char *argv[]){
 			end: /*overlap-save*/
 				memmove(
 					curr_source->x[(p->blockNo + 1) % FLIGHT_NUM],
-					curr_source->x[(p->blockNo + 1) % FLIGHT_NUM] + FRAMES_PER_BUFFER,
+					curr_source->x[(p->blockNo) % FLIGHT_NUM] + FRAMES_PER_BUFFER,
 					sizeof(float) * (PAD_LEN - FRAMES_PER_BUFFER)
 				);
 				/*memcpy(
@@ -114,7 +107,7 @@ int main(int argc, char *argv[]){
 	/*MAIN FUNCTIONAL LOOP*/
 	/*Here to debug without graphics*/
 #if DEBUGMODE == 2
-	std::this_thread::sleep_for(std::chrono::seconds((p->all_sources[0].length)/44100));
+std::this_thread::sleep_for(std::chrono::seconds((p->all_sources[0].length)/44100));
 	//char merp = getchar();
 #else
 	graphicsMain(argc, argv, p);

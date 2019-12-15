@@ -211,20 +211,7 @@ void cudaFFT(int argc, char **argv, Data *p) {
 void transform_hrtfs() {
 
 	cufftHandle plan;
-
-	/*CHECK_CUFFT_ERRORS(cufftPlan1d(&plan, PAD_LEN, CUFFT_R2C, NUM_HRTF * 2));
-	CHECK_CUFFT_ERRORS(cufftExecR2C(plan, d_hrtf, (cufftComplex*)d_hrtf));*/
-
-	CHECK_CUFFT_ERRORS(cufftCreate(&plan));
-	CHECK_CUFFT_ERRORS(cufftPlan1d(&plan, PAD_LEN, CUFFT_R2C, 1));
-	for (int i = 0; i < NUM_HRTF; i++) {
-		cufftReal* lbuf = d_hrtf + i * HRTF_CHN * (PAD_LEN + 2);
-		cufftReal* rbuf = d_hrtf + i * HRTF_CHN * (PAD_LEN + 2) + PAD_LEN + 2;
-		CHECK_CUFFT_ERRORS(cufftExecR2C(plan, (cufftReal*) lbuf, (cufftComplex*)lbuf));
-		checkCudaErrors(cudaDeviceSynchronize());
-		CHECK_CUFFT_ERRORS(cufftExecR2C(plan, (cufftReal*) rbuf, (cufftComplex*)rbuf));
-		checkCudaErrors(cudaDeviceSynchronize());
-	}
-	
+	CHECK_CUFFT_ERRORS(cufftPlan1d(&plan, PAD_LEN, CUFFT_R2C, NUM_HRTF * 2));
+	CHECK_CUFFT_ERRORS(cufftExecR2C(plan, d_hrtf, (cufftComplex*)d_hrtf));
 	CHECK_CUFFT_ERRORS(cufftDestroy(plan));
 }

@@ -9,14 +9,14 @@
 
 #include <math.h>
 #include <cmath>
-extern __device__ __constant__ float d_hrtf[NUM_HRTF * HRTF_CHN * (PAD_LEN + 2)];
+
 class SoundSource {
 public:
 	float* buf;							/*Reverberated signal on host*/
 	float* x[FLIGHT_NUM];				/*Buffer for PA output on host, mono, pinned memory, PAD_LEN + 2 size */
 	float* intermediate[FLIGHT_NUM];	/*Host data of the output*/
 	float* d_input[FLIGHT_NUM];			/*PAD_LEN + 2 sized for the input*/
-	float* d_convbufs[FLIGHT_NUM * 8];	/*2 * (PAD_LEN + 2) sized for each interpolation buffer*/
+	float* d_convbufs[FLIGHT_NUM];		/*4 * 2 * (PAD_LEN + 2) sized for each interpolation buffer*/
 	float* d_output[FLIGHT_NUM];		/*2 * (PAD_LEN + 2)  sized for the output*/
 
 	cufftHandle in_plan, out_plan;	/*cufft plans*/

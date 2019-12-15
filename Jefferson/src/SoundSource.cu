@@ -19,9 +19,8 @@ SoundSource::SoundSource() {
 		for(int j = 0; j < STREAMS_PER_FLIGHT; j++){
 			checkCudaErrors(cudaStreamCreate(streams + i * STREAMS_PER_FLIGHT + j));
 		}
-		for(int j = 0; j < 4; j++){
-			checkCudaErrors(cudaMalloc(d_convbufs + i * 4 + j, HRTF_CHN * (PAD_LEN + 2) * sizeof(float)));
-		}
+		checkCudaErrors(cudaMalloc(d_convbufs + i, 4 * HRTF_CHN * (PAD_LEN + 2) * sizeof(float)));
+
 		/*Allocating pinned memory for outgoing transfer*/
 		checkCudaErrors(cudaMallocHost(intermediate + i, (FRAMES_PER_BUFFER * HRTF_CHN) * sizeof(float)));
 	}
@@ -131,10 +130,16 @@ void SoundSource::interpolateConvolve(int blockNo) {
 	float* d_output = this->d_output[blockNo % FLIGHT_NUM];
 	float* d_convbufs = this ->d_convbufs[blockNo % FLIGHT_NUM];
 	cudaStream_t* streams = this->streams + (blockNo * 2 % FLIGHT_NUM);
+
+
 	fillWithZeroes(&d_output, 0, 2 * (PAD_LEN + 2));
+
+	CHECK_CUFFT_ERRORS(cufftSetStream(in_plan, streams[0]));
+	CHECK_CUFFT_ERRORS(cufftSetStream(out_plan, streams[0]));
 	float scale = 1.0f / ((float)PAD_LEN);
 	CHECK_CUFFT_ERRORS(cufftExecR2C(in_plan, (cufftReal*)d_input, (cufftComplex*)d_input));
-	int numThreads = 128;
+	checkCudaErrors(cudaStreamSynchronize(streams[0]));
+	int numThreads = 256;
 	int numBlocks = (PAD_LEN / 2 + numThreads) / numThreads;
 	size_t buf_size = PAD_LEN + 2;
 	/*The azi & ele falls exactly on an hrtf resolution*/
@@ -186,15 +191,14 @@ void SoundSource::interpolateConvolve(int blockNo) {
 				hrtf_index = hrtf_indices[1];
 			ComplexPointwiseMulAndScaleOutPlace << < numBlocks, numThreads, 0, streams[buf_no] >> > (
 				(cufftComplex*)d_input,
-				(cufftComplex*)(d_hrtf + hrtf_index * (PAD_LEN + 2) * HRTF_CHN),
+				(cufftComplex*)(d_hrtf + hrtf_index * (PAD_LEN + 2) * HRTF_CHN + ((buf_no % 2) * (PAD_LEN + 2))),
 				(cufftComplex*)(d_convbufs + buf_size * buf_no),
 				PAD_LEN / 2 + 1,
 				curr_scale
 				);
-			/*+ Theta 1 Right*/
 			ComplexPointwiseAdd << < numBlocks, numThreads, 0, streams[buf_no] >> > (
 				(cufftComplex*)(d_convbufs + buf_size * buf_no),
-				(cufftComplex*)(d_output + buf_size * buf_no % 2),
+				(cufftComplex*)(d_output + buf_size * (buf_no % 2)),
 				PAD_LEN / 2 + 1
 				);
 		}
@@ -202,175 +206,72 @@ void SoundSource::interpolateConvolve(int blockNo) {
 	}
 	/*If the azimuth falls on the resolution, interpolate the elevation*/
 	else if (hrtf_indices[0] == hrtf_indices[1] && hrtf_indices[0] != hrtf_indices[2]) {
-		/*Phi 1*/
-		ComplexPointwiseMulAndScaleOutPlace << < numBlocks, numThreads, 0, streams[0] >> > (
-			(cufftComplex*)d_input,
-			(cufftComplex*)(d_hrtf + hrtf_indices[0] * (PAD_LEN + 2) * HRTF_CHN),
-			(cufftComplex*)d_convbufs,
-			PAD_LEN / 2 + 1,
-			scale * omegas[4]
-			);
-		/*Right channel*/
-		ComplexPointwiseMulAndScaleOutPlace << < numBlocks, numThreads, 0, streams[1] >> > (
-			(cufftComplex*)d_input,
-			(cufftComplex*)(d_hrtf + hrtf_indices[0] * (PAD_LEN + 2) * HRTF_CHN + PAD_LEN + 2),
-			(cufftComplex*)(d_convbufs + buf_size),
-			PAD_LEN / 2 + 1,
-			scale * omegas[4]
-			);
-		/*Phi 2*/
-		ComplexPointwiseMulAndScaleOutPlace << < numBlocks, numThreads, 0, streams[2] >> > (
-			(cufftComplex*)d_input,
-			(cufftComplex*)(d_hrtf + hrtf_indices[2] * (PAD_LEN + 2) * HRTF_CHN),
-			(cufftComplex*)(d_convbufs + buf_size * 2),
-			PAD_LEN / 2 + 1,
-			scale * omegas[5]
-			);
-		ComplexPointwiseMulAndScaleOutPlace << < numBlocks, numThreads, 0, streams[3] >> > (
-			(cufftComplex*)d_input,
-			(cufftComplex*)(d_hrtf + hrtf_indices[2] * (PAD_LEN + 2) * HRTF_CHN + PAD_LEN + 2),
-			(cufftComplex*)(d_convbufs + buf_size * 3),
-			PAD_LEN / 2 + 1,
-			scale * omegas[5]
-			);
-		/*+ Theta 1 Left*/
-		ComplexPointwiseAdd << < numBlocks, numThreads, 0, streams[0] >> > (
-			(cufftComplex*)d_convbufs,
-			(cufftComplex*)d_output,
-			PAD_LEN / 2 + 1
-			);
-		/*+ Theta 1 Right*/
-		ComplexPointwiseAdd << < numBlocks, numThreads, 0, streams[1] >> > (
-			(cufftComplex*)(d_convbufs + buf_size),
-			(cufftComplex*)(d_output + buf_size),
-			PAD_LEN / 2 + 1
-			);
-		/*+ Theta 2 Left*/
-		ComplexPointwiseAdd << < numBlocks, numThreads, 0, streams[2] >> > (
-			(cufftComplex*)(d_convbufs + buf_size * 2),
-			(cufftComplex*)d_output,
-			PAD_LEN / 2 + 1
-			);
-		/*+ Theta 2 Right*/
-		ComplexPointwiseAdd << < numBlocks, numThreads, 0, streams[3] >> > (
-			(cufftComplex*)(d_convbufs + buf_size * 3),
-			(cufftComplex*)(d_output + buf_size),
-			PAD_LEN / 2 + 1
-			);
+		for (int buf_no = 0; buf_no < 4; buf_no++) {
+			/*Even buf numbers are the left channel, odd ones are the right channel*/
+			float curr_scale;
+			int hrtf_index;
+			switch (buf_no) {
+			case 0:
+			case 1:
+				curr_scale = scale * omegas[4];
+				hrtf_index = 0;
+				break;
+			case 2:
+			case 3:
+				curr_scale = scale * omegas[5];
+				hrtf_index = 2;
+				break;
+			}
+
+			ComplexPointwiseMulAndScaleOutPlace << < numBlocks, numThreads, 0, streams[buf_no] >> > (
+				(cufftComplex*)d_input,
+				(cufftComplex*)(d_hrtf + hrtf_indices[hrtf_index] * (PAD_LEN + 2) * HRTF_CHN + ((buf_no % 2) * (PAD_LEN + 2))),
+				(cufftComplex*)(d_convbufs + buf_size * buf_no),
+				PAD_LEN / 2 + 1,
+				curr_scale
+				);
+			ComplexPointwiseAdd << < numBlocks, numThreads, 0, streams[buf_no] >> > (
+				(cufftComplex*)(d_convbufs + buf_size * buf_no),
+				(cufftComplex*)(d_output + buf_size * (buf_no % 2)),
+				PAD_LEN / 2 + 1
+				);
+		}
 	}
 	/*Worst case scenario*/
 	else {
-		/*Theta 1*/
-		ComplexPointwiseMulAndScaleOutPlace << < numBlocks, numThreads, 0, streams[0] >> > (
-			(cufftComplex*)d_input,
-			(cufftComplex*)(d_hrtf + hrtf_indices[0] * (PAD_LEN + 2) * HRTF_CHN),
-			(cufftComplex*)d_convbufs,
-			PAD_LEN / 2 + 1,
-			scale * omegas[5] * omegas[1]
-			);
-		/*Right channel*/
-		ComplexPointwiseMulAndScaleOutPlace << < numBlocks, numThreads, 0, streams[1] >> > (
-			(cufftComplex*)d_input,
-			(cufftComplex*)(d_hrtf + hrtf_indices[0] * (PAD_LEN + 2) * HRTF_CHN + PAD_LEN + 2),
-			(cufftComplex*)(d_convbufs + buf_size),
-			PAD_LEN / 2 + 1,
-			scale * omegas[5] * omegas[1]
-			);
-		/*Theta 2*/
-		ComplexPointwiseMulAndScaleOutPlace << < numBlocks, numThreads, 0, streams[2] >> > (
-			(cufftComplex*)d_input,
-			(cufftComplex*)(d_hrtf + hrtf_indices[1] * (PAD_LEN + 2) * HRTF_CHN),
-			(cufftComplex*)(d_convbufs + buf_size * 2),
-			PAD_LEN / 2 + 1,
-			scale * omegas[5] * omegas[0]
-			);
-		ComplexPointwiseMulAndScaleOutPlace << < numBlocks, numThreads, 0, streams[3] >> > (
-			(cufftComplex*)d_input,
-			(cufftComplex*)(d_hrtf + hrtf_indices[1] * (PAD_LEN + 2) * HRTF_CHN + PAD_LEN + 2),
-			(cufftComplex*)(d_convbufs + buf_size * 3),
-			PAD_LEN / 2 + 1,
-			scale * omegas[5] * omegas[0]
-			);
-		/*Theta 3*/
-		ComplexPointwiseMulAndScaleOutPlace << < numBlocks, numThreads, 0, streams[4] >> > (
-			(cufftComplex*)d_input,
-			(cufftComplex*)(d_hrtf + hrtf_indices[2] * (PAD_LEN + 2) * HRTF_CHN),
-			(cufftComplex*)(d_convbufs + buf_size * 4),
-			PAD_LEN / 2 + 1,
-			scale * omegas[4] * omegas[3]
-			);
-		ComplexPointwiseMulAndScaleOutPlace << < numBlocks, numThreads, 0, streams[5] >> > (
-			(cufftComplex*)d_input,
-			(cufftComplex*)(d_hrtf + hrtf_indices[2] * (PAD_LEN + 2) * HRTF_CHN + PAD_LEN + 2),
-			(cufftComplex*)(d_convbufs + buf_size * 5),
-			PAD_LEN / 2 + 1,
-			scale * omegas[4] * omegas[3]
-			);
-		/*Theta 4*/
-		ComplexPointwiseMulAndScaleOutPlace << < numBlocks, numThreads, 0, streams[6] >> > (
-			(cufftComplex*)d_input,
-			(cufftComplex*)(d_hrtf + hrtf_indices[3] * (PAD_LEN + 2) * HRTF_CHN),
-			(cufftComplex*)(d_convbufs + buf_size * 6),
-			PAD_LEN / 2 + 1,
-			scale * omegas[4] * omegas[2]
-			);
-		ComplexPointwiseMulAndScaleOutPlace << < numBlocks, numThreads, 0, streams[7] >> > (
-			(cufftComplex*)d_input,
-			(cufftComplex*)(d_hrtf + hrtf_indices[3] * (PAD_LEN + 2) * HRTF_CHN + PAD_LEN + 2),
-			(cufftComplex*)(d_convbufs + buf_size * 7),
-			PAD_LEN / 2 + 1,
-			scale * omegas[4] * omegas[2]
-			);
-		/*+ Theta 1 Left*/
-		ComplexPointwiseAdd << < numBlocks, numThreads, 0, streams[0] >> > (
-			(cufftComplex*)d_convbufs,
-			(cufftComplex*)d_output,
-			PAD_LEN / 2 + 1
-			);
-		/*+ Theta 1 Right*/
-		ComplexPointwiseAdd << < numBlocks, numThreads, 0, streams[1] >> > (
-			(cufftComplex*)(d_convbufs + buf_size),
-			(cufftComplex*)(d_output + buf_size),
-			PAD_LEN / 2 + 1
-			);
-		/*+ Theta 2 Left*/
-		ComplexPointwiseAdd << < numBlocks, numThreads, 0, streams[2] >> > (
-			(cufftComplex*)(d_convbufs + buf_size * 2),
-			(cufftComplex*)d_output,
-			PAD_LEN / 2 + 1
-			);
-		/*+ Theta 2 Right*/
-		ComplexPointwiseAdd << < numBlocks, numThreads, 0, streams[3] >> > (
-			(cufftComplex*)(d_convbufs + buf_size * 3),
-			(cufftComplex*)(d_output + buf_size),
-			PAD_LEN / 2 + 1
-			);
-		/*+ Theta 3 Left*/
-		ComplexPointwiseAdd << < numBlocks, numThreads, 0, streams[4] >> > (
-			(cufftComplex*)(d_convbufs + buf_size * 4),
-			(cufftComplex*)d_output,
-			PAD_LEN / 2 + 1
-			);
-		/*+ Theta 3 Right*/
-		ComplexPointwiseAdd << < numBlocks, numThreads, 0, streams[5] >> > (
-			(cufftComplex*)(d_convbufs + buf_size * 5),
-			(cufftComplex*)(d_output + buf_size),
-			PAD_LEN / 2 + 1
-			);
-		/*+ Theta 4 Left*/
-		ComplexPointwiseAdd << < numBlocks, numThreads, 0, streams[6] >> > (
-			(cufftComplex*)(d_convbufs + buf_size * 6),
-			(cufftComplex*)d_output,
-			PAD_LEN / 2 + 1
-			);
-		/*+ Theta 4 Right*/
-		ComplexPointwiseAdd << < numBlocks, numThreads, 0, streams[7] >> > (
-			(cufftComplex*)(d_convbufs + buf_size * 7),
-			(cufftComplex*)(d_output + buf_size),
-			PAD_LEN / 2 + 1
-			);
+		for (int buf_no = 0; buf_no < 8; buf_no++) {
+			/*Even buf numbers are the left channel, odd ones are the right channel*/
+			float curr_scale;
+			int hrtf_index = buf_no / 2;
+			switch (hrtf_index) {
+			case 0:
+				curr_scale = scale * omegas[5] * omegas[1];
+				break;
+			case 1:
+				curr_scale = scale * omegas[5] * omegas[0];
+				break;
+			case 2:
+				curr_scale = scale * omegas[4] * omegas[3];
+				break;
+			case 3:
+				curr_scale = scale * omegas[4] * omegas[2];
+				break;
+			}
+			ComplexPointwiseMulAndScaleOutPlace << < numBlocks, numThreads, 0, streams[buf_no] >> > (
+				(cufftComplex*)d_input,
+				(cufftComplex*)(d_hrtf + hrtf_indices[hrtf_index] * (PAD_LEN + 2) * HRTF_CHN + ((buf_no % 2) * (PAD_LEN + 2))),
+				(cufftComplex*)(d_convbufs + buf_size * buf_no),
+				PAD_LEN / 2 + 1,
+				curr_scale
+				);
+			ComplexPointwiseAdd << < numBlocks, numThreads, 0, streams[buf_no] >> > (
+				(cufftComplex*)(d_convbufs + buf_size * buf_no),
+				(cufftComplex*)(d_output + buf_size * (buf_no % 2)),
+				PAD_LEN / 2 + 1
+				);
+		}
 	}
-	for (int i = 0; i < STREAMS_PER_FLIGHT; i++) {
+	for (int i = 1; i < STREAMS_PER_FLIGHT; i++) {
 		checkCudaErrors(cudaStreamSynchronize(streams[i]));
 	}
 	CHECK_CUFFT_ERRORS(cufftExecC2R(out_plan, (cufftComplex*)d_output, d_output));
