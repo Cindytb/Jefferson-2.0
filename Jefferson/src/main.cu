@@ -4,15 +4,21 @@
 #include <cuda.h>
 #include <cuda_profiler_api.h>
 
+void printSize() {
+	size_t free = 0, total = 0;
+	checkCudaErrors(cudaMemGetInfo(&free, &total));
+	fprintf(stderr, "GPU Global Memory Stats: Size Free: %.2fMB\tSize Total: %.2fMB\tSize Used: %.2fMB\n", free / 1048576.0f, total / 1048576.0f, (total - free) / 1048576.0f);
+}
 struct Data data;
 struct Data* p = &data;
 int main(int argc, char *argv[]){
-	if (argc > 3 ) {
-		fprintf(stderr, "Usage: %s input.wav reverb.wav", argv[0]);
-		return 0;
-	}
+	//if (argc > 3 ) {
+		//fprintf(stderr, "Usage: %s input.wav reverb.wav", argv[0]);
+		//return 0;
+	//}
 	p->num_sources = 1;
 	p->all_sources = new SoundSource[p->num_sources]; /*Moving all allocation & initialization into the constructor*/
+	printSize();
 	#if(DEBUGMODE != 1)
 		/*Initialize & read files*/
 		cudaFFT(argc, argv, p);
@@ -24,7 +30,7 @@ int main(int argc, char *argv[]){
 			exit(EXIT_FAILURE);
 		}
 
-		transform_hrtfs();
+		//transform_hrtfs();
 
 		fprintf(stderr, "Opening output file\n");
 		SF_INFO osfinfo;
@@ -55,7 +61,7 @@ int main(int argc, char *argv[]){
 					curr_source->x[p->blockNo],
 					PAD_LEN * sizeof(float),
 					cudaMemcpyHostToDevice,
-					curr_source->streams[p->blockNo * 2])
+					curr_source->streams[p->blockNo * STREAMS_PER_FLIGHT])
 				);
 				if (i == 0) {
 					goto end;
@@ -78,7 +84,7 @@ int main(int argc, char *argv[]){
 					curr_source->d_output[(p->blockNo - 2) % FLIGHT_NUM] + 2 * (PAD_LEN - FRAMES_PER_BUFFER),
 					FRAMES_PER_BUFFER * 2 * sizeof(float),
 					cudaMemcpyDeviceToHost,
-					curr_source->streams[(p->blockNo - 2) % FLIGHT_NUM * 2])
+					curr_source->streams[(p->blockNo - 2) % FLIGHT_NUM * STREAMS_PER_FLIGHT])
 				);
 				
 			end: /*overlap-save*/
@@ -132,10 +138,10 @@ void closeEverything(){
 			checkCudaErrors(cudaFree(p->all_sources[source_no].d_output[i]));
 			checkCudaErrors(cudaFreeHost(p->all_sources[source_no].intermediate[i]));
 			checkCudaErrors(cudaFreeHost(p->all_sources[source_no].x[i]));
-			checkCudaErrors(cudaStreamSynchronize(p->all_sources[source_no].streams[i * 2]));
-			checkCudaErrors(cudaStreamSynchronize(p->all_sources[source_no].streams[i * 2 + 1]));
-			checkCudaErrors(cudaStreamDestroy(p->all_sources[source_no].streams[i * 2]));
-			checkCudaErrors(cudaStreamDestroy(p->all_sources[source_no].streams[i * 2 + 1]));
+			for (int j = 0; j < STREAMS_PER_FLIGHT; j++) {
+				checkCudaErrors(cudaStreamSynchronize(p->all_sources[source_no].streams[i * STREAMS_PER_FLIGHT + j]));
+				checkCudaErrors(cudaStreamDestroy(p->all_sources[source_no].streams[i * STREAMS_PER_FLIGHT + j]));
+			}			
 		}
 
 		free(p->all_sources[source_no].buf);

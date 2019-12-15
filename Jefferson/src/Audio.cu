@@ -109,9 +109,8 @@ void callback_func(float *output, Data *p){
 			break;
 		}
 
-		//fprintf(stderr, "%s\n", cudaStreamQuery(p->all_sources[source_no].streams[p->blockNo % FLIGHT_NUM * 2]) ? "Unfinished" : "Finished");
-		checkCudaErrors(cudaStreamSynchronize(curr_source->streams[p->blockNo % FLIGHT_NUM * 2]));
-		checkCudaErrors(cudaStreamSynchronize(curr_source->streams[p->blockNo % FLIGHT_NUM * 2 + 1]));
+		
+		
 		/*Copy into curr_source->x pinned memory*/
 		if (curr_source->count + FRAMES_PER_BUFFER < curr_source->length) {
 			memcpy(
@@ -147,18 +146,19 @@ void callback_func(float *output, Data *p){
 			curr_source->x[p->blockNo % FLIGHT_NUM],
 			PAD_LEN * sizeof(float), 
 			cudaMemcpyHostToDevice, 
-			curr_source->streams[p->blockNo % FLIGHT_NUM * 2])
+			curr_source->streams[p->blockNo % FLIGHT_NUM * STREAMS_PER_FLIGHT])
 		);
 		
 		/*Process*/
-		curr_source->fftConvolve((p->blockNo- 1) % FLIGHT_NUM);
+		//curr_source->fftConvolve((p->blockNo- 1) % FLIGHT_NUM);
+		curr_source->interpolateConvolve((p->blockNo - 1) % FLIGHT_NUM);
 		/*Return*/
 		checkCudaErrors(cudaMemcpyAsync(
 			curr_source->intermediate[(p->blockNo - 2) % FLIGHT_NUM],
 			curr_source->d_output[(p->blockNo - 2) % FLIGHT_NUM] + 2 * (PAD_LEN - FRAMES_PER_BUFFER),
 			FRAMES_PER_BUFFER * 2 * sizeof(float),
 			cudaMemcpyDeviceToHost,
-			curr_source->streams[(p->blockNo - 2) % FLIGHT_NUM * 2])
+			curr_source->streams[(p->blockNo - 2) % FLIGHT_NUM * STREAMS_PER_FLIGHT])
 		);
 		/*Overlap-save*/
 		memmove(

@@ -1,13 +1,13 @@
-#include "SoundSource.cuh"
+﻿#include "SoundSource.cuh"
 
 SoundSource::SoundSource() {
 	count = 0;
 	length = 0;
 	gain = 0.99074;
 	hrtf_idx = 314;
-	azi = 270;
-	ele = 0;
-	streams = new cudaStream_t[FLIGHT_NUM * 2];
+	azi = 273;
+	ele = 5;
+	streams = new cudaStream_t[FLIGHT_NUM * STREAMS_PER_FLIGHT];
 	for (int i = 0; i < FLIGHT_NUM; i++) {
 		/*Allocating pinned memory for incoming transfer*/
 		checkCudaErrors(cudaMallocHost(x + i, (PAD_LEN + 2) * sizeof(float)));
@@ -16,8 +16,12 @@ SoundSource::SoundSource() {
 		/*Allocating memory for the outputs*/
 		checkCudaErrors(cudaMalloc(d_output + i, HRTF_CHN * (PAD_LEN + 2) * sizeof(float)));
 		/*Creating the streams*/
-		checkCudaErrors(cudaStreamCreate(streams + i * 2));
-		checkCudaErrors(cudaStreamCreate(streams + i * 2 + 1));
+		for(int j = 0; j < STREAMS_PER_FLIGHT; j++){
+			checkCudaErrors(cudaStreamCreate(streams + i * STREAMS_PER_FLIGHT + j));
+		}
+		for(int j = 0; j < 4; j++){
+			checkCudaErrors(cudaMalloc(d_convbufs + i * 4 + j, HRTF_CHN * (PAD_LEN + 2) * sizeof(float)));
+		}
 		/*Allocating pinned memory for outgoing transfer*/
 		checkCudaErrors(cudaMallocHost(intermediate + i, (FRAMES_PER_BUFFER * HRTF_CHN) * sizeof(float)));
 	}
@@ -56,7 +60,8 @@ void SoundSource::updateInfo() {
 	if (azi < 0.0f) {
 		azi += 360;
 	}
-	float newR = r / 100 + 1;
+	ele = round(ele);
+	azi = round(azi);
 	hrtf_idx = pick_hrtf(ele, azi);
 }
 
@@ -70,7 +75,306 @@ void SoundSource::drawWaveform() {
 	waveform->update();
 	waveform->draw(rotateVBO_y, ele, 0.0f);
 }
+void SoundSource::interpolationCalculations(int* hrtf_indices, float* omegas) {
+	float omegaA, omegaB, omegaC, omegaD, omegaE, omegaF;
+	int phi[2];
+	int theta[4];
+	float deltaTheta1, deltaTheta2;
+	phi[0] = int(ele) / 10 * 10; /*hard coded 10 because the elevation increments in the KEMAR HRTF database is 10 degrees*/
+	phi[1] = int(ele + 9) / 10 * 10;
+	omegaE = (ele - phi[0]) / 10.0f;
+	omegaF = (phi[1] - ele) / 10.0f;
 
+	for (int i = 0; i < NUM_ELEV; i++) {
+		if (phi[0] == elevation_pos[i]) {
+			deltaTheta1 = azimuth_inc[i];
+		}
+		if (phi[1] == elevation_pos[i]) {
+			deltaTheta2 = azimuth_inc[i];
+			break;
+		}
+	}
+	theta[0] = int(azi / deltaTheta1) * deltaTheta1;
+	theta[1] = int((azi + deltaTheta1 - 1) / deltaTheta1) * deltaTheta1;
+	theta[2] = int(azi / deltaTheta2) * deltaTheta2;
+	theta[3] = int((azi + deltaTheta2 - 1) / deltaTheta2) * deltaTheta2;
+	omegaA = (azi - theta[0]) / deltaTheta1;
+	omegaB = (theta[1] - azi) / deltaTheta1;
+	omegaC = (azi - theta[2]) / deltaTheta2;
+	omegaD = (theta[3] - azi) / deltaTheta2;
+
+	hrtf_indices[0] = pick_hrtf(phi[0], theta[0]);
+	hrtf_indices[1] = pick_hrtf(phi[0], theta[1]);
+	hrtf_indices[2] = pick_hrtf(phi[1], theta[2]);
+	hrtf_indices[3] = pick_hrtf(phi[1], theta[3]);
+
+	omegas[0] = omegaA;
+	omegas[1] = omegaB;
+	omegas[2] = omegaC;
+	omegas[3] = omegaD;
+	omegas[4] = omegaE;
+	omegas[5] = omegaF;
+
+}
+/*
+This method is a slightly tweaked implementation of Jose Belloch's 
+"Headphone-Based Virtual Spatialization of Sound with a GPU Accelerator"
+paper from the Journal of the Audio Engineering Society,
+Volume 61, No 7/8, 2013, July/August
+*/
+void SoundSource::interpolateConvolve(int blockNo) {
+	int hrtf_indices[4];
+	float omegas[6];
+	interpolationCalculations(hrtf_indices, omegas);
+	
+	float* d_input = this->d_input[blockNo % FLIGHT_NUM];
+	float* d_output = this->d_output[blockNo % FLIGHT_NUM];
+	float* d_convbufs = this ->d_convbufs[blockNo % FLIGHT_NUM];
+	cudaStream_t* streams = this->streams + (blockNo * 2 % FLIGHT_NUM);
+	fillWithZeroes(&d_output, 0, 2 * (PAD_LEN + 2));
+	float scale = 1.0f / ((float)PAD_LEN);
+	CHECK_CUFFT_ERRORS(cufftExecR2C(in_plan, (cufftReal*)d_input, (cufftComplex*)d_input));
+	int numThreads = 128;
+	int numBlocks = (PAD_LEN / 2 + numThreads) / numThreads;
+	size_t buf_size = PAD_LEN + 2;
+	/*The azi & ele falls exactly on an hrtf resolution*/
+	if (hrtf_indices[0] == hrtf_indices[1] && hrtf_indices[1] == hrtf_indices[2] && hrtf_indices[2] == hrtf_indices[3]) {
+		ComplexPointwiseMulAndScaleOutPlace << < numBlocks, numThreads, 0, streams[0] >> > (
+			(cufftComplex*)d_input,
+			(cufftComplex*)(d_hrtf + hrtf_indices[0] * (PAD_LEN + 2) * HRTF_CHN),
+			(cufftComplex*)d_convbufs,
+			PAD_LEN / 2 + 1,
+			scale
+			);
+
+		ComplexPointwiseMulAndScaleOutPlace << < numBlocks, numThreads, 0, streams[1] >> > (
+			(cufftComplex*)d_input,
+			(cufftComplex*)(d_hrtf + hrtf_indices[0] * (PAD_LEN + 2) * HRTF_CHN + PAD_LEN + 2),
+			(cufftComplex*)(d_convbufs + buf_size),
+			PAD_LEN / 2 + 1,
+			scale
+			);
+		/*+ Theta 1 Left*/
+		checkCudaErrors(cudaStreamSynchronize(streams[0]));
+		ComplexPointwiseAdd << < numBlocks, numThreads, 0, streams[0] >> > (
+			(cufftComplex*)d_convbufs,
+			(cufftComplex*)d_output,
+			PAD_LEN / 2 + 1
+			);
+		/*+ Theta 1 Right*/
+		checkCudaErrors(cudaStreamSynchronize(streams[1]));
+		ComplexPointwiseAdd << < numBlocks, numThreads, 0, streams[1] >> > (
+			(cufftComplex*)(d_convbufs + buf_size),
+			(cufftComplex*)(d_output + buf_size),
+			PAD_LEN / 2 + 1
+			);
+	}
+	/*If the elevation falls on the resolution, interpolate the azimuth*/
+	else if (hrtf_indices[0] == hrtf_indices[2]) {
+		for (int buf_no = 0; buf_no < 4; buf_no++) {
+			/*Even buf numbers are the left channel, odd ones are the right channel*/
+			float curr_scale;
+			if (buf_no < 2)
+				curr_scale = scale * omegas[1];
+			else {
+				curr_scale = scale * omegas[0];
+			}
+			int hrtf_index;
+			if (buf_no < 2)
+				hrtf_index = hrtf_indices[0];
+			else
+				hrtf_index = hrtf_indices[1];
+			ComplexPointwiseMulAndScaleOutPlace << < numBlocks, numThreads, 0, streams[buf_no] >> > (
+				(cufftComplex*)d_input,
+				(cufftComplex*)(d_hrtf + hrtf_index * (PAD_LEN + 2) * HRTF_CHN),
+				(cufftComplex*)(d_convbufs + buf_size * buf_no),
+				PAD_LEN / 2 + 1,
+				curr_scale
+				);
+			/*+ Theta 1 Right*/
+			ComplexPointwiseAdd << < numBlocks, numThreads, 0, streams[buf_no] >> > (
+				(cufftComplex*)(d_convbufs + buf_size * buf_no),
+				(cufftComplex*)(d_output + buf_size * buf_no % 2),
+				PAD_LEN / 2 + 1
+				);
+		}
+		
+	}
+	/*If the azimuth falls on the resolution, interpolate the elevation*/
+	else if (hrtf_indices[0] == hrtf_indices[1] && hrtf_indices[0] != hrtf_indices[2]) {
+		/*Phi 1*/
+		ComplexPointwiseMulAndScaleOutPlace << < numBlocks, numThreads, 0, streams[0] >> > (
+			(cufftComplex*)d_input,
+			(cufftComplex*)(d_hrtf + hrtf_indices[0] * (PAD_LEN + 2) * HRTF_CHN),
+			(cufftComplex*)d_convbufs,
+			PAD_LEN / 2 + 1,
+			scale * omegas[4]
+			);
+		/*Right channel*/
+		ComplexPointwiseMulAndScaleOutPlace << < numBlocks, numThreads, 0, streams[1] >> > (
+			(cufftComplex*)d_input,
+			(cufftComplex*)(d_hrtf + hrtf_indices[0] * (PAD_LEN + 2) * HRTF_CHN + PAD_LEN + 2),
+			(cufftComplex*)(d_convbufs + buf_size),
+			PAD_LEN / 2 + 1,
+			scale * omegas[4]
+			);
+		/*Phi 2*/
+		ComplexPointwiseMulAndScaleOutPlace << < numBlocks, numThreads, 0, streams[2] >> > (
+			(cufftComplex*)d_input,
+			(cufftComplex*)(d_hrtf + hrtf_indices[2] * (PAD_LEN + 2) * HRTF_CHN),
+			(cufftComplex*)(d_convbufs + buf_size * 2),
+			PAD_LEN / 2 + 1,
+			scale * omegas[5]
+			);
+		ComplexPointwiseMulAndScaleOutPlace << < numBlocks, numThreads, 0, streams[3] >> > (
+			(cufftComplex*)d_input,
+			(cufftComplex*)(d_hrtf + hrtf_indices[2] * (PAD_LEN + 2) * HRTF_CHN + PAD_LEN + 2),
+			(cufftComplex*)(d_convbufs + buf_size * 3),
+			PAD_LEN / 2 + 1,
+			scale * omegas[5]
+			);
+		/*+ Theta 1 Left*/
+		ComplexPointwiseAdd << < numBlocks, numThreads, 0, streams[0] >> > (
+			(cufftComplex*)d_convbufs,
+			(cufftComplex*)d_output,
+			PAD_LEN / 2 + 1
+			);
+		/*+ Theta 1 Right*/
+		ComplexPointwiseAdd << < numBlocks, numThreads, 0, streams[1] >> > (
+			(cufftComplex*)(d_convbufs + buf_size),
+			(cufftComplex*)(d_output + buf_size),
+			PAD_LEN / 2 + 1
+			);
+		/*+ Theta 2 Left*/
+		ComplexPointwiseAdd << < numBlocks, numThreads, 0, streams[2] >> > (
+			(cufftComplex*)(d_convbufs + buf_size * 2),
+			(cufftComplex*)d_output,
+			PAD_LEN / 2 + 1
+			);
+		/*+ Theta 2 Right*/
+		ComplexPointwiseAdd << < numBlocks, numThreads, 0, streams[3] >> > (
+			(cufftComplex*)(d_convbufs + buf_size * 3),
+			(cufftComplex*)(d_output + buf_size),
+			PAD_LEN / 2 + 1
+			);
+	}
+	/*Worst case scenario*/
+	else {
+		/*Theta 1*/
+		ComplexPointwiseMulAndScaleOutPlace << < numBlocks, numThreads, 0, streams[0] >> > (
+			(cufftComplex*)d_input,
+			(cufftComplex*)(d_hrtf + hrtf_indices[0] * (PAD_LEN + 2) * HRTF_CHN),
+			(cufftComplex*)d_convbufs,
+			PAD_LEN / 2 + 1,
+			scale * omegas[5] * omegas[1]
+			);
+		/*Right channel*/
+		ComplexPointwiseMulAndScaleOutPlace << < numBlocks, numThreads, 0, streams[1] >> > (
+			(cufftComplex*)d_input,
+			(cufftComplex*)(d_hrtf + hrtf_indices[0] * (PAD_LEN + 2) * HRTF_CHN + PAD_LEN + 2),
+			(cufftComplex*)(d_convbufs + buf_size),
+			PAD_LEN / 2 + 1,
+			scale * omegas[5] * omegas[1]
+			);
+		/*Theta 2*/
+		ComplexPointwiseMulAndScaleOutPlace << < numBlocks, numThreads, 0, streams[2] >> > (
+			(cufftComplex*)d_input,
+			(cufftComplex*)(d_hrtf + hrtf_indices[1] * (PAD_LEN + 2) * HRTF_CHN),
+			(cufftComplex*)(d_convbufs + buf_size * 2),
+			PAD_LEN / 2 + 1,
+			scale * omegas[5] * omegas[0]
+			);
+		ComplexPointwiseMulAndScaleOutPlace << < numBlocks, numThreads, 0, streams[3] >> > (
+			(cufftComplex*)d_input,
+			(cufftComplex*)(d_hrtf + hrtf_indices[1] * (PAD_LEN + 2) * HRTF_CHN + PAD_LEN + 2),
+			(cufftComplex*)(d_convbufs + buf_size * 3),
+			PAD_LEN / 2 + 1,
+			scale * omegas[5] * omegas[0]
+			);
+		/*Theta 3*/
+		ComplexPointwiseMulAndScaleOutPlace << < numBlocks, numThreads, 0, streams[4] >> > (
+			(cufftComplex*)d_input,
+			(cufftComplex*)(d_hrtf + hrtf_indices[2] * (PAD_LEN + 2) * HRTF_CHN),
+			(cufftComplex*)(d_convbufs + buf_size * 4),
+			PAD_LEN / 2 + 1,
+			scale * omegas[4] * omegas[3]
+			);
+		ComplexPointwiseMulAndScaleOutPlace << < numBlocks, numThreads, 0, streams[5] >> > (
+			(cufftComplex*)d_input,
+			(cufftComplex*)(d_hrtf + hrtf_indices[2] * (PAD_LEN + 2) * HRTF_CHN + PAD_LEN + 2),
+			(cufftComplex*)(d_convbufs + buf_size * 5),
+			PAD_LEN / 2 + 1,
+			scale * omegas[4] * omegas[3]
+			);
+		/*Theta 4*/
+		ComplexPointwiseMulAndScaleOutPlace << < numBlocks, numThreads, 0, streams[6] >> > (
+			(cufftComplex*)d_input,
+			(cufftComplex*)(d_hrtf + hrtf_indices[3] * (PAD_LEN + 2) * HRTF_CHN),
+			(cufftComplex*)(d_convbufs + buf_size * 6),
+			PAD_LEN / 2 + 1,
+			scale * omegas[4] * omegas[2]
+			);
+		ComplexPointwiseMulAndScaleOutPlace << < numBlocks, numThreads, 0, streams[7] >> > (
+			(cufftComplex*)d_input,
+			(cufftComplex*)(d_hrtf + hrtf_indices[3] * (PAD_LEN + 2) * HRTF_CHN + PAD_LEN + 2),
+			(cufftComplex*)(d_convbufs + buf_size * 7),
+			PAD_LEN / 2 + 1,
+			scale * omegas[4] * omegas[2]
+			);
+		/*+ Theta 1 Left*/
+		ComplexPointwiseAdd << < numBlocks, numThreads, 0, streams[0] >> > (
+			(cufftComplex*)d_convbufs,
+			(cufftComplex*)d_output,
+			PAD_LEN / 2 + 1
+			);
+		/*+ Theta 1 Right*/
+		ComplexPointwiseAdd << < numBlocks, numThreads, 0, streams[1] >> > (
+			(cufftComplex*)(d_convbufs + buf_size),
+			(cufftComplex*)(d_output + buf_size),
+			PAD_LEN / 2 + 1
+			);
+		/*+ Theta 2 Left*/
+		ComplexPointwiseAdd << < numBlocks, numThreads, 0, streams[2] >> > (
+			(cufftComplex*)(d_convbufs + buf_size * 2),
+			(cufftComplex*)d_output,
+			PAD_LEN / 2 + 1
+			);
+		/*+ Theta 2 Right*/
+		ComplexPointwiseAdd << < numBlocks, numThreads, 0, streams[3] >> > (
+			(cufftComplex*)(d_convbufs + buf_size * 3),
+			(cufftComplex*)(d_output + buf_size),
+			PAD_LEN / 2 + 1
+			);
+		/*+ Theta 3 Left*/
+		ComplexPointwiseAdd << < numBlocks, numThreads, 0, streams[4] >> > (
+			(cufftComplex*)(d_convbufs + buf_size * 4),
+			(cufftComplex*)d_output,
+			PAD_LEN / 2 + 1
+			);
+		/*+ Theta 3 Right*/
+		ComplexPointwiseAdd << < numBlocks, numThreads, 0, streams[5] >> > (
+			(cufftComplex*)(d_convbufs + buf_size * 5),
+			(cufftComplex*)(d_output + buf_size),
+			PAD_LEN / 2 + 1
+			);
+		/*+ Theta 4 Left*/
+		ComplexPointwiseAdd << < numBlocks, numThreads, 0, streams[6] >> > (
+			(cufftComplex*)(d_convbufs + buf_size * 6),
+			(cufftComplex*)d_output,
+			PAD_LEN / 2 + 1
+			);
+		/*+ Theta 4 Right*/
+		ComplexPointwiseAdd << < numBlocks, numThreads, 0, streams[7] >> > (
+			(cufftComplex*)(d_convbufs + buf_size * 7),
+			(cufftComplex*)(d_output + buf_size),
+			PAD_LEN / 2 + 1
+			);
+	}
+	for (int i = 0; i < STREAMS_PER_FLIGHT; i++) {
+		checkCudaErrors(cudaStreamSynchronize(streams[i]));
+	}
+	CHECK_CUFFT_ERRORS(cufftExecC2R(out_plan, (cufftComplex*)d_output, d_output));
+}
 void SoundSource::fftConvolve(int blockNo) {
 	float* d_input = this->d_input[blockNo % FLIGHT_NUM];
 	float* d_output = this->d_output[blockNo % FLIGHT_NUM];
@@ -79,8 +383,8 @@ void SoundSource::fftConvolve(int blockNo) {
 		gain = 1;
 	float scale = 1.0f / ((float) PAD_LEN);
 	CHECK_CUFFT_ERRORS(cufftExecR2C(in_plan, (cufftReal*)d_input, (cufftComplex*)d_input));
-	int numThreads = 128;
-	int numBlocks = (PAD_LEN + numThreads - 1) / numThreads;
+	int numThreads = 256;
+	int numBlocks = (PAD_LEN / 2 + numThreads - 1) / numThreads;
 	//interpolateConvolve(blockNo);
 	ComplexPointwiseMulAndScaleOutPlace << < numBlocks, numThreads, 0, streams[0] >> > (
 		(cufftComplex*)d_input,
@@ -110,8 +414,12 @@ SoundSource::~SoundSource() {
 		cudaFreeHost(x[i]);
 		cudaFree(d_input[i]);
 		cudaFree(d_output[i]);
-		cudaStreamDestroy(streams[i * 2]);
-		cudaStreamDestroy(streams[i * 2 + 1]);
+		for(int j = 0; j < STREAMS_PER_FLIGHT; j++){
+			cudaStreamDestroy(streams[i * STREAMS_PER_FLIGHT + j]);
+		}
+		for(int j = 0; j < 4; j++){
+			cudaFree(d_convbufs[i * 4 + j]);
+		}
 		cudaFreeHost(intermediate[i]);
 	}
 }

@@ -61,6 +61,20 @@ __global__ void ComplexPointwiseMulAndScaleOutPlace(const cufftComplex* a, const
 		c[i] = cufftComplexScale(cufftComplexMul(a[i], b[i]), scale);
 	}
 }
+__global__ void ComplexPointwiseAdd(cufftComplex* in, cufftComplex* out, int size)
+{
+	const int numThreads = blockDim.x * gridDim.x;
+	const int threadID = blockIdx.x * blockDim.x + threadIdx.x;
+
+	for (int i = threadID; i < size; i += numThreads)
+	{
+
+		atomicAdd(&(out[i].x), in[i].x);
+		atomicAdd(&(out[i].y), in[i].y);
+		// out[i].x += in[i].x;
+		// out[i].y += in[i].y;
+	}
+}
 __global__ void interleave(float* input, float* output, int size) {
 	const int numThreads = blockDim.x * gridDim.x;
 	const int threadID = blockIdx.x * blockDim.x + threadIdx.x;
@@ -130,6 +144,7 @@ __device__ __host__ inline cufftComplex cufftComplexMul(cufftComplex a, cufftCom
 	return c;
 }
 
+
 __global__ void averagingKernel(float4 *pos, float *d_buf, unsigned int size, double ratio, int averageSize) {
 
 	unsigned long modNum = blockIdx.x * blockDim.x + threadIdx.x;
@@ -154,4 +169,8 @@ __global__ void averagingKernel(float4 *pos, float *d_buf, unsigned int size, do
 		pos[modNum * 2 + 1] = make_float4(x, -avg, 0, 1.0f);
 
 	}
+}
+void fillWithZeroes(float** target_buf, long long old_size, long long new_size) {
+	thrust::device_ptr<float> dev_ptr(*target_buf);
+	thrust::fill(dev_ptr + old_size, dev_ptr + new_size, (float)0.0f);
 }

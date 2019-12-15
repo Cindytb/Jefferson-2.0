@@ -30,6 +30,8 @@ __global__ void averagingKernel(float4 *pos, float *d_buf, unsigned int size, do
 __global__ void ComplexPointwiseMulAndScale(cufftComplex *a, const cufftComplex *b, int size, float scale);
 __global__ void ComplexPointwiseMulAndScaleOutPlace(const cufftComplex* a, const cufftComplex* b, cufftComplex* c, int size, float scale);
 __global__ void ComplexPointwiseMul(cufftComplex* a, const cufftComplex* b, cufftComplex* c, int size);
+__global__ void ComplexPointwiseAdd(cufftComplex* in, cufftComplex* out, int size);
 __global__ void interleave(float* input, float* output, int size);
+void fillWithZeroes(float** target_buf, long long old_size, long long new_size);
 
 #endif
