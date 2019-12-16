@@ -129,7 +129,7 @@ bool runTest(int argc, char **argv, char *ref_file)
 #if(DEBUGMODE != 1)
 	/*MOVING SIGNAL TO GPU*/
 	// Allocate device memory for signal
-	SoundSource* source = &(GP->all_sources[0]);
+	//SoundSource* source = &(GP->all_sources[0]);
 	//float *d_signal;
 	//checkCudaErrors(cudaMalloc((void **)&d_signal, source->length * sizeof(float)));
 
@@ -480,7 +480,8 @@ void cleanup()
 void keyboard(unsigned char key, int /*x*/, int /*y*/)
 {
 	float dist = std::sqrt(ball_x * ball_x + ball_z * ball_z);
-
+	/*Calculate the radius, distance, elevation, and azimuth*/
+	//float ele = (float)atan2(coordinates.y, dist) * 180.0f / PI;
 	switch (key)
 	{
 	case('r'):
@@ -494,22 +495,24 @@ void keyboard(unsigned char key, int /*x*/, int /*y*/)
 	case('W'):
 	case('w'):
 		//value is 40 degrees in radians
-		if (ball_y >= 0 || ball_y < 0 && (atan(ball_y / dist) < 0.6981317))
+		if (ball_y >= 0 || ball_y < 0 && (atan((ball_y + temp) / dist) * 180.0f / PI > -40))
 			ball_y += temp;
 		break;
 	case('S'):
 	case('s'):
-		ball_y -= temp;
+		if (ball_y >= 0 || ball_y < 0 && (atan((ball_y - temp) / dist) * 180.0f / PI > -40))
+			ball_y -= temp;
+		
 		break;
 		/*TODO: Fix this logic*/
 	case('A'):
 	case('a'):
-		if (ball_y >= 0 || ball_y < 0 && (atan(ball_y / std::sqrt(pow(ball_x - temp, 2) + pow(ball_z, 2)) < tan40)))
+		if (atan(ball_y / std::sqrt((ball_x - temp) * (ball_x - temp) + ball_z * ball_z)) * 180.0f / PI > -40)
 			ball_x -= temp;
 		break;
 	case('D'):
 	case('d'):
-		if (ball_y >= 0 || ball_y < 0 && (atan(ball_y / std::sqrt(pow(ball_x + temp, 2) + pow(ball_z, 2)) < tan40)))
+		if (atan(ball_y / std::sqrt((ball_x + temp) * (ball_x + temp) + ball_z * ball_z)) * 180.0f / PI > -40)
 			ball_x += temp;
 		break;
 	case (27):
@@ -526,19 +529,19 @@ void specialKeys(int key, int x, int y) {
 
 	switch (key) {
 	case GLUT_KEY_LEFT:
-		if (ball_y <= 0 || ball_y > 0 && (atan(ball_y / std::sqrt(pow(ball_x - temp, 2) + pow(ball_z, 2)) < tan40)))
+		if (atan(ball_y / std::sqrt((ball_x - temp) * (ball_x - temp) + ball_z * ball_z)) * 180.0f / PI > -40)
 			ball_x -= temp;
 		break;
 	case GLUT_KEY_RIGHT:
-		if (ball_y <= 0 || ball_y > 0 && (atan(ball_y / std::sqrt(pow(ball_x + temp, 2) + pow(ball_z, 2)) < tan40)))
+		if (atan(ball_y / std::sqrt((ball_x + temp) * (ball_x + temp) + ball_z * ball_z)) * 180.0f / PI > -40)
 			ball_x += temp;
 		break;
 	case GLUT_KEY_UP:
-		if (ball_y <= 0 || ball_y > 0 && (atan(ball_y / std::sqrt(pow(ball_x, 2) + pow(ball_z - temp, 2)) < tan40)))
+		if (atan(ball_y / std::sqrt(ball_x * ball_x + (ball_z - temp) * (ball_z - temp))) * 180.0f / PI > -40)
 			ball_z -= temp;
 		break;
 	case GLUT_KEY_DOWN:
-		if (ball_y <= 0 || ball_y > 0 && (atan(ball_y / std::sqrt(pow(ball_x, 2) + pow(ball_z + temp, 2)) < tan40)))
+		if (atan(ball_y / std::sqrt(ball_x * ball_x + (ball_z + temp) * (ball_z + temp))) * 180.0f / PI > -40)
 			ball_z += temp;
 		break;
 	}

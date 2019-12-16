@@ -150,8 +150,7 @@ void callback_func(float *output, Data *p){
 		);
 		
 		/*Process*/
-		//curr_source->fftConvolve((p->blockNo- 1) % FLIGHT_NUM);
-		curr_source->interpolateConvolve((p->blockNo - 1) % FLIGHT_NUM);
+		curr_source->process((p->blockNo - 1) % FLIGHT_NUM);
 		/*Return*/
 		checkCudaErrors(cudaMemcpyAsync(
 			curr_source->intermediate[(p->blockNo - 2) % FLIGHT_NUM],

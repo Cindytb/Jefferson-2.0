@@ -363,7 +363,10 @@ void SoundSource::fftConvolve(int blockNo) {
 	CHECK_CUFFT_ERRORS(cufftExecC2R(out_plan, (cufftComplex*)d_output, d_output));
 
 }
-
+void SoundSource::process(int blockNo){
+	 interpolateConvolve(blockNo);
+	//fftConvolve(blockNo);
+}
 SoundSource::~SoundSource() {
 	CHECK_CUFFT_ERRORS(cufftDestroy(in_plan));
 	CHECK_CUFFT_ERRORS(cufftDestroy(out_plan));

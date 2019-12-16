@@ -39,9 +39,10 @@ public:
 	~SoundSource(); /*Destroy plans and deallocate memory on GPU*/
 	void updateInfo(); /*Update the azimuth and elevation. Called by display()*/
 	void drawWaveform(); /*Renders the VBO onto the screen. Called by display()*/
+	void process(int blockNo); /*Wrapper for the processor convolver. Calls fftConvolve() or interpolateConvolve()*/
+private:
 	void fftConvolve(int blockNo); /*Uses time domain convolution rounding to the nearest HRTF in the database*/
 	void interpolateConvolve(int blockNo); /*Uses Belloch's technique of interpolation*/
-private:
 	void interpolationCalculations(int* hrtf_indices, float* omegas);
 	void calculateDistanceFactor(int blockNo);
 };

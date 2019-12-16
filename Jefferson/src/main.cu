@@ -68,7 +68,7 @@ int main(int argc, char *argv[]){
 				}
 				/*Process*/
 				//curr_source->fftConvolve(p->blockNo - 1);
-				curr_source->interpolateConvolve(p->blockNo - 1);
+				curr_source->process(p->blockNo - 1);
 				if (i == 1) {
 					goto end;
 				}
