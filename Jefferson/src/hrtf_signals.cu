@@ -1,6 +1,7 @@
 #include "hrtf_signals.cuh"
 
 float* d_hrtf;
+float* hrtf;
 int elevation_pos[NUM_ELEV] =
 { -40,  -30,  -20,  -10,    0,   10,   20,   30,   40,   50,    60,    70,    80,  90 };
 float azimuth_inc[NUM_ELEV] =
@@ -85,7 +86,7 @@ int read_and_error_check(char* input, float* hrtf) {
 }
 int read_hrtf_signals(void) {
 	/*adding + 2 padding for the FFT*/
-	float* hrtf = new float[NUM_HRTF * HRTF_CHN * (PAD_LEN + 2)];
+	hrtf = new float[NUM_HRTF * HRTF_CHN * (PAD_LEN + 2)];
 	for (int i = 0; i < NUM_HRTF * HRTF_CHN * (PAD_LEN + 2); i++) {
 		hrtf[i] = 0.0f;
 	}
@@ -124,46 +125,6 @@ int read_hrtf_signals(void) {
 		printf("%3d ", azimuth_offset[i]);
 	}
 	printf("\n");
-	delete[] hrtf;
 	return 0;
 }
 
-
-__global__ void timeDomainConvolutionNaive(float* ibuf, float* rbuf, float* obuf, long long oframes,
-	long long rframes, int ch, float gain) {
-	int threadID = blockIdx.x * blockDim.x + threadIdx.x;
-	float value = 0;
-	for (int k = 0; k < rframes; k++) {
-		value += ibuf[threadID - k] * rbuf[k];
-	}
-	obuf[threadID * 2 + ch] = value * gain;
-
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/*GPU Convolution was not fast enough because of the large overhead
-of FFT and IFFT. Keeping the code here for future purposes*/
-void GPUconvolve_hrtf(float* input, int hrtf_idx, float* d_output, int outputLen, float gain, cudaStream_t* streams) {
-	if (gain > 1)
-		gain = 1;
-
-	int numBlocks = 8;
-	int numThread = FRAMES_PER_BUFFER / numBlocks;
-	timeDomainConvolutionNaive << < numBlocks, numThread, 0, streams[0] >> > (
-		input,
-		d_hrtf + hrtf_idx * HRTF_CHN * (HRTF_LEN + 2),
-		d_output,
-		outputLen,
-		HRTF_LEN,
-		0,
-		gain);
-	timeDomainConvolutionNaive << < numBlocks, numThread, 0, streams[1] >> > (
-		input,
-		d_hrtf + hrtf_idx * HRTF_CHN * (HRTF_LEN + 2) + HRTF_LEN + 2,
-		d_output,
-		outputLen,
-		HRTF_LEN,
-		1,
-		gain);
-
-}

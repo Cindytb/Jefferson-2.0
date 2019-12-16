@@ -29,9 +29,9 @@ int main(int argc, char *argv[]){
 		if (read_hrtf_signals() != 0) {
 			exit(EXIT_FAILURE);
 		}
-
+#ifndef RT_GPU_TD
 		transform_hrtfs();
-
+#endif
 		fprintf(stderr, "Opening output file\n");
 		SF_INFO osfinfo;
 		osfinfo.channels = 2;
@@ -39,10 +39,10 @@ int main(int argc, char *argv[]){
 		osfinfo.format = SF_FORMAT_PCM_24 | SF_FORMAT_WAV;
 		p->sndfile = sf_open("ofile.wav", SFM_WRITE, &osfinfo);
 
-
+#ifdef RT_GPU
 		printf("Blocks in flight: %i\n", FLIGHT_NUM);
 		cudaProfilerStart();		
-		
+
 		p->blockNo = 0;
 		for (int i = 0; i < FLIGHT_NUM; i++) {
 			for(int j = 0; j < p->num_sources; j++){
@@ -67,7 +67,6 @@ int main(int argc, char *argv[]){
 					goto end;
 				}
 				/*Process*/
-				//curr_source->fftConvolve(p->blockNo - 1);
 				curr_source->process(p->blockNo - 1);
 				if (i == 1) {
 					goto end;
@@ -86,18 +85,13 @@ int main(int argc, char *argv[]){
 					curr_source->x[(p->blockNo) % FLIGHT_NUM] + FRAMES_PER_BUFFER,
 					sizeof(float) * (PAD_LEN - FRAMES_PER_BUFFER)
 				);
-				/*memcpy(
-					curr_source->x[(p->blockNo + 1) % FLIGHT_NUM], 
-					curr_source->x[p->blockNo] + (PAD_LEN - FRAMES_PER_BUFFER),
-					(HRTF_LEN - 1) * sizeof(float)
-				);*/
 			}
 			p->blockNo++;
 		}
 		checkCudaErrors(cudaDeviceSynchronize());
 	#endif
 	
-
+#endif
 #if(DEBUGMODE != 1)
 	fprintf(stderr, "\n\n\n\nInitializing PortAudio\n\n\n\n");
 	initializePA(SAMPLE_RATE);
@@ -133,19 +127,6 @@ int main(int argc, char *argv[]){
 void closeEverything(){
 	closePA();
 	sf_close(p->sndfile);
-	for(int source_no = 0; source_no < p->num_sources; source_no++){
-		for(int i = 0; i < FLIGHT_NUM; i++){
-			checkCudaErrors(cudaFree(p->all_sources[source_no].d_input[i]));
-			checkCudaErrors(cudaFree(p->all_sources[source_no].d_output[i]));
-			checkCudaErrors(cudaFreeHost(p->all_sources[source_no].intermediate[i]));
-			checkCudaErrors(cudaFreeHost(p->all_sources[source_no].x[i]));
-			for (int j = 0; j < STREAMS_PER_FLIGHT; j++) {
-				checkCudaErrors(cudaStreamSynchronize(p->all_sources[source_no].streams[i * STREAMS_PER_FLIGHT + j]));
-				checkCudaErrors(cudaStreamDestroy(p->all_sources[source_no].streams[i * STREAMS_PER_FLIGHT + j]));
-			}			
-		}
-
-		free(p->all_sources[source_no].buf);
-	}
-	
+	delete[] hrtf;
+	checkCudaErrors(cudaFree(d_hrtf));	
 }

@@ -37,7 +37,7 @@ void initializePA(int fs) {
 		paNoFlag, /* flags */
 		paCallback,
 		&data);
-
+	printf("Frames per buffer: %i\n", FRAMES_PER_BUFFER);
 	if (err != paNoError) {
 		printf("PortAudio error: open stream: %s\n", Pa_GetErrorText(err));
 		printf("\nExiting.\n");
@@ -97,7 +97,7 @@ void callback_func(float *output, Data *p){
 	for(int i = 0; i < FRAMES_PER_BUFFER * 2; i++){
 		output[i] = 0.0f;
 	}
-	for (int source_no = 0; source_no < p->num_sources; source_no++){
+	for (int source_no = 0; source_no < p->num_sources; source_no++) {
 
 		SoundSource* curr_source = &(p->all_sources[source_no]);
 		/*Enable pausing of audio*/
@@ -108,14 +108,45 @@ void callback_func(float *output, Data *p){
 			}
 			break;
 		}
+	
+		
+#ifdef CPU_TD
+		/*Copy into curr_source->x pinned memory*/
+		if (curr_source->count + FRAMES_PER_BUFFER < curr_source->length) {
+			memcpy(
+				curr_source->x[0] + (PAD_LEN - FRAMES_PER_BUFFER),  /*Go to the end and work backwards*/
+				curr_source->buf + curr_source->count,
+				FRAMES_PER_BUFFER * sizeof(float));
+			curr_source->count += FRAMES_PER_BUFFER;
+		}
+		else {
+			int rem = curr_source->length - curr_source->count;
+			memcpy(
+				curr_source->x[0] + (PAD_LEN - FRAMES_PER_BUFFER),
+				curr_source->buf + curr_source->count,
+				rem * sizeof(float));
+			memcpy(
+				curr_source->x[0] + (PAD_LEN - FRAMES_PER_BUFFER) + rem,
+				curr_source->buf,
+				(FRAMES_PER_BUFFER - rem) * sizeof(float));
+			curr_source->count = FRAMES_PER_BUFFER - rem;
+		}
+		/*Process*/
+		curr_source->cpuTDConvolve(curr_source->x[0] + (PAD_LEN - FRAMES_PER_BUFFER), output, FRAMES_PER_BUFFER, 1);
+		/*Overlap-save*/
+		memmove(
+			curr_source->x[0],
+			curr_source->x[0] + FRAMES_PER_BUFFER,
+			sizeof(float) * (PAD_LEN - FRAMES_PER_BUFFER)
+		);
+#endif
 
-		
-		
+#ifdef RT_GPU
 		/*Copy into curr_source->x pinned memory*/
 		if (curr_source->count + FRAMES_PER_BUFFER < curr_source->length) {
 			memcpy(
 				curr_source->x[p->blockNo % FLIGHT_NUM] + (PAD_LEN - FRAMES_PER_BUFFER),  /*Go to the end and work backwards*/
-				curr_source->buf + curr_source->count, 
+				curr_source->buf + curr_source->count,
 				FRAMES_PER_BUFFER * sizeof(float));
 			curr_source->count += FRAMES_PER_BUFFER;
 		}
@@ -123,15 +154,15 @@ void callback_func(float *output, Data *p){
 			int rem = curr_source->length - curr_source->count;
 			memcpy(
 				curr_source->x[p->blockNo % FLIGHT_NUM] + (PAD_LEN - FRAMES_PER_BUFFER),
-				curr_source->buf + curr_source->count, 
+				curr_source->buf + curr_source->count,
 				rem * sizeof(float));
 			memcpy(
-				curr_source->x[p->blockNo % FLIGHT_NUM] + (PAD_LEN - FRAMES_PER_BUFFER) + rem, 
-				curr_source->buf, 
+				curr_source->x[p->blockNo % FLIGHT_NUM] + (PAD_LEN - FRAMES_PER_BUFFER) + rem,
+				curr_source->buf,
 				(FRAMES_PER_BUFFER - rem) * sizeof(float));
 			curr_source->count = FRAMES_PER_BUFFER - rem;
 		}
-
+		/*Copy intermediate --> output*/
 		//memcpy(output, curr_source->intermediate[p->blockNo % FLIGHT_NUM], FRAMES_PER_BUFFER * 2 * sizeof(float));
 		for (int i = 0; i < FRAMES_PER_BUFFER * 2; i++) {
 			output[i] += curr_source->intermediate[p->blockNo % FLIGHT_NUM][i];
@@ -166,6 +197,8 @@ void callback_func(float *output, Data *p){
 			sizeof(float) * (PAD_LEN - FRAMES_PER_BUFFER)
 		);
 		
+	
+#endif
 	}
 	p->blockNo++;
 	if (p->blockNo > FLIGHT_NUM * 2) {

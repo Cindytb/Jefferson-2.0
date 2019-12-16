@@ -40,10 +40,13 @@ public:
 	void updateInfo(); /*Update the azimuth and elevation. Called by display()*/
 	void drawWaveform(); /*Renders the VBO onto the screen. Called by display()*/
 	void process(int blockNo); /*Wrapper for the processor convolver. Calls fftConvolve() or interpolateConvolve()*/
+	void cpuTDConvolve(float *input, float *output, int outputLen, float gain);
 private:
 	void fftConvolve(int blockNo); /*Uses time domain convolution rounding to the nearest HRTF in the database*/
 	void interpolateConvolve(int blockNo); /*Uses Belloch's technique of interpolation*/
-	void interpolationCalculations(int* hrtf_indices, float* omegas);
+	void gpuTDConvolve(float* input, float* d_output, int outputLen, float gain, cudaStream_t* streams);
+	void allKernels(float* d_input, float* d_output, cufftComplex* d_convbufs, cufftComplex* d_distance_factor, cudaStream_t* streams, float* omegas, int* hrtf_indices); /*All of the kernels for interpolation*/
+	void interpolationCalculations(int* hrtf_indices, float* omegas); /*Determine all omegas and hrtf indices*/
 	void calculateDistanceFactor(int blockNo);
 };
 #endif

@@ -7,6 +7,14 @@
     <LocalDebuggerCommandArguments>media/Castanets-441.wav media/s1_r1_b_441_mono.wav 2&gt;Jefferson.log</LocalDebuggerCommandArguments>
     <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='GPU_TD|x64'">
+    <LocalDebuggerCommandArguments>media/Castanets-441.wav media/s1_r1_b_441_mono.wav 2&gt;Jefferson.log</LocalDebuggerCommandArguments>
+    <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='CPU_TD|x64'">
+    <LocalDebuggerCommandArguments>media/Castanets-441.wav media/s1_r1_b_441_mono.wav 2&gt;Jefferson.log</LocalDebuggerCommandArguments>
+    <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
+  </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LocalDebuggerCommandArguments>media/Castanets-441.wav media/s1_r1_b_441_mono.wav 2&gt;Jefferson.log</LocalDebuggerCommandArguments>
     <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>

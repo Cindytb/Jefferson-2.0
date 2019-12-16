@@ -147,24 +147,14 @@ void SoundSource::calculateDistanceFactor(int blockNo){
 
 }
 /*
-This method is a slightly tweaked implementation of Jose Belloch's 
+This method is a slightly tweaked implementation of Jose Belloch's
 "Headphone-Based Virtual Spatialization of Sound with a GPU Accelerator"
 paper from the Journal of the Audio Engineering Society,
 Volume 61, No 7/8, 2013, July/August
 */
-void SoundSource::interpolateConvolve(int blockNo) {
-	int hrtf_indices[4];
-	float omegas[6];
-	interpolationCalculations(hrtf_indices, omegas);
-	calculateDistanceFactor(blockNo % FLIGHT_NUM);
-	
-	cufftComplex* d_distance_factor = this->distance_factor[blockNo % FLIGHT_NUM];
-	float* d_input = this->d_input[blockNo % FLIGHT_NUM];
-	float* d_output = this->d_output[blockNo % FLIGHT_NUM];
-	cufftComplex* d_convbufs = this ->d_convbufs[blockNo % FLIGHT_NUM];
-	cudaStream_t* streams = this->streams + (blockNo * 2 % FLIGHT_NUM);
-
-
+void SoundSource::allKernels(float* d_input, float* d_output, 
+	cufftComplex* d_convbufs, cufftComplex* d_distance_factor, 
+	cudaStream_t* streams, float* omegas, int* hrtf_indices){
 	fillWithZeroes(&d_output, 0, 2 * (PAD_LEN + 2));
 
 	CHECK_CUFFT_ERRORS(cufftSetStream(in_plan, streams[0]));
@@ -327,6 +317,22 @@ void SoundSource::interpolateConvolve(int blockNo) {
 				);
 		}
 	}
+}
+
+void SoundSource::interpolateConvolve(int blockNo) {
+	int hrtf_indices[4];
+	float omegas[6];
+	interpolationCalculations(hrtf_indices, omegas);
+	calculateDistanceFactor(blockNo % FLIGHT_NUM);
+	
+	cufftComplex* d_distance_factor = this->distance_factor[blockNo % FLIGHT_NUM];
+	float* d_input = this->d_input[blockNo % FLIGHT_NUM];
+	float* d_output = this->d_output[blockNo % FLIGHT_NUM];
+	cufftComplex* d_convbufs = this ->d_convbufs[blockNo % FLIGHT_NUM];
+	cudaStream_t* streams = this->streams + (blockNo * 2 % FLIGHT_NUM);
+
+	allKernels(d_input, d_output, d_convbufs, d_distance_factor, streams, omegas, hrtf_indices);
+	
 	for (int i = 1; i < STREAMS_PER_FLIGHT; i++) {
 		checkCudaErrors(cudaStreamSynchronize(streams[i]));
 	}
@@ -363,11 +369,103 @@ void SoundSource::fftConvolve(int blockNo) {
 	CHECK_CUFFT_ERRORS(cufftExecC2R(out_plan, (cufftComplex*)d_output, d_output));
 
 }
+/* convolve signal buffer with HRTF
+* new signal starts at HRTF_LEN frames into x buffer
+* x is mono input signal
+* HRTF and y are interleaved by channel
+* y_len is in frames
+*/
+void SoundSource::cpuTDConvolve(float *input, float *output, int outputLen, float gain){
+	float *l_hrtf = hrtf + hrtf_idx * HRTF_CHN * (PAD_LEN + 2);
+	float *r_hrtf = hrtf + hrtf_idx * HRTF_CHN * (PAD_LEN + 2) + PAD_LEN + 2;
+	if (gain > 1)
+		gain = 1;
+
+	/* zero output buffer */
+	for (int i = 0; i < outputLen * HRTF_CHN; i++) {
+		output[i] = 0.0;
+	}
+	for (int n = 0; n < outputLen; n++) {
+		for (int k = 0; k < HRTF_LEN; k++) {
+			for (int j = 0; j < HRTF_CHN; j++) {
+				/* outputLen and HRTF_LEN are n frames, output and hrtf are interleaved
+				* input is mono
+				*/
+				if(j == 0){
+					output[2 * n + j] += input[n - k] * l_hrtf[k];
+				}
+				else{
+					output[2 * n + j] += input[n - k] * r_hrtf[k];
+				}
+				
+			}
+			output[2 * n] *= gain;
+			output[2 * n + 1] *= gain;
+		}
+	}
+}
+
+
+__global__ void timeDomainConvolutionNaive(float* ibuf, float* rbuf, float* obuf, long long oframes,
+	long long rframes, int ch, float gain) {
+	int threadID = blockIdx.x * blockDim.x + threadIdx.x;
+	float value = 0;
+	for (int k = 0; k < rframes; k++) {
+		value += ibuf[threadID - k] * rbuf[k];
+	}
+	obuf[threadID * 2 + ch] = value * gain;
+
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/*GPU Convolution was not fast enough because of the large overhead
+of FFT and IFFT. Keeping the code here for future purposes*/
+void SoundSource::gpuTDConvolve(float* input, float* d_output, int outputLen, float gain, cudaStream_t* streams) {
+	if (gain > 1)
+		gain = 1;
+
+	int numThread = 256;
+	int numBlocks = (outputLen + numThread - 1) / numThread;
+	timeDomainConvolutionNaive << < numBlocks, numThread, 0, streams[0] >> > (
+		input,
+		d_hrtf + hrtf_idx * HRTF_CHN * (PAD_LEN + 2),
+		d_output,
+		outputLen,
+		HRTF_LEN,
+		0,
+		gain);
+	timeDomainConvolutionNaive << < numBlocks, numThread, 0, streams[1] >> > (
+		input,
+		d_hrtf + hrtf_idx * HRTF_CHN * (PAD_LEN + 2) + PAD_LEN + 2,
+		d_output,
+		outputLen,
+		HRTF_LEN,
+		1,
+		gain);
+	checkCudaErrors(cudaDeviceSynchronize());
+}
 void SoundSource::process(int blockNo){
+#ifdef RT_GPU_INTERPOLATE
 	 interpolateConvolve(blockNo);
-	//fftConvolve(blockNo);
+#endif
+#ifdef RT_GPU_BASIC
+	fftConvolve(blockNo);
+#endif
+#ifdef RT_GPU_TD
+	/*Process*/
+	gpuTDConvolve(
+		d_input[blockNo % FLIGHT_NUM] + PAD_LEN - FRAMES_PER_BUFFER,
+		d_output[blockNo % FLIGHT_NUM] + 2 * (PAD_LEN - FRAMES_PER_BUFFER),
+		FRAMES_PER_BUFFER,
+		gain, streams + blockNo * STREAMS_PER_FLIGHT);
+
+#endif
+#ifdef CPU_TD
+	 cpuTDConvolve(x[blockNo % FLIGHT_NUM] + PAD_LEN - FRAMES_PER_BUFFER, intermediate[blockNo % FLIGHT_NUM], FRAMES_PER_BUFFER, 1);
+#endif
 }
 SoundSource::~SoundSource() {
+	free(buf);
 	CHECK_CUFFT_ERRORS(cufftDestroy(in_plan));
 	CHECK_CUFFT_ERRORS(cufftDestroy(out_plan));
 	for (int i = 0; i < FLIGHT_NUM; i++) {
