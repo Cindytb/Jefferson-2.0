@@ -15,6 +15,8 @@
 #include <helper_functions.h>
 #include <helper_cuda.h>
 
+#include <fftw3.h>
+
 
 #define HRTF_DIR	"full"
 
@@ -30,5 +32,5 @@ extern int azimuth_offset[NUM_ELEV + 1];
 int read_hrtf_signals(void);
 int pick_hrtf(float obj_ele, float obj_azi);
 
-void GPUconvolve_hrtf(float *input, int hrtf_idx, float *output, int outputLen, float gain, cudaStream_t *stream);
+extern fftwf_complex* fft_hrtf;
 #endif /* __HRTF_SIGNALS_CUDA */

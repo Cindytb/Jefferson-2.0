@@ -2,6 +2,7 @@
 
 float* d_hrtf;
 float* hrtf;
+fftwf_complex* fft_hrtf;
 int elevation_pos[NUM_ELEV] =
 { -40,  -30,  -20,  -10,    0,   10,   20,   30,   40,   50,    60,    70,    80,  90 };
 float azimuth_inc[NUM_ELEV] =
@@ -17,7 +18,7 @@ int azimuth_offset[NUM_ELEV + 1];
 */
 int pick_hrtf(float obj_ele, float obj_azi)
 {
-	int i, n, ele_idx, hrtf_idx;
+	int i, n, ele_idx, hrtf_idx = 0;
 	float d, dmin;
 
 	/* find closest elevation position */
@@ -86,7 +87,9 @@ int read_and_error_check(char* input, float* hrtf) {
 }
 int read_hrtf_signals(void) {
 	/*adding + 2 padding for the FFT*/
+
 	hrtf = new float[NUM_HRTF * HRTF_CHN * (PAD_LEN + 2)];
+
 	for (int i = 0; i < NUM_HRTF * HRTF_CHN * (PAD_LEN + 2); i++) {
 		hrtf[i] = 0.0f;
 	}
@@ -118,8 +121,27 @@ int read_hrtf_signals(void) {
 
 		azimuth_offset[i + 1] = j;
 	}
-	
 	checkCudaErrors(cudaMemcpy(d_hrtf, hrtf, size, cudaMemcpyHostToDevice));
+	/*fftw_plan fftw_plan_many_dft_r2c(int rank, const int *n, int howmany,
+                                 double *in, const int *inembed,
+                                 int istride, int idist,
+                                 fftw_complex *out, const int *onembed,
+                                 int ostride, int odist,
+                                 unsigned flags);
+								 */
+#ifdef CPU_FD_BASIC
+	fft_hrtf = fftwf_alloc_complex(NUM_HRTF * HRTF_CHN * (PAD_LEN / 2 + 1));
+	printf("%p\n", fft_hrtf);
+	printf("%p\n", fft_hrtf + NUM_HRTF * HRTF_CHN * (PAD_LEN / 2 + 1));
+	int n[] = { PAD_LEN };
+	fftwf_plan plan = fftwf_plan_many_dft_r2c(
+		1, n, NUM_HRTF * 2, 
+		hrtf, NULL, 1, PAD_LEN + 2, 
+		fft_hrtf, NULL, 1, PAD_LEN / 2 + 1, 
+		FFTW_ESTIMATE);
+	fftwf_execute(plan);
+	fftwf_destroy_plan(plan);
+#endif
 	printf("\nHRTF index offsets for each elevation:\n");
 	for (int i = 0; i < NUM_ELEV + 1; i++) {
 		printf("%3d ", azimuth_offset[i]);

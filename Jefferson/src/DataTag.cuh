@@ -10,7 +10,6 @@ public:
 	SoundSource *all_sources;		/*Array of structs for all sound sources*/
 	int blockNo;
 	int num_sources;
-	float ele;						/*Elevation of the sound source*/
 	bool pauseStatus;
 };
 

@@ -214,4 +214,21 @@ void transform_hrtfs() {
 	CHECK_CUFFT_ERRORS(cufftPlan1d(&plan, PAD_LEN, CUFFT_R2C, NUM_HRTF * 2));
 	CHECK_CUFFT_ERRORS(cufftExecR2C(plan, d_hrtf, (cufftComplex*)d_hrtf));
 	CHECK_CUFFT_ERRORS(cufftDestroy(plan));
+
+#ifdef CPU_FD_BASIC
+	float max_diff = 0;
+	cufftComplex* buf = new cufftComplex[NUM_HRTF * 2 * (PAD_LEN / 2 + 1)];
+	checkCudaErrors(cudaMemcpy(buf, d_hrtf, NUM_HRTF * 2 * (PAD_LEN / 2 + 1) * sizeof(cufftComplex), cudaMemcpyDeviceToHost));
+	int size = NUM_HRTF * HRTF_CHN * (PAD_LEN + 2);
+	for (int i = 0; i < size; i++) {
+		float gpu_val = *(((float*)buf) + i);
+		float cpu_val = *(((float*)fft_hrtf) + i);
+		float diff = fabs(gpu_val - cpu_val);
+		if (max_diff < diff) {
+			max_diff = diff;
+		}
+	}
+	printf("GPU & CPU FFT are within %f precision\n", max_diff);
+	delete[] buf;
+#endif
 }

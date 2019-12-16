@@ -33,6 +33,8 @@ __global__ void ComplexPointwiseMulAndScaleOutPlace(const cufftComplex* a, const
 __global__ void ComplexPointwiseMulInPlace(const cufftComplex* in, cufftComplex* out, int size);
 __global__ void ComplexPointwiseMul(cufftComplex* a, const cufftComplex* b, cufftComplex* c, int size);
 __global__ void ComplexPointwiseAdd(cufftComplex* in, cufftComplex* out, int size);
+__global__ void timeDomainConvolutionNaive(float* ibuf, float* rbuf, float* obuf, long long oframes,
+	long long rframes, int ch, float gain);
 __global__ void interleave(float* input, float* output, int size);
 void fillWithZeroes(float** target_buf, long long old_size, long long new_size);
 

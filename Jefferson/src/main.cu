@@ -38,7 +38,7 @@ int main(int argc, char *argv[]){
 		osfinfo.samplerate = 44100;
 		osfinfo.format = SF_FORMAT_PCM_24 | SF_FORMAT_WAV;
 		p->sndfile = sf_open("ofile.wav", SFM_WRITE, &osfinfo);
-
+		
 #ifdef RT_GPU
 		printf("Blocks in flight: %i\n", FLIGHT_NUM);
 		cudaProfilerStart();		
@@ -102,23 +102,24 @@ int main(int argc, char *argv[]){
 	/*Here to debug without graphics*/
 #if DEBUGMODE == 2
 	std::this_thread::sleep_for(std::chrono::seconds((p->all_sources[0].length)/44100));
-	p->all_sources[0].azi = 273;
+
+	/*p->all_sources[0].azi = 273;
 	std::this_thread::sleep_for(std::chrono::seconds((p->all_sources[0].length) / 44100));
 	p->all_sources[0].azi = 270;
 	p->all_sources[0].ele = 5;
 	std::this_thread::sleep_for(std::chrono::seconds((p->all_sources[0].length) / 44100));
 	p->all_sources[0].azi = 273;
-	std::this_thread::sleep_for(std::chrono::seconds((p->all_sources[0].length) / 44100));
+	std::this_thread::sleep_for(std::chrono::seconds((p->all_sources[0].length) / 44100));*/
 
 	//char merp = getchar();
 #else
 	graphicsMain(argc, argv, p);
 #endif
-	
+
 	/*THIS SECTION WILL NOT RUN IF GRAPHICS IS TURNED ON*/
 	/*Placed here to properly close files when debugging without graphics*/
 	cudaProfilerStop();
-	
+
 	closeEverything();
 
 	return 0;
@@ -128,5 +129,8 @@ void closeEverything(){
 	closePA();
 	sf_close(p->sndfile);
 	delete[] hrtf;
+#ifdef CPU_FD_BASIC
+	fftwf_free(fft_hrtf);
+#endif
 	checkCudaErrors(cudaFree(d_hrtf));	
 }

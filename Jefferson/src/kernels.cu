@@ -104,6 +104,17 @@ __global__ void ComplexPointwiseAdd(cufftComplex* in, cufftComplex* out, int siz
 		// out[i].y += in[i].y;
 	}
 }
+
+__global__ void timeDomainConvolutionNaive(float* ibuf, float* rbuf, float* obuf, long long oframes,
+	long long rframes, int ch, float gain) {
+	int threadID = blockIdx.x * blockDim.x + threadIdx.x;
+	float value = 0;
+	for (int k = 0; k < rframes; k++) {
+		value += ibuf[threadID - k] * rbuf[k];
+	}
+	obuf[threadID * 2 + ch] = value * gain;
+
+}
 __global__ void interleave(float* input, float* output, int size) {
 	const int numThreads = blockDim.x * gridDim.x;
 	const int threadID = blockIdx.x * blockDim.x + threadIdx.x;

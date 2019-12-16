@@ -108,38 +108,6 @@ void callback_func(float *output, Data *p){
 			}
 			break;
 		}
-	
-		
-#ifdef CPU_TD
-		/*Copy into curr_source->x pinned memory*/
-		if (curr_source->count + FRAMES_PER_BUFFER < curr_source->length) {
-			memcpy(
-				curr_source->x[0] + (PAD_LEN - FRAMES_PER_BUFFER),  /*Go to the end and work backwards*/
-				curr_source->buf + curr_source->count,
-				FRAMES_PER_BUFFER * sizeof(float));
-			curr_source->count += FRAMES_PER_BUFFER;
-		}
-		else {
-			int rem = curr_source->length - curr_source->count;
-			memcpy(
-				curr_source->x[0] + (PAD_LEN - FRAMES_PER_BUFFER),
-				curr_source->buf + curr_source->count,
-				rem * sizeof(float));
-			memcpy(
-				curr_source->x[0] + (PAD_LEN - FRAMES_PER_BUFFER) + rem,
-				curr_source->buf,
-				(FRAMES_PER_BUFFER - rem) * sizeof(float));
-			curr_source->count = FRAMES_PER_BUFFER - rem;
-		}
-		/*Process*/
-		curr_source->cpuTDConvolve(curr_source->x[0] + (PAD_LEN - FRAMES_PER_BUFFER), output, FRAMES_PER_BUFFER, 1);
-		/*Overlap-save*/
-		memmove(
-			curr_source->x[0],
-			curr_source->x[0] + FRAMES_PER_BUFFER,
-			sizeof(float) * (PAD_LEN - FRAMES_PER_BUFFER)
-		);
-#endif
 
 #ifdef RT_GPU
 		/*Copy into curr_source->x pinned memory*/
@@ -197,7 +165,48 @@ void callback_func(float *output, Data *p){
 			sizeof(float) * (PAD_LEN - FRAMES_PER_BUFFER)
 		);
 		
-	
+#else
+		/*Copy into curr_source->x pinned memory*/
+		if (curr_source->count + FRAMES_PER_BUFFER < curr_source->length) {
+			memcpy(
+				curr_source->x[0] + (PAD_LEN - FRAMES_PER_BUFFER),  /*Go to the end and work backwards*/
+				curr_source->buf + curr_source->count,
+				FRAMES_PER_BUFFER * sizeof(float));
+			curr_source->count += FRAMES_PER_BUFFER;
+		}
+		else {
+			int rem = curr_source->length - curr_source->count;
+			memcpy(
+				curr_source->x[0] + (PAD_LEN - FRAMES_PER_BUFFER),
+				curr_source->buf + curr_source->count,
+				rem * sizeof(float));
+			memcpy(
+				curr_source->x[0] + (PAD_LEN - FRAMES_PER_BUFFER) + rem,
+				curr_source->buf,
+				(FRAMES_PER_BUFFER - rem) * sizeof(float));
+			curr_source->count = FRAMES_PER_BUFFER - rem;
+		}
+		
+		/*Process*/
+#ifdef CPU_TD
+		curr_source->cpuTDConvolve(curr_source->x[0] + (PAD_LEN - FRAMES_PER_BUFFER), output, FRAMES_PER_BUFFER, 1);
+#else
+		curr_source->process(0);
+		/*Write to output*/
+		for (int i = 0; i < FRAMES_PER_BUFFER * 2; i++) {
+			output[i] += ((float*)curr_source->fftw_intermediate)[i + 2 * (PAD_LEN - FRAMES_PER_BUFFER)];
+			if (output[i] > 1.0) {
+				fprintf(stderr, "ALERT! CLIPPING AUDIO!\n");
+			}
+		}
+#endif
+		
+		/*Overlap-save*/
+		memmove(
+			curr_source->x[0],
+			curr_source->x[0] + FRAMES_PER_BUFFER,
+			sizeof(float) * (PAD_LEN - FRAMES_PER_BUFFER)
+		);
 #endif
 	}
 	p->blockNo++;
