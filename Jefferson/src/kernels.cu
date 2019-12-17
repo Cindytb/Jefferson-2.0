@@ -80,6 +80,21 @@ __global__ void generateDistanceFactor(cufftComplex *in, float frac, float fsvs,
 		in[i].y = -sin(2 * PI * fsvs * r * i / N) / frac;
 	}
 }
+
+/*
+	f[n] = n / (N - 1)
+	g[n] = 1 - f[n]
+*/
+__global__ void crossFade(float* out1, float* out2, int numFrames){
+	const int numThreads = blockDim.x * gridDim.x;
+	const int threadID = blockIdx.x * blockDim.x + threadIdx.x;
+	for (int i = threadID; i < numFrames; i += numThreads)
+	{
+		out1[i * 2] = out1[i * 2] * float(i) / (numFrames - 1) + out2[i * 2] * (1 - float(i) / (numFrames - 1));
+		out1[i * 2 + 1] = out1[i * 2 + 1] * float(i) / (numFrames - 1) + out2[i * 2 + 1] * (1 - float(i) / (numFrames - 1));
+	}
+
+}
 // cufftComplex pointwise multiplication
 __global__ void ComplexPointwiseMulInPlace(const cufftComplex* in, cufftComplex* out, int size) {
 	const int numThreads = blockDim.x * gridDim.x;

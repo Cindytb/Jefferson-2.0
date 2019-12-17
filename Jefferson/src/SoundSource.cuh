@@ -20,7 +20,9 @@ public:
 	cufftComplex* distance_factor[FLIGHT_NUM]; 	/*Buffer for the complex factor to account for distance scaling PAD_LEN / 2 + 1 Complex values*/
 	float* d_input[FLIGHT_NUM];					/*PAD_LEN + 2 sized for the input*/
 	cufftComplex* d_convbufs[FLIGHT_NUM];		/*4 * 2 * (PAD_LEN + 2) sized for each interpolation buffer*/
+	cufftComplex* d_convbufs2[FLIGHT_NUM];		/*4 * 2 * (PAD_LEN + 2) sized for each interpolation buffer, part of the crossfading functions*/
 	float* d_output[FLIGHT_NUM];				/*2 * (PAD_LEN + 2)  sized for the output*/
+	float* d_output2[FLIGHT_NUM];				/*2 * (PAD_LEN + 2)  sized for the output, part of the crossfading function*/
 	fftwf_complex* fftw_intermediate;			/*2 * (PAD_LEN / 2 + 1) complex values. Padded buffer for fftw output*/
 
 	
@@ -61,7 +63,7 @@ private:
 	float sum_ms = 0;
 	float avg_ms = 0;
 	int num_iterations = 0;
-	cufftHandle in_plan, out_plan;
+	cufftHandle in_plan, out_plan, out_plan2;
 	fftwf_plan fftw_in_plan, fftw_out_plan; 
 };
 #endif

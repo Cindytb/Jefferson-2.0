@@ -23,8 +23,8 @@ SoundSource::SoundSource() {
 	coordinates.x = 1;
 	coordinates.y = 0;
 	coordinates.z = 0;
-	azi = 273;
-	ele = 5;
+	azi = 270;
+	ele = 0;
 	streams = new cudaStream_t[FLIGHT_NUM * STREAMS_PER_FLIGHT];
 	for (int i = 0; i < FLIGHT_NUM; i++) {
 		/*Allocating pinned memory for incoming transfer*/
@@ -33,6 +33,7 @@ SoundSource::SoundSource() {
 		checkCudaErrors(cudaMalloc(d_input + i, (PAD_LEN + 2) * sizeof(float)));
 		/*Allocating memory for the outputs*/
 		checkCudaErrors(cudaMalloc(d_output + i, HRTF_CHN * (PAD_LEN + 2) * sizeof(float)));
+		checkCudaErrors(cudaMalloc(d_output2 + i, HRTF_CHN * (PAD_LEN + 2) * sizeof(float)));
 		/*Allocating memory for the distance factor*/
 		checkCudaErrors(cudaMalloc(distance_factor + i, (PAD_LEN / 2 + 1) * sizeof(cufftComplex)));
 		/*Creating the streams*/
@@ -40,6 +41,7 @@ SoundSource::SoundSource() {
 			checkCudaErrors(cudaStreamCreate(streams + i * STREAMS_PER_FLIGHT + j));
 		}
 		checkCudaErrors(cudaMalloc(d_convbufs + i, 4 * HRTF_CHN * (PAD_LEN / 2 + 1) * sizeof(cufftComplex)));
+		checkCudaErrors(cudaMalloc(d_convbufs2 + i, 4 * HRTF_CHN * (PAD_LEN / 2 + 1) * sizeof(cufftComplex)));
 
 		/*Allocating pinned memory for outgoing transfer*/
 		checkCudaErrors(cudaMallocHost(intermediate + i, (FRAMES_PER_BUFFER * HRTF_CHN) * sizeof(float)));
@@ -69,6 +71,13 @@ SoundSource::SoundSource() {
 			&n, 2, 1,
 			CUFFT_C2R, 2)
 	);
+	CHECK_CUFFT_ERRORS(
+		cufftPlanMany(
+			&out_plan2, 1, &n,
+			&n, 1, n / 2 + 1,
+			&n, 2, 1,
+			CUFFT_C2R, 2)
+	);
 	fftw_in_plan = fftwf_plan_dft_r2c_1d(PAD_LEN, x[0], fftw_intermediate, FFTW_ESTIMATE);
 	fftw_out_plan = fftwf_plan_many_dft_c2r(
 		1, &PAD_LEN, 2, 
@@ -77,7 +86,7 @@ SoundSource::SoundSource() {
 		(float*)fftw_intermediate, NULL, 
 		2, 1, FFTW_ESTIMATE
 	);
-
+	interpolationCalculations(hrtf_indices, omegas);
 }
 void SoundSource::updateInfo() {
 	/*Calculate the radius, distance, elevation, and azimuth*/
@@ -168,7 +177,7 @@ void SoundSource::calculateDistanceFactor(int blockNo){
 	float N = PAD_LEN / 2 + 1;
 	int numThreads = 256;
 	int numBlocks = (PAD_LEN / 2 + numThreads ) / numThreads;
-	generateDistanceFactor << < numThreads, numBlocks, 0, streams[1] >> > (d_distance_factor, frac, fsvs, r, N);
+	generateDistanceFactor << < numThreads, numBlocks, 0, streams[0] >> > (d_distance_factor, frac, fsvs, r, N);
 
 }
 /*
@@ -182,14 +191,13 @@ void SoundSource::allKernels(float* d_input, float* d_output,
 	cudaStream_t* streams, float* omegas, int* hrtf_indices){
 	fillWithZeroesKernel(d_output, 2 * (PAD_LEN + 2), streams[0]);
 
-	CHECK_CUFFT_ERRORS(cufftSetStream(in_plan, streams[0]));
-	CHECK_CUFFT_ERRORS(cufftSetStream(out_plan, streams[0]));
 	float scale = 1.0f / ((float)PAD_LEN);
-	CHECK_CUFFT_ERRORS(cufftExecR2C(in_plan, (cufftReal*)d_input, (cufftComplex*)d_input));
-	checkCudaErrors(cudaStreamSynchronize(streams[0]));
+	
 	int numThreads = 256;
 	int numBlocks = (PAD_LEN / 2 + numThreads) / numThreads;
 	size_t buf_size = PAD_LEN + 2;
+
+	//checkCudaErrors(cudaStreamSynchronize(streams[0]));
 	/*The azi & ele falls exactly on an hrtf resolution*/
 	if (hrtf_indices[0] == hrtf_indices[1] && hrtf_indices[1] == hrtf_indices[2] && hrtf_indices[2] == hrtf_indices[3]) {
 		/*+ Theta 1 Left*/
@@ -211,20 +219,20 @@ void SoundSource::allKernels(float* d_input, float* d_output,
 			PAD_LEN / 2 + 1
 			);
 		/*+ Theta 1 Right*/
-		ComplexPointwiseMulAndScaleOutPlace << < numBlocks, numThreads, 0, streams[1] >> > (
+		ComplexPointwiseMulAndScaleOutPlace << < numBlocks, numThreads, 0, streams[0] >> > (
 			(cufftComplex*)d_input,
 			(cufftComplex*)(d_hrtf + hrtf_indices[0] * (PAD_LEN + 2) * HRTF_CHN + PAD_LEN + 2),
 			d_convbufs + buf_size / 2,
 			PAD_LEN / 2 + 1,
 			scale
 			);
-		ComplexPointwiseMulInPlace << < numBlocks, numThreads, 0, streams[1] >> > (
+		ComplexPointwiseMulInPlace << < numBlocks, numThreads, 0, streams[0] >> > (
 			d_distance_factor, 
 			d_convbufs + buf_size / 2, 
 			PAD_LEN / 2 + 1
 			);
 		
-		ComplexPointwiseAdd << < numBlocks, numThreads, 0, streams[1] >> > (
+		ComplexPointwiseAdd << < numBlocks, numThreads, 0, streams[0] >> > (
 			d_convbufs + buf_size / 2,
 			(cufftComplex*)(d_output + buf_size),
 			PAD_LEN / 2 + 1
@@ -245,19 +253,19 @@ void SoundSource::allKernels(float* d_input, float* d_output,
 				hrtf_index = hrtf_indices[0];
 			else
 				hrtf_index = hrtf_indices[1];
-			ComplexPointwiseMulAndScaleOutPlace << < numBlocks, numThreads, 0, streams[buf_no] >> > (
+			ComplexPointwiseMulAndScaleOutPlace << < numBlocks, numThreads, 0, streams[0] >> > (
 				(cufftComplex*)d_input,
 				(cufftComplex*)(d_hrtf + hrtf_index * (PAD_LEN + 2) * HRTF_CHN + ((buf_no % 2) * (PAD_LEN + 2))),
 				d_convbufs + buf_size / 2 * buf_no,
 				PAD_LEN / 2 + 1,
 				curr_scale
 				);
-			ComplexPointwiseMulInPlace << < numBlocks, numThreads, 0, streams[buf_no] >> > (
+			ComplexPointwiseMulInPlace << < numBlocks, numThreads, 0, streams[0] >> > (
 				d_distance_factor, 
 				d_convbufs + buf_size / 2 * buf_no,
 				PAD_LEN / 2 + 1
 				);
-			ComplexPointwiseAdd << < numBlocks, numThreads, 0, streams[buf_no] >> > (
+			ComplexPointwiseAdd << < numBlocks, numThreads, 0, streams[0] >> > (
 				d_convbufs + buf_size / 2 * buf_no,
 				(cufftComplex*)(d_output + buf_size * (buf_no % 2)),
 				PAD_LEN / 2 + 1
@@ -284,19 +292,19 @@ void SoundSource::allKernels(float* d_input, float* d_output,
 				break;
 			}
 
-			ComplexPointwiseMulAndScaleOutPlace << < numBlocks, numThreads, 0, streams[buf_no] >> > (
+			ComplexPointwiseMulAndScaleOutPlace << < numBlocks, numThreads, 0, streams[0] >> > (
 				(cufftComplex*)d_input,
 				(cufftComplex*)(d_hrtf + hrtf_indices[hrtf_index] * (PAD_LEN + 2) * HRTF_CHN + ((buf_no % 2) * (PAD_LEN + 2))),
 				d_convbufs + buf_size / 2 * buf_no,
 				PAD_LEN / 2 + 1,
 				curr_scale
 				);
-			ComplexPointwiseMulInPlace << < numBlocks, numThreads, 0, streams[buf_no] >> > (
+			ComplexPointwiseMulInPlace << < numBlocks, numThreads, 0, streams[0] >> > (
 				d_distance_factor,
 				d_convbufs + buf_size / 2 * buf_no,
 				PAD_LEN / 2 + 1
 				);
-			ComplexPointwiseAdd << < numBlocks, numThreads, 0, streams[buf_no] >> > (
+			ComplexPointwiseAdd << < numBlocks, numThreads, 0, streams[0] >> > (
 				d_convbufs + buf_size / 2 * buf_no,
 				(cufftComplex*)(d_output + buf_size * (buf_no % 2)),
 				PAD_LEN / 2 + 1
@@ -323,19 +331,19 @@ void SoundSource::allKernels(float* d_input, float* d_output,
 				curr_scale = scale * omegas[4] * omegas[2];
 				break;
 			}
-			ComplexPointwiseMulAndScaleOutPlace << < numBlocks, numThreads, 0, streams[buf_no] >> > (
+			ComplexPointwiseMulAndScaleOutPlace << < numBlocks, numThreads, 0, streams[0] >> > (
 				(cufftComplex*)d_input,
 				(cufftComplex*)(d_hrtf + hrtf_indices[hrtf_index] * (PAD_LEN + 2) * HRTF_CHN + ((buf_no % 2) * (PAD_LEN + 2))),
 				d_convbufs + buf_size / 2 * buf_no,
 				PAD_LEN / 2 + 1,
 				curr_scale
 				);
-			ComplexPointwiseMulInPlace << < numBlocks, numThreads, 0, streams[buf_no] >> > (
+			ComplexPointwiseMulInPlace << < numBlocks, numThreads, 0, streams[0] >> > (
 				d_distance_factor,
 				d_convbufs + buf_size / 2 * buf_no,
 				PAD_LEN / 2 + 1
 				);
-			ComplexPointwiseAdd << < numBlocks, numThreads, 0, streams[buf_no] >> > (
+			ComplexPointwiseAdd << < numBlocks, numThreads, 0, streams[0] >> > (
 				d_convbufs + buf_size / 2 * buf_no,
 				(cufftComplex*)(d_output + buf_size * (buf_no % 2)),
 				PAD_LEN / 2 + 1
@@ -363,15 +371,33 @@ void SoundSource::interpolateConvolve(int blockNo) {
 	cufftComplex* d_distance_factor = this->distance_factor[blockNo % FLIGHT_NUM];
 	float* d_input = this->d_input[blockNo % FLIGHT_NUM];
 	float* d_output = this->d_output[blockNo % FLIGHT_NUM];
+	float* d_output2 = this->d_output2[blockNo % FLIGHT_NUM];
 	cufftComplex* d_convbufs = this ->d_convbufs[blockNo % FLIGHT_NUM];
-	cudaStream_t* streams = this->streams + (blockNo * 2 % FLIGHT_NUM);
+	cudaStream_t* streams = this->streams + (blockNo % FLIGHT_NUM) * STREAMS_PER_FLIGHT;
 
+	CHECK_CUFFT_ERRORS(cufftSetStream(in_plan, streams[0]));
+	CHECK_CUFFT_ERRORS(cufftExecR2C(in_plan, (cufftReal*)d_input, (cufftComplex*)d_input));
+
+	if (xfade) {
+		allKernels(d_input, d_output2, this->d_convbufs2[blockNo % FLIGHT_NUM], d_distance_factor, streams + 1, old_omegas, old_hrtf_indices);
+		CHECK_CUFFT_ERRORS(cufftSetStream(out_plan2, streams[1]));
+		
+	}
 	allKernels(d_input, d_output, d_convbufs, d_distance_factor, streams, omegas, hrtf_indices);
 
-	for (int i = 1; i < STREAMS_PER_FLIGHT; i++) {
-		checkCudaErrors(cudaStreamSynchronize(streams[i]));
-	}
+	checkCudaErrors(cudaStreamSynchronize(streams[0]));
+	CHECK_CUFFT_ERRORS(cufftSetStream(out_plan, streams[0]));
 	CHECK_CUFFT_ERRORS(cufftExecC2R(out_plan, (cufftComplex*)d_output, d_output));
+	
+	if (xfade) {
+		checkCudaErrors(cudaStreamSynchronize(streams[1]));
+		CHECK_CUFFT_ERRORS(cufftExecC2R(out_plan2, (cufftComplex*)d_output2, d_output2));
+		int numThreads = 256;
+		int numBlocks = (PAD_LEN + numThreads - 1) / numThreads;
+		checkCudaErrors(cudaStreamSynchronize(streams[1]));
+		crossFade<<<numThreads, numBlocks, 0, streams[0]>>>(d_output, d_output2, PAD_LEN);
+	}
+
 }
 void SoundSource::fftConvolve(int blockNo) {
 	cudaEvent_t start, stop;
