@@ -36,6 +36,7 @@ public:
 	float gain;						/*Gain for distance away*/
 	float ele;						/*Elevation of the sound source*/
 	float azi;						/*Azimuth of the sound source*/
+	unsigned long long num_calls = 0;
 
 	VBO* waveform;
 	SoundSource(); /*Initialize plans and allocate memory on GPU*/
@@ -45,6 +46,7 @@ public:
 	void process(int blockNo); /*Wrapper for the processor convolver. Calls fftConvolve() or interpolateConvolve()*/
 	void cpuTDConvolve(float *input, float *output, int outputLen, float gain);
 	void cpuFFTConvolve();
+	void chunkProcess(int blockNo);
 private:
 	void fftConvolve(int blockNo); /*Uses time domain convolution rounding to the nearest HRTF in the database*/
 	void interpolateConvolve(int blockNo); /*Uses Belloch's technique of interpolation*/
@@ -52,6 +54,10 @@ private:
 	void allKernels(float* d_input, float* d_output, cufftComplex* d_convbufs, cufftComplex* d_distance_factor, cudaStream_t* streams, float* omegas, int* hrtf_indices); /*All of the kernels for interpolation*/
 	void interpolationCalculations(int* hrtf_indices, float* omegas); /*Determine all omegas and hrtf indices*/
 	void calculateDistanceFactor(int blockNo);
+	int hrtf_indices[4];
+	int old_hrtf_indices[4];
+	float omegas[6];
+	float old_omegas[6];
 	float sum_ms = 0;
 	float avg_ms = 0;
 	int num_iterations = 0;

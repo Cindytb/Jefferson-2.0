@@ -1,5 +1,5 @@
 #include "Audio.cuh"
-#include "pa_asio.h"
+
 #include <cuda.h>
 PaStream *stream;
 extern Data data;
@@ -25,8 +25,7 @@ void initializePA(int fs) {
 	outputParams.device = Pa_GetDefaultOutputDevice();
 	outputParams.channelCount = 2;
 	outputParams.sampleFormat = paFloat32;
-	outputParams.suggestedLatency =
-		Pa_GetDeviceInfo(outputParams.device)->defaultLowOutputLatency;
+	outputParams.suggestedLatency = float(FRAMES_PER_BUFFER) / float(fs);
 	outputParams.hostApiSpecificStreamInfo = NULL;
 
 	/* Open audio stream */
@@ -110,10 +109,21 @@ void callback_func(float *output, Data *p){
 		}
 
 #ifdef RT_GPU
+		/*Copy intermediate --> output*/
+		//memcpy(output, curr_source->intermediate[p->blockNo % FLIGHT_NUM], FRAMES_PER_BUFFER * 2 * sizeof(float));
+		int buf_block = (p->blockNo - FLIGHT_NUM) % FLIGHT_NUM;
+		checkCudaErrors(cudaStreamSynchronize(curr_source->streams[buf_block]));
+		for (int i = 0; i < FRAMES_PER_BUFFER * 2; i++) {
+			output[i] += curr_source->intermediate[buf_block][i];
+			if (output[i] > 1.0) {
+				fprintf(stderr, "ALERT! CLIPPING AUDIO!\n");
+			}
+		}
+		int blockNo = p->blockNo % FLIGHT_NUM;
 		/*Copy into curr_source->x pinned memory*/
 		if (curr_source->count + FRAMES_PER_BUFFER < curr_source->length) {
 			memcpy(
-				curr_source->x[p->blockNo % FLIGHT_NUM] + (PAD_LEN - FRAMES_PER_BUFFER),  /*Go to the end and work backwards*/
+				curr_source->x[blockNo] + (PAD_LEN - FRAMES_PER_BUFFER),  /*Go to the end and work backwards*/
 				curr_source->buf + curr_source->count,
 				FRAMES_PER_BUFFER * sizeof(float));
 			curr_source->count += FRAMES_PER_BUFFER;
@@ -121,49 +131,99 @@ void callback_func(float *output, Data *p){
 		else {
 			int rem = curr_source->length - curr_source->count;
 			memcpy(
-				curr_source->x[p->blockNo % FLIGHT_NUM] + (PAD_LEN - FRAMES_PER_BUFFER),
+				curr_source->x[blockNo] + (PAD_LEN - FRAMES_PER_BUFFER),
 				curr_source->buf + curr_source->count,
 				rem * sizeof(float));
 			memcpy(
-				curr_source->x[p->blockNo % FLIGHT_NUM] + (PAD_LEN - FRAMES_PER_BUFFER) + rem,
+				curr_source->x[blockNo] + (PAD_LEN - FRAMES_PER_BUFFER) + rem,
 				curr_source->buf,
 				(FRAMES_PER_BUFFER - rem) * sizeof(float));
 			curr_source->count = FRAMES_PER_BUFFER - rem;
 		}
-		/*Copy intermediate --> output*/
-		//memcpy(output, curr_source->intermediate[p->blockNo % FLIGHT_NUM], FRAMES_PER_BUFFER * 2 * sizeof(float));
-		for (int i = 0; i < FRAMES_PER_BUFFER * 2; i++) {
-			output[i] += curr_source->intermediate[p->blockNo % FLIGHT_NUM][i];
-			if (output[i] > 1.0) {
-				fprintf(stderr, "ALERT! CLIPPING AUDIO!\n");
+		curr_source->chunkProcess(blockNo);
+		///*Send*/
+		//checkCudaErrors(cudaMemcpyAsync(
+		//	curr_source->d_input[blockNo],
+		//	curr_source->x[blockNo],
+		//	PAD_LEN * sizeof(float),
+		//	cudaMemcpyHostToDevice,
+		//	curr_source->streams[(blockNo)*STREAMS_PER_FLIGHT])
+		//);
+		///*Process*/
+		//curr_source->process((blockNo));
+		///*Receive*/
+		//checkCudaErrors(cudaMemcpyAsync(
+		//	curr_source->intermediate[blockNo],
+		//	curr_source->d_output[blockNo] + 2 * (PAD_LEN - FRAMES_PER_BUFFER),
+		//	FRAMES_PER_BUFFER * 2 * sizeof(float),
+		//	cudaMemcpyDeviceToHost,
+		//	curr_source->streams[blockNo * STREAMS_PER_FLIGHT])
+		//);
+		for (int b = 0; b < FLIGHT_NUM; b++) {
+			if(cudaStreamQuery(curr_source->streams[b * STREAMS_PER_FLIGHT])) {
+				/*Overlap-save*/
+				memmove(
+					curr_source->x[(b + 1) % FLIGHT_NUM],
+					curr_source->x[b] + FRAMES_PER_BUFFER,
+					sizeof(float) * (PAD_LEN - FRAMES_PER_BUFFER)
+				);
 			}
 		}
-
-		/*Send*/
-		checkCudaErrors(cudaMemcpyAsync(
-			curr_source->d_input[p->blockNo % FLIGHT_NUM], 
-			curr_source->x[p->blockNo % FLIGHT_NUM],
-			PAD_LEN * sizeof(float), 
-			cudaMemcpyHostToDevice, 
-			curr_source->streams[p->blockNo % FLIGHT_NUM * STREAMS_PER_FLIGHT])
-		);
 		
-		/*Process*/
-		curr_source->process((p->blockNo - 1) % FLIGHT_NUM);
-		/*Return*/
-		checkCudaErrors(cudaMemcpyAsync(
-			curr_source->intermediate[(p->blockNo - 2) % FLIGHT_NUM],
-			curr_source->d_output[(p->blockNo - 2) % FLIGHT_NUM] + 2 * (PAD_LEN - FRAMES_PER_BUFFER),
-			FRAMES_PER_BUFFER * 2 * sizeof(float),
-			cudaMemcpyDeviceToHost,
-			curr_source->streams[(p->blockNo - 2) % FLIGHT_NUM * STREAMS_PER_FLIGHT])
-		);
-		/*Overlap-save*/
-		memmove(
-			curr_source->x[(p->blockNo + 1) % FLIGHT_NUM],
-			curr_source->x[p->blockNo % FLIGHT_NUM] + FRAMES_PER_BUFFER,
-			sizeof(float) * (PAD_LEN - FRAMES_PER_BUFFER)
-		);
+		/*Copy into curr_source->x pinned memory*/
+		//if (curr_source->count + FRAMES_PER_BUFFER < curr_source->length) {
+		//	memcpy(
+		//		curr_source->x[p->blockNo % FLIGHT_NUM] + (PAD_LEN - FRAMES_PER_BUFFER),  /*Go to the end and work backwards*/
+		//		curr_source->buf + curr_source->count,
+		//		FRAMES_PER_BUFFER * sizeof(float));
+		//	curr_source->count += FRAMES_PER_BUFFER;
+		//}
+		//else {
+		//	int rem = curr_source->length - curr_source->count;
+		//	memcpy(
+		//		curr_source->x[p->blockNo % FLIGHT_NUM] + (PAD_LEN - FRAMES_PER_BUFFER),
+		//		curr_source->buf + curr_source->count,
+		//		rem * sizeof(float));
+		//	memcpy(
+		//		curr_source->x[p->blockNo % FLIGHT_NUM] + (PAD_LEN - FRAMES_PER_BUFFER) + rem,
+		//		curr_source->buf,
+		//		(FRAMES_PER_BUFFER - rem) * sizeof(float));
+		//	curr_source->count = FRAMES_PER_BUFFER - rem;
+		//}
+		///*Copy intermediate --> output*/
+		////memcpy(output, curr_source->intermediate[p->blockNo % FLIGHT_NUM], FRAMES_PER_BUFFER * 2 * sizeof(float));
+		//for (int i = 0; i < FRAMES_PER_BUFFER * 2; i++) {
+		//	output[i] += curr_source->intermediate[p->blockNo % FLIGHT_NUM][i];
+		//	if (output[i] > 1.0) {
+		//		fprintf(stderr, "ALERT! CLIPPING AUDIO!\n");
+		//	}
+		//}
+
+		///*Send*/
+		//checkCudaErrors(cudaMemcpyAsync(
+		//	curr_source->d_input[p->blockNo % FLIGHT_NUM], 
+		//	curr_source->x[p->blockNo % FLIGHT_NUM],
+		//	PAD_LEN * sizeof(float), 
+		//	cudaMemcpyHostToDevice, 
+		//	curr_source->streams[p->blockNo % FLIGHT_NUM * STREAMS_PER_FLIGHT])
+		//);
+		//
+		///*Process*/
+		//curr_source->process((p->blockNo - 1) % FLIGHT_NUM);
+		///*Return*/
+		//checkCudaErrors(cudaMemcpyAsync(
+		//	curr_source->intermediate[(p->blockNo - 2) % FLIGHT_NUM],
+		//	curr_source->d_output[(p->blockNo - 2) % FLIGHT_NUM] + 2 * (PAD_LEN - FRAMES_PER_BUFFER),
+		//	FRAMES_PER_BUFFER * 2 * sizeof(float),
+		//	cudaMemcpyDeviceToHost,
+		//	curr_source->streams[(p->blockNo - 2) % FLIGHT_NUM * STREAMS_PER_FLIGHT])
+		//);
+		///*Overlap-save*/
+		//memmove(
+		//	curr_source->x[(p->blockNo + 1) % FLIGHT_NUM],
+		//	curr_source->x[p->blockNo % FLIGHT_NUM] + FRAMES_PER_BUFFER,
+		//	sizeof(float) * (PAD_LEN - FRAMES_PER_BUFFER)
+		//);
 		
 #else
 		/*Copy into curr_source->x pinned memory*/

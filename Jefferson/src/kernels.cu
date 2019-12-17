@@ -211,7 +211,31 @@ __global__ void averagingKernel(float4 *pos, float *d_buf, unsigned int size, do
 
 	}
 }
+
+__global__ void fill_kernel(thrust::device_ptr<float> dev_ptr, long long old_size, long long new_size)
+{
+	thrust::fill(dev_ptr + old_size, dev_ptr + new_size, (float)0.0f);
+}
+
+__global__ void fillZeros(float* buf, int size) {
+	const int numThreads = blockDim.x * gridDim.x;
+	const int threadID = blockIdx.x * blockDim.x + threadIdx.x;
+
+	for (int i = threadID; i < size; i += numThreads)
+	{
+		buf[i] = 0.0f;
+	}
+}
+void fillWithZeroes(float** target_buf, long long old_size, long long new_size, cudaStream_t s) {
+	thrust::device_ptr<float> dev_ptr(*target_buf);
+	fill_kernel << <1, 1, 0, s >> > (dev_ptr, old_size, new_size);
+}
 void fillWithZeroes(float** target_buf, long long old_size, long long new_size) {
 	thrust::device_ptr<float> dev_ptr(*target_buf);
-	thrust::fill(dev_ptr + old_size, dev_ptr + new_size, (float)0.0f);
+	fill_kernel << <1, 1>> > (dev_ptr, old_size, new_size);
+}
+void fillWithZeroesKernel(float* buf, int size, cudaStream_t s) {
+	int numThreads = 256;
+	int numBlocks = (size + numThreads - 1) / numThreads;
+	fillZeros << < numThreads, numBlocks, 0, s >> > (buf, size);
 }

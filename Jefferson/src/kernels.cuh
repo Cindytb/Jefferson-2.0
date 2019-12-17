@@ -36,6 +36,8 @@ __global__ void ComplexPointwiseAdd(cufftComplex* in, cufftComplex* out, int siz
 __global__ void timeDomainConvolutionNaive(float* ibuf, float* rbuf, float* obuf, long long oframes,
 	long long rframes, int ch, float gain);
 __global__ void interleave(float* input, float* output, int size);
+void fillWithZeroes(float** target_buf, long long old_size, long long new_size, cudaStream_t s);
 void fillWithZeroes(float** target_buf, long long old_size, long long new_size);
+void fillWithZeroesKernel(float* buf, int size, cudaStream_t s);
 
 #endif

@@ -181,7 +181,7 @@
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>RT_GPU;WIN32;WIN64;_DEBUG;_CONSOLE;PA_USE_ASIO=1;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>RT_GPU_INTERPOLATE;RT_GPU;WIN32;WIN64;_DEBUG;_CONSOLE;PA_USE_ASIO=1;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <OpenMPSupport>true</OpenMPSupport>
     </ClCompile>
     <Link>

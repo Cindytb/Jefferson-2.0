@@ -1,5 +1,20 @@
 ﻿#include "SoundSource.cuh"
 
+void pointwiseMultiplication(fftwf_complex* a, fftwf_complex* b, int size) {
+	for (int i = 0; i < size; i++) {
+		fftwf_complex temp;
+		temp[0] = a[i][0];
+		temp[1] = a[i][1];
+		a[i][0] = temp[0] * b[i][0] - temp[1] * b[i][1];
+		a[i][1] = temp[0] * b[i][1] + temp[1] * b[i][0];
+	}
+}
+void complexScaling(fftwf_complex* f_x, float scale, int size) {
+	for (int i = 0; i < size; i++) {
+		f_x[i][0] *= scale;
+		f_x[i][1] *= scale;
+	}
+}
 SoundSource::SoundSource() {
 	count = 0;
 	length = 0;
@@ -8,8 +23,8 @@ SoundSource::SoundSource() {
 	coordinates.x = 1;
 	coordinates.y = 0;
 	coordinates.z = 0;
-	azi = 270;
-	ele = 0;
+	azi = 273;
+	ele = 5;
 	streams = new cudaStream_t[FLIGHT_NUM * STREAMS_PER_FLIGHT];
 	for (int i = 0; i < FLIGHT_NUM; i++) {
 		/*Allocating pinned memory for incoming transfer*/
@@ -165,7 +180,7 @@ Volume 61, No 7/8, 2013, July/August
 void SoundSource::allKernels(float* d_input, float* d_output, 
 	cufftComplex* d_convbufs, cufftComplex* d_distance_factor, 
 	cudaStream_t* streams, float* omegas, int* hrtf_indices){
-	fillWithZeroes(&d_output, 0, 2 * (PAD_LEN + 2));
+	fillWithZeroesKernel(d_output, 2 * (PAD_LEN + 2), streams[0]);
 
 	CHECK_CUFFT_ERRORS(cufftSetStream(in_plan, streams[0]));
 	CHECK_CUFFT_ERRORS(cufftSetStream(out_plan, streams[0]));
@@ -330,9 +345,19 @@ void SoundSource::allKernels(float* d_input, float* d_output,
 }
 
 void SoundSource::interpolateConvolve(int blockNo) {
-	int hrtf_indices[4];
-	float omegas[6];
+	
+	
+	for (int i = 0; i < 4; i++) {
+		old_hrtf_indices[i] = hrtf_indices[i];
+		old_omegas[i] = omegas[i];
+	}
 	interpolationCalculations(hrtf_indices, omegas);
+	bool xfade = false;
+	for (int i = 0; i < 4; i++) {
+		if (old_hrtf_indices[i] != hrtf_indices[i]) {
+			xfade = true;
+		}
+	}
 	calculateDistanceFactor(blockNo % FLIGHT_NUM);
 	
 	cufftComplex* d_distance_factor = this->distance_factor[blockNo % FLIGHT_NUM];
@@ -342,7 +367,7 @@ void SoundSource::interpolateConvolve(int blockNo) {
 	cudaStream_t* streams = this->streams + (blockNo * 2 % FLIGHT_NUM);
 
 	allKernels(d_input, d_output, d_convbufs, d_distance_factor, streams, omegas, hrtf_indices);
-	
+
 	for (int i = 1; i < STREAMS_PER_FLIGHT; i++) {
 		checkCudaErrors(cudaStreamSynchronize(streams[i]));
 	}
@@ -350,15 +375,18 @@ void SoundSource::interpolateConvolve(int blockNo) {
 }
 void SoundSource::fftConvolve(int blockNo) {
 	cudaEvent_t start, stop;
-	cudaEventCreate(&start);
+	/*cudaEventCreate(&start);
 	cudaEventCreate(&stop);
-	cudaEventRecord(start);
+	cudaEventRecord(start);*/
+
 	float* d_input = this->d_input[blockNo % FLIGHT_NUM];
 	float* d_output = this->d_output[blockNo % FLIGHT_NUM];
-	cudaStream_t* streams = this->streams + (blockNo * 2 % FLIGHT_NUM);
+	cudaStream_t* streams = this->streams + (blockNo % FLIGHT_NUM) * STREAMS_PER_FLIGHT;
 	if (gain > 1)
 		gain = 1;
 	float scale = 1.0f / ((float) PAD_LEN);
+	CHECK_CUFFT_ERRORS(cufftSetStream(in_plan, streams[0]));
+	CHECK_CUFFT_ERRORS(cufftSetStream(out_plan, streams[0]));
 	CHECK_CUFFT_ERRORS(cufftExecR2C(in_plan, (cufftReal*)d_input, (cufftComplex*)d_input));
 	int numThreads = 256;
 	int numBlocks = (PAD_LEN / 2 + numThreads - 1) / numThreads;
@@ -370,132 +398,25 @@ void SoundSource::fftConvolve(int blockNo) {
 		PAD_LEN / 2 + 1,
 		scale
 	);
-
-	ComplexPointwiseMulAndScaleOutPlace << < numBlocks, numThreads, 0, streams[1] >> > (
+	
+	ComplexPointwiseMulAndScaleOutPlace << < numBlocks, numThreads, 0, streams[0] >> > (
 		(cufftComplex*)d_input,
 		(cufftComplex*)(d_hrtf + hrtf_idx * (PAD_LEN + 2) * HRTF_CHN + PAD_LEN + 2),
 		(cufftComplex*)(d_output + PAD_LEN + 2),
 		PAD_LEN / 2 + 1,
 		scale
-	);
-	checkCudaErrors(cudaStreamSynchronize(streams[0]));
-	checkCudaErrors(cudaStreamSynchronize(streams[1]));
+		);
 	CHECK_CUFFT_ERRORS(cufftExecC2R(out_plan, (cufftComplex*)d_output, d_output));
 
-	cudaEventRecord(stop);
-	cudaEventSynchronize(stop);
-	float milliseconds = 0;
-	cudaEventElapsedTime(&milliseconds, start, stop);
-	sum_ms += milliseconds;
-	num_iterations++;
-	avg_ms = sum_ms / float(num_iterations);
-	fprintf(stderr, "Average GPU Basic FD Kernel Time: %f\n", avg_ms);
-
 }
-/* convolve signal buffer with HRTF
-* new signal starts at HRTF_LEN frames into x buffer
-* x is mono input signal
-* HRTF and y are interleaved by channel
-* y_len is in frames
-*/
-void SoundSource::cpuTDConvolve(float *input, float *output, int outputLen, float gain){
-	cudaEvent_t start, stop;
-	cudaEventCreate(&start);
-	cudaEventCreate(&stop);
-	cudaEventRecord(start);
-	float *l_hrtf = hrtf + hrtf_idx * HRTF_CHN * (PAD_LEN + 2);
-	float *r_hrtf = hrtf + hrtf_idx * HRTF_CHN * (PAD_LEN + 2) + PAD_LEN + 2;
-	if (gain > 1)
-		gain = 1;
-
-	/* zero output buffer */
-	for (int i = 0; i < outputLen * HRTF_CHN; i++) {
-		output[i] = 0.0;
-	}
-	for (int n = 0; n < outputLen; n++) {
-		for (int k = 0; k < HRTF_LEN; k++) {
-			for (int j = 0; j < HRTF_CHN; j++) {
-				/* outputLen and HRTF_LEN are n frames, output and hrtf are interleaved
-				* input is mono
-				*/
-				if(j == 0){
-					output[2 * n + j] += input[n - k] * l_hrtf[k];
-				}
-				else{
-					output[2 * n + j] += input[n - k] * r_hrtf[k];
-				}
-				
-			}
-			output[2 * n] *= gain;
-			output[2 * n + 1] *= gain;
-		}
-	}
-	cudaEventRecord(stop);
-	cudaEventSynchronize(stop);
-	float milliseconds = 0;
-	cudaEventElapsedTime(&milliseconds, start, stop);
-	sum_ms += milliseconds;
-	num_iterations++;
-	avg_ms = sum_ms / float(num_iterations);
-	fprintf(stderr, "Average CPU Time Domain Kernel Time: %f\n", avg_ms);
-}
-void pointwiseMultiplication(fftwf_complex* a, fftwf_complex* b, int size) {
-	for (int i = 0; i < size; i++) {
-		fftwf_complex temp;
-		temp[0] = a[i][0];
-		temp[1] = a[i][1];
-		a[i][0] = temp[0] * b[i][0] - temp[1] * b[i][1];
-		a[i][1] = temp[0] * b[i][1] + temp[1] * b[i][0];
-	}
-}
-void complexScaling(fftwf_complex* f_x, float scale, int size) {
-	for (int i = 0; i < size; i++) {
-		f_x[i][0] *= scale;
-		f_x[i][1] *= scale;
-	}
-}
-void SoundSource::cpuFFTConvolve() {
-	cudaEvent_t start, stop;
-	cudaEventCreate(&start);
-	cudaEventCreate(&stop);
-	cudaEventRecord(start);
-	float* output = intermediate[0];
-	fftwf_execute(fftw_in_plan); /*FFT on x[0] --> fftw_intermediate*/
-	complexScaling(fftw_intermediate, 1.0 / PAD_LEN, PAD_LEN / 2 + 1);
-	/*Copying over for both channels*/
-#pragma omp for parallel
-	for (int i = 0; i < PAD_LEN / 2 + 1; i++) {
-		fftw_intermediate[i + PAD_LEN / 2 + 1][0] = fftw_intermediate[i][0];
-		fftw_intermediate[i + PAD_LEN / 2 + 1][1] = fftw_intermediate[i][1];
-	}
-	/*Doing both channels at once since they're contiguous in memory*/
-	pointwiseMultiplication(fftw_intermediate, 
-		fft_hrtf + hrtf_idx * HRTF_CHN * (PAD_LEN / 2 + 1), 
-		PAD_LEN + 2);
-	fftwf_execute(fftw_out_plan);
-
-	cudaEventRecord(stop);
-	cudaEventSynchronize(stop);
-	float milliseconds = 0;
-	cudaEventElapsedTime(&milliseconds, start, stop);
-	sum_ms += milliseconds;
-	num_iterations++;
-	avg_ms = sum_ms / float(num_iterations);
-	fprintf(stderr, "Average CPU Basic FD Kernel Time: %f\n", avg_ms);
-
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/*GPU Convolution was not fast enough because of the large overhead
-of FFT and IFFT. Keeping the code here for future purposes*/
 void SoundSource::gpuTDConvolve(float* input, float* d_output, int outputLen, float gain, cudaStream_t* streams) {
 	if (gain > 1)
 		gain = 1;
-	cudaEvent_t start, stop;
-	cudaEventCreate(&start);
-	cudaEventCreate(&stop);
-	cudaEventRecord(start);
-	int numThread = 256;
+	//cudaEvent_t start, stop;
+	//cudaEventCreate(&start);
+	//cudaEventCreate(&stop);
+	//cudaEventRecord(start);
+	int numThread = 128;
 	int numBlocks = (outputLen + numThread - 1) / numThread;
 	timeDomainConvolutionNaive << < numBlocks, numThread, 0, streams[0] >> > (
 		input,
@@ -505,7 +426,7 @@ void SoundSource::gpuTDConvolve(float* input, float* d_output, int outputLen, fl
 		HRTF_LEN,
 		0,
 		gain);
-	timeDomainConvolutionNaive << < numBlocks, numThread, 0, streams[1] >> > (
+	timeDomainConvolutionNaive << < numBlocks, numThread, 0, streams[0] >> > (
 		input,
 		d_hrtf + hrtf_idx * HRTF_CHN * (PAD_LEN + 2) + PAD_LEN + 2,
 		d_output,
@@ -513,16 +434,29 @@ void SoundSource::gpuTDConvolve(float* input, float* d_output, int outputLen, fl
 		HRTF_LEN,
 		1,
 		gain);
-	checkCudaErrors(cudaDeviceSynchronize());
-	cudaEventRecord(stop);
-	cudaEventSynchronize(stop);
-	float milliseconds = 0;
-	cudaEventElapsedTime(&milliseconds, start, stop);
-	sum_ms += milliseconds;
-	num_iterations++;
-	avg_ms = sum_ms / float(num_iterations);
-	fprintf(stderr, "Average GPU Time Domain Kernel Time: %f\n", avg_ms);
 
+}
+
+void SoundSource::chunkProcess(int blockNo) {
+	cudaStream_t* streams = this->streams + blockNo * STREAMS_PER_FLIGHT;
+	/*Send*/
+	checkCudaErrors(cudaMemcpyAsync(
+		d_input[blockNo],
+		x[blockNo],
+		PAD_LEN * sizeof(float),
+		cudaMemcpyHostToDevice,
+		streams[0])
+	);
+	/*Process*/
+	process(blockNo);
+	/*Receive*/
+	checkCudaErrors(cudaMemcpyAsync(
+		intermediate[blockNo],
+		d_output[blockNo] + 2 * (PAD_LEN - FRAMES_PER_BUFFER),
+		FRAMES_PER_BUFFER * 2 * sizeof(float),
+		cudaMemcpyDeviceToHost,
+		streams[0])
+	);
 }
 void SoundSource::process(int blockNo){
 #ifdef RT_GPU_INTERPOLATE
@@ -544,7 +478,85 @@ void SoundSource::process(int blockNo){
 	 cpuFFTConvolve();
 #endif
 }
-void SoundSource::~SoundSource() {
+
+/////////////////////////////////////////////////////////////////
+/*CPU Implementations*/
+/////////////////////////////////////////////////////////////////
+void SoundSource::cpuTDConvolve(float* input, float* output, int outputLen, float gain) {
+	//cudaEvent_t start, stop;
+	//cudaEventCreate(&start);
+	//cudaEventCreate(&stop);
+	//cudaEventRecord(start);
+	float* l_hrtf = hrtf + hrtf_idx * HRTF_CHN * (PAD_LEN + 2);
+	float* r_hrtf = hrtf + hrtf_idx * HRTF_CHN * (PAD_LEN + 2) + PAD_LEN + 2;
+	if (gain > 1)
+		gain = 1;
+
+	/* zero output buffer */
+	for (int i = 0; i < outputLen * HRTF_CHN; i++) {
+		output[i] = 0.0;
+	}
+	for (int n = 0; n < outputLen; n++) {
+		for (int k = 0; k < HRTF_LEN; k++) {
+			for (int j = 0; j < HRTF_CHN; j++) {
+				/* outputLen and HRTF_LEN are n frames, output and hrtf are interleaved
+				* input is mono
+				*/
+				if (j == 0) {
+					output[2 * n + j] += input[n - k] * l_hrtf[k];
+				}
+				else {
+					output[2 * n + j] += input[n - k] * r_hrtf[k];
+				}
+
+			}
+			output[2 * n] *= gain;
+			output[2 * n + 1] *= gain;
+		}
+	}
+	num_calls++;
+	//cudaEventRecord(stop);
+	//cudaEventSynchronize(stop);
+	//float milliseconds = 0;
+	//cudaEventElapsedTime(&milliseconds, start, stop);
+	//sum_ms += milliseconds;
+	//num_iterations++;
+	//avg_ms = sum_ms / float(num_iterations);
+	//fprintf(stderr, "Average CPU Time Domain Kernel Time: %f\n", avg_ms);
+}
+void SoundSource::cpuFFTConvolve() {
+	cudaEvent_t start, stop;
+	/*cudaEventCreate(&start);
+	cudaEventCreate(&stop);
+	cudaEventRecord(start);*/
+	float* output = intermediate[0];
+	fftwf_execute(fftw_in_plan); /*FFT on x[0] --> fftw_intermediate*/
+	complexScaling(fftw_intermediate, 1.0 / PAD_LEN, PAD_LEN / 2 + 1);
+	/*Copying over for both channels*/
+#pragma omp for parallel
+	for (int i = 0; i < PAD_LEN / 2 + 1; i++) {
+		fftw_intermediate[i + PAD_LEN / 2 + 1][0] = fftw_intermediate[i][0];
+		fftw_intermediate[i + PAD_LEN / 2 + 1][1] = fftw_intermediate[i][1];
+	}
+	/*Doing both channels at once since they're contiguous in memory*/
+	pointwiseMultiplication(fftw_intermediate,
+		fft_hrtf + hrtf_idx * HRTF_CHN * (PAD_LEN / 2 + 1),
+		PAD_LEN + 2);
+	fftwf_execute(fftw_out_plan);
+
+	num_calls++;
+	/*cudaEventRecord(stop);
+	cudaEventSynchronize(stop);
+	float milliseconds = 0;
+	cudaEventElapsedTime(&milliseconds, start, stop);
+	sum_ms += milliseconds;
+	num_iterations++;
+	avg_ms = sum_ms / float(num_iterations);
+	fprintf(stderr, "Average CPU Basic FD Kernel Time: %f\n", avg_ms);*/
+
+}
+
+SoundSource::~SoundSource() {
 	free(buf);
 	CHECK_CUFFT_ERRORS(cufftDestroy(in_plan));
 	CHECK_CUFFT_ERRORS(cufftDestroy(out_plan));

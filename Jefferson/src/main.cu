@@ -19,7 +19,7 @@ int main(int argc, char *argv[]){
 	p->num_sources = 1;
 	p->all_sources = new SoundSource[p->num_sources]; /*Moving all allocation & initialization into the constructor*/
 	printSize();
-	#if(DEBUGMODE != 1)
+#if(DEBUGMODE != 1)
 		/*Initialize & read files*/
 		cudaFFT(argc, argv, p);
 			
@@ -29,9 +29,9 @@ int main(int argc, char *argv[]){
 		if (read_hrtf_signals() != 0) {
 			exit(EXIT_FAILURE);
 		}
-#ifndef RT_GPU_TD
+	#ifndef RT_GPU_TD
 		transform_hrtfs();
-#endif
+	#endif
 		fprintf(stderr, "Opening output file\n");
 		SF_INFO osfinfo;
 		osfinfo.channels = 2;
@@ -39,50 +39,50 @@ int main(int argc, char *argv[]){
 		osfinfo.format = SF_FORMAT_PCM_24 | SF_FORMAT_WAV;
 		p->sndfile = sf_open("ofile.wav", SFM_WRITE, &osfinfo);
 		
-#ifdef RT_GPU
+	#ifdef RT_GPU
 		printf("Blocks in flight: %i\n", FLIGHT_NUM);
-		cudaProfilerStart();		
+		cudaProfilerStart();
 
 		p->blockNo = 0;
 		for (int i = 0; i < FLIGHT_NUM; i++) {
-			for(int j = 0; j < p->num_sources; j++){
+			for (int j = 0; j < p->num_sources; j++) {
 				SoundSource* curr_source = &(p->all_sources[j]);
 				/*Copy new input chunk into pinned memory*/
+				int buf_block = p->blockNo;
 				memcpy(
-					curr_source->x[p->blockNo] + (PAD_LEN - FRAMES_PER_BUFFER),  /*Go to the end and work backwards*/
-					curr_source->buf + curr_source->count, 
+					curr_source->x[buf_block] + (PAD_LEN - FRAMES_PER_BUFFER),  /*Go to the end and work backwards*/
+					curr_source->buf + curr_source->count,
 					FRAMES_PER_BUFFER * sizeof(float)
 				);
 				curr_source->count += FRAMES_PER_BUFFER;
 
-				/*Send*/
-				checkCudaErrors(cudaMemcpyAsync(
-					curr_source->d_input[p->blockNo],
-					curr_source->x[p->blockNo],
-					PAD_LEN * sizeof(float),
-					cudaMemcpyHostToDevice,
-					curr_source->streams[p->blockNo * STREAMS_PER_FLIGHT])
-				);
-				if (i == 0) {
-					goto end;
-				}
-				/*Process*/
-				curr_source->process(p->blockNo - 1);
-				if (i == 1) {
-					goto end;
-				}
-				checkCudaErrors(cudaMemcpyAsync(
-					curr_source->intermediate[(p->blockNo - 2) % FLIGHT_NUM],
-					curr_source->d_output[(p->blockNo - 2) % FLIGHT_NUM] + 2 * (PAD_LEN - FRAMES_PER_BUFFER),
-					FRAMES_PER_BUFFER * 2 * sizeof(float),
-					cudaMemcpyDeviceToHost,
-					curr_source->streams[(p->blockNo - 2) % FLIGHT_NUM * STREAMS_PER_FLIGHT])
-				);
-				
-			end: /*overlap-save*/
+
+				curr_source->chunkProcess(buf_block);
+				///*Send*/
+				//checkCudaErrors(cudaMemcpyAsync(
+				//	curr_source->d_input[buf_block],
+				//	curr_source->x[buf_block],
+				//	PAD_LEN * sizeof(float),
+				//	cudaMemcpyHostToDevice,
+				//	curr_source->streams[(buf_block % FLIGHT_NUM) * STREAMS_PER_FLIGHT])
+				//);
+				///*Process*/
+				//curr_source->process(buf_block);
+				//checkCudaErrors(cudaDeviceSynchronize());
+				///*Receive*/
+				//checkCudaErrors(cudaMemcpyAsync(
+				//	curr_source->intermediate[buf_block % FLIGHT_NUM],
+				//	curr_source->d_output[buf_block % FLIGHT_NUM] + 2 * (PAD_LEN - FRAMES_PER_BUFFER),
+				//	FRAMES_PER_BUFFER * 2 * sizeof(float),
+				//	cudaMemcpyDeviceToHost,
+				//	curr_source->streams[(buf_block % FLIGHT_NUM) * STREAMS_PER_FLIGHT])
+				//);
+				checkCudaErrors(cudaStreamSynchronize(curr_source->streams[buf_block * FLIGHT_NUM]));
+				checkCudaErrors(cudaDeviceSynchronize());
+				/*overlap-save*/
 				memmove(
-					curr_source->x[(p->blockNo + 1) % FLIGHT_NUM],
-					curr_source->x[(p->blockNo) % FLIGHT_NUM] + FRAMES_PER_BUFFER,
+					curr_source->x[(buf_block + 1) % FLIGHT_NUM],
+					curr_source->x[buf_block % FLIGHT_NUM] + FRAMES_PER_BUFFER,
 					sizeof(float) * (PAD_LEN - FRAMES_PER_BUFFER)
 				);
 			}
@@ -90,6 +90,58 @@ int main(int argc, char *argv[]){
 		}
 		checkCudaErrors(cudaDeviceSynchronize());
 	#endif
+
+	// #ifdef RT_GPU
+	// 	printf("Blocks in flight: %i\n", FLIGHT_NUM);
+	// 	cudaProfilerStart();		
+
+	// 	p->blockNo = 0;
+	// 	for (int i = 0; i < FLIGHT_NUM; i++) {
+	// 		for(int j = 0; j < p->num_sources; j++){
+	// 			SoundSource* curr_source = &(p->all_sources[j]);
+	// 			/*Copy new input chunk into pinned memory*/
+	// 			memcpy(
+	// 				curr_source->x[p->blockNo] + (PAD_LEN - FRAMES_PER_BUFFER),  /*Go to the end and work backwards*/
+	// 				curr_source->buf + curr_source->count, 
+	// 				FRAMES_PER_BUFFER * sizeof(float)
+	// 			);
+	// 			curr_source->count += FRAMES_PER_BUFFER;
+
+	// 			/*Send*/
+	// 			checkCudaErrors(cudaMemcpyAsync(
+	// 				curr_source->d_input[p->blockNo],
+	// 				curr_source->x[p->blockNo],
+	// 				PAD_LEN * sizeof(float),
+	// 				cudaMemcpyHostToDevice,
+	// 				curr_source->streams[p->blockNo * STREAMS_PER_FLIGHT])
+	// 			);
+	// 			if (i == 0) {
+	// 				goto end;
+	// 			}
+	// 			/*Process*/
+	// 			curr_source->process(p->blockNo - 1);
+	// 			if (i == 1) {
+	// 				goto end;
+	// 			}
+	// 			checkCudaErrors(cudaMemcpyAsync(
+	// 				curr_source->intermediate[(p->blockNo - 2) % FLIGHT_NUM],
+	// 				curr_source->d_output[(p->blockNo - 2) % FLIGHT_NUM] + 2 * (PAD_LEN - FRAMES_PER_BUFFER),
+	// 				FRAMES_PER_BUFFER * 2 * sizeof(float),
+	// 				cudaMemcpyDeviceToHost,
+	// 				curr_source->streams[(p->blockNo - 2) % FLIGHT_NUM * STREAMS_PER_FLIGHT])
+	// 			);
+				
+	// 		end: /*overlap-save*/
+	// 			memmove(
+	// 				curr_source->x[(p->blockNo + 1) % FLIGHT_NUM],
+	// 				curr_source->x[(p->blockNo) % FLIGHT_NUM] + FRAMES_PER_BUFFER,
+	// 				sizeof(float) * (PAD_LEN - FRAMES_PER_BUFFER)
+	// 			);
+	// 		}
+	// 		p->blockNo++;
+	// 	}
+	// 	checkCudaErrors(cudaDeviceSynchronize());
+	// #endif
 	
 #endif
 #if(DEBUGMODE != 1)
@@ -119,7 +171,7 @@ int main(int argc, char *argv[]){
 	/*THIS SECTION WILL NOT RUN IF GRAPHICS IS TURNED ON*/
 	/*Placed here to properly close files when debugging without graphics*/
 	cudaProfilerStop();
-
+	fprintf(stderr, "Number of function calls: %llu\n", p->all_sources[0].num_calls);
 	closeEverything();
 
 	return 0;
@@ -127,6 +179,7 @@ int main(int argc, char *argv[]){
 
 void closeEverything(){
 	closePA();
+	checkCudaErrors(cudaDeviceSynchronize());
 	sf_close(p->sndfile);
 	delete[] hrtf;
 #ifdef CPU_FD_BASIC
