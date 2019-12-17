@@ -153,15 +153,22 @@ int main(int argc, char *argv[]){
 	/*MAIN FUNCTIONAL LOOP*/
 	/*Here to debug without graphics*/
 #if DEBUGMODE == 2
-	std::this_thread::sleep_for(std::chrono::seconds((p->all_sources[0].length / 4)/44100));
+	//std::this_thread::sleep_for(std::chrono::seconds((p->all_sources[0].length / 5) / 44100));
+	std::this_thread::sleep_for(std::chrono::seconds(1));
 	p->all_sources[0].azi = 273;
-	std::this_thread::sleep_for(std::chrono::seconds((p->all_sources[0].length / 4) / 44100));
+	std::this_thread::sleep_for(std::chrono::seconds(1));
+	//std::this_thread::sleep_for(std::chrono::seconds((p->all_sources[0].length / 5) / 44100));
 	p->all_sources[0].azi = 270;
 	p->all_sources[0].ele = 5;
-	std::this_thread::sleep_for(std::chrono::seconds((p->all_sources[0].length / 4) / 44100));
+	std::this_thread::sleep_for(std::chrono::seconds(1));
+	//std::this_thread::sleep_for(std::chrono::seconds((p->all_sources[0].length / 5) / 44100));
 	p->all_sources[0].azi = 273;
-	std::this_thread::sleep_for(std::chrono::seconds((p->all_sources[0].length / 4) / 44100));
-
+	std::this_thread::sleep_for(std::chrono::seconds(1));
+	//std::this_thread::sleep_for(std::chrono::seconds((p->all_sources[0].length / 5) / 44100));
+	p->all_sources[0].azi = 277;
+	p->all_sources[0].ele = 9;
+	std::this_thread::sleep_for(std::chrono::seconds(1));
+	//std::this_thread::sleep_for(std::chrono::seconds((p->all_sources[0].length / 5) / 44100));
 	//char merp = getchar();
 #else
 	graphicsMain(argc, argv, p);

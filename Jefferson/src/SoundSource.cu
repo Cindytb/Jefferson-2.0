@@ -1,4 +1,4 @@
-﻿#include "SoundSource.cuh"
+#include "SoundSource.cuh"
 
 void pointwiseMultiplication(fftwf_complex* a, fftwf_complex* b, int size) {
 	for (int i = 0; i < size; i++) {
@@ -86,7 +86,8 @@ SoundSource::SoundSource() {
 		(float*)fftw_intermediate, NULL, 
 		2, 1, FFTW_ESTIMATE
 	);
-	interpolationCalculations(hrtf_indices, omegas);
+	old_azi = azi;
+	old_ele = ele;
 }
 void SoundSource::updateInfo() {
 	/*Calculate the radius, distance, elevation, and azimuth*/
@@ -113,7 +114,7 @@ void SoundSource::drawWaveform() {
 	waveform->update();
 	waveform->draw(rotateVBO_y, ele, 0.0f);
 }
-void SoundSource::interpolationCalculations(int* hrtf_indices, float* omegas) {
+void SoundSource::interpolationCalculations(float ele, float azi, int* hrtf_indices, float* omegas) {
 	float omegaA, omegaB, omegaC, omegaD, omegaE, omegaF;
 	int phi[2];
 	int theta[4];
@@ -163,9 +164,9 @@ void SoundSource::interpolationCalculations(int* hrtf_indices, float* omegas) {
 	R[r].x = FRAC * cosine(exponent)
 	R[r].y = -FRAC * sine(exponent)
 	*/
-void SoundSource::calculateDistanceFactor(int blockNo){
+void SoundSource::calculateDistanceFactor(int blockNo, cudaStream_t stream){
 	cufftComplex* d_distance_factor = this->distance_factor[blockNo % FLIGHT_NUM];
-	cudaStream_t* streams = this->streams + (blockNo * 2 % FLIGHT_NUM);
+	cudaStream_t* streams = this->streams + (blockNo % FLIGHT_NUM) * STREAMS_PER_FLIGHT;
 	float r = std::sqrt(
 		coordinates.x * coordinates.x + 
 		coordinates.y * coordinates.y + 
@@ -177,7 +178,7 @@ void SoundSource::calculateDistanceFactor(int blockNo){
 	float N = PAD_LEN / 2 + 1;
 	int numThreads = 256;
 	int numBlocks = (PAD_LEN / 2 + numThreads ) / numThreads;
-	generateDistanceFactor << < numThreads, numBlocks, 0, streams[0] >> > (d_distance_factor, frac, fsvs, r, N);
+	generateDistanceFactor << < numThreads, numBlocks, 0, stream >> > (d_distance_factor, frac, fsvs, r, N);
 
 }
 /*
@@ -189,7 +190,7 @@ Volume 61, No 7/8, 2013, July/August
 void SoundSource::allKernels(float* d_input, float* d_output, 
 	cufftComplex* d_convbufs, cufftComplex* d_distance_factor, 
 	cudaStream_t* streams, float* omegas, int* hrtf_indices){
-	fillWithZeroesKernel(d_output, 2 * (PAD_LEN + 2), streams[0]);
+	
 
 	float scale = 1.0f / ((float)PAD_LEN);
 	
@@ -197,7 +198,6 @@ void SoundSource::allKernels(float* d_input, float* d_output,
 	int numBlocks = (PAD_LEN / 2 + numThreads) / numThreads;
 	size_t buf_size = PAD_LEN + 2;
 
-	//checkCudaErrors(cudaStreamSynchronize(streams[0]));
 	/*The azi & ele falls exactly on an hrtf resolution*/
 	if (hrtf_indices[0] == hrtf_indices[1] && hrtf_indices[1] == hrtf_indices[2] && hrtf_indices[2] == hrtf_indices[3]) {
 		/*+ Theta 1 Left*/
@@ -353,51 +353,53 @@ void SoundSource::allKernels(float* d_input, float* d_output,
 }
 
 void SoundSource::interpolateConvolve(int blockNo) {
-	
-	
-	for (int i = 0; i < 4; i++) {
-		old_hrtf_indices[i] = hrtf_indices[i];
-		old_omegas[i] = omegas[i];
-	}
-	interpolationCalculations(hrtf_indices, omegas);
-	bool xfade = false;
-	for (int i = 0; i < 4; i++) {
-		if (old_hrtf_indices[i] != hrtf_indices[i]) {
-			xfade = true;
-		}
-	}
-	calculateDistanceFactor(blockNo % FLIGHT_NUM);
-	
 	cufftComplex* d_distance_factor = this->distance_factor[blockNo % FLIGHT_NUM];
 	float* d_input = this->d_input[blockNo % FLIGHT_NUM];
 	float* d_output = this->d_output[blockNo % FLIGHT_NUM];
 	float* d_output2 = this->d_output2[blockNo % FLIGHT_NUM];
-	cufftComplex* d_convbufs = this ->d_convbufs[blockNo % FLIGHT_NUM];
+	cufftComplex* d_convbufs = this->d_convbufs[blockNo % FLIGHT_NUM];
 	cudaStream_t* streams = this->streams + (blockNo % FLIGHT_NUM) * STREAMS_PER_FLIGHT;
+	cudaEvent_t event1, event2;
+	checkCudaErrors(cudaEventCreate(&event1));
+	checkCudaErrors(cudaEventCreate(&event2));
+	int old_hrtf_indices[4];
+	float old_omegas[6];
+	interpolationCalculations(ele, azi, hrtf_indices, omegas);
+	bool xfade = false;
+	if (old_azi != azi || old_ele != ele) {
+		xfade = true;
+		interpolationCalculations(old_ele, old_azi, old_hrtf_indices, old_omegas);
+	}
+	calculateDistanceFactor(blockNo % FLIGHT_NUM, streams[1]);
+	fillWithZeroesKernel(d_output, 2 * (PAD_LEN + 2), streams[2]);
+	if (xfade) {
+		fillWithZeroesKernel(d_output, 2 * (PAD_LEN + 2), streams[3]);
+	}
 
 	CHECK_CUFFT_ERRORS(cufftSetStream(in_plan, streams[0]));
 	CHECK_CUFFT_ERRORS(cufftExecR2C(in_plan, (cufftReal*)d_input, (cufftComplex*)d_input));
-
+	checkCudaErrors(cudaEventRecord(event1, streams[0]));
 	if (xfade) {
+		checkCudaErrors(cudaStreamWaitEvent(streams[1], event1, 0));
 		allKernels(d_input, d_output2, this->d_convbufs2[blockNo % FLIGHT_NUM], d_distance_factor, streams + 1, old_omegas, old_hrtf_indices);
 		CHECK_CUFFT_ERRORS(cufftSetStream(out_plan2, streams[1]));
-		
+		CHECK_CUFFT_ERRORS(cufftExecC2R(out_plan2, (cufftComplex*)d_output2, d_output2));
+		checkCudaErrors(cudaEventRecord(event2, streams[1]));
 	}
 	allKernels(d_input, d_output, d_convbufs, d_distance_factor, streams, omegas, hrtf_indices);
-
-	checkCudaErrors(cudaStreamSynchronize(streams[0]));
 	CHECK_CUFFT_ERRORS(cufftSetStream(out_plan, streams[0]));
 	CHECK_CUFFT_ERRORS(cufftExecC2R(out_plan, (cufftComplex*)d_output, d_output));
-	
-	if (xfade) {
-		checkCudaErrors(cudaStreamSynchronize(streams[1]));
-		CHECK_CUFFT_ERRORS(cufftExecC2R(out_plan2, (cufftComplex*)d_output2, d_output2));
-		int numThreads = 256;
-		int numBlocks = (PAD_LEN + numThreads - 1) / numThreads;
-		checkCudaErrors(cudaStreamSynchronize(streams[1]));
-		crossFade<<<numThreads, numBlocks, 0, streams[0]>>>(d_output, d_output2, PAD_LEN);
+	if(xfade){	
+		int numThreads = PAD_LEN;
+		checkCudaErrors(cudaStreamWaitEvent(streams[0], event2, 0));
+		crossFade << <numThreads, 1, 0, streams[0] >> > (
+			d_output + 2 * (PAD_LEN - FRAMES_PER_BUFFER), 
+			d_output2 + 2 * (PAD_LEN - FRAMES_PER_BUFFER), 
+			FRAMES_PER_BUFFER);
+		
 	}
-
+	old_azi = azi;
+	old_ele = ele;
 }
 void SoundSource::fftConvolve(int blockNo) {
 	cudaEvent_t start, stop;
@@ -559,7 +561,7 @@ void SoundSource::cpuFFTConvolve() {
 	fftwf_execute(fftw_in_plan); /*FFT on x[0] --> fftw_intermediate*/
 	complexScaling(fftw_intermediate, 1.0 / PAD_LEN, PAD_LEN / 2 + 1);
 	/*Copying over for both channels*/
-#pragma omp for parallel
+	#pragma omp for parallel
 	for (int i = 0; i < PAD_LEN / 2 + 1; i++) {
 		fftw_intermediate[i + PAD_LEN / 2 + 1][0] = fftw_intermediate[i][0];
 		fftw_intermediate[i + PAD_LEN / 2 + 1][1] = fftw_intermediate[i][1];
@@ -582,6 +584,21 @@ void SoundSource::cpuFFTConvolve() {
 
 }
 
+void SoundSource::cpuFFTInterpolate(){
+	float* output = intermediate[0];
+	fftwf_execute(fftw_in_plan); /*FFT on x[0] --> fftw_intermediate*/
+	complexScaling(fftw_intermediate, 1.0 / PAD_LEN, PAD_LEN / 2 + 1);
+	/*Copying over for both channels*/
+	#pragma omp for parallel
+	for (int i = 0; i < PAD_LEN / 2 + 1; i++) {
+		fftw_intermediate[i + PAD_LEN / 2 + 1][0] = fftw_intermediate[i][0];
+	}
+	/*Doing both channels at once since they're contiguous in memory*/
+	pointwiseMultiplication(fftw_intermediate,
+		fft_hrtf + hrtf_idx * HRTF_CHN * (PAD_LEN / 2 + 1),
+		PAD_LEN + 2);
+	fftwf_execute(fftw_out_plan);
+}
 SoundSource::~SoundSource() {
 	free(buf);
 	CHECK_CUFFT_ERRORS(cufftDestroy(in_plan));

@@ -50,16 +50,17 @@ public:
 	void cpuFFTConvolve();
 	void chunkProcess(int blockNo);
 private:
+	void cpuFFTInterpolate();
 	void fftConvolve(int blockNo); /*Uses time domain convolution rounding to the nearest HRTF in the database*/
 	void interpolateConvolve(int blockNo); /*Uses Belloch's technique of interpolation*/
 	void gpuTDConvolve(float* input, float* d_output, int outputLen, float gain, cudaStream_t* streams);
 	void allKernels(float* d_input, float* d_output, cufftComplex* d_convbufs, cufftComplex* d_distance_factor, cudaStream_t* streams, float* omegas, int* hrtf_indices); /*All of the kernels for interpolation*/
-	void interpolationCalculations(int* hrtf_indices, float* omegas); /*Determine all omegas and hrtf indices*/
-	void calculateDistanceFactor(int blockNo);
+	void interpolationCalculations(float ele, float azi, int* hrtf_indices, float* omegas); /*Determine all omegas and hrtf indices*/
+	void calculateDistanceFactor(int blockNo, cudaStream_t stream);
 	int hrtf_indices[4];
-	int old_hrtf_indices[4];
+	int old_ele;
 	float omegas[6];
-	float old_omegas[6];
+	float old_azi;
 	float sum_ms = 0;
 	float avg_ms = 0;
 	int num_iterations = 0;

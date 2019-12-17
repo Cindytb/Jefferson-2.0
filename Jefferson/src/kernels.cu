@@ -84,16 +84,14 @@ __global__ void generateDistanceFactor(cufftComplex *in, float frac, float fsvs,
 /*
 	f[n] = n / (N - 1)
 	g[n] = 1 - f[n]
+	WARNING: This kernel is not scalable. This kernel was designed to have 1 block
 */
 __global__ void crossFade(float* out1, float* out2, int numFrames){
-	const int numThreads = blockDim.x * gridDim.x;
-	const int threadID = blockIdx.x * blockDim.x + threadIdx.x;
-	for (int i = threadID; i < numFrames; i += numThreads)
-	{
-		out1[i * 2] = out1[i * 2] * float(i) / (numFrames - 1) + out2[i * 2] * (1 - float(i) / (numFrames - 1));
-		out1[i * 2 + 1] = out1[i * 2 + 1] * float(i) / (numFrames - 1) + out2[i * 2 + 1] * (1 - float(i) / (numFrames - 1));
-	}
-
+	int threadID = threadIdx.x;
+	float fn = float(threadID) / (numFrames - 1.0f);
+	out1[threadID * 2] = out1[threadID * 2] * (1.0f - fn) + out2[threadID * 2] * fn;
+	out1[threadID * 2 + 1] = out1[threadID * 2 + 1] * (1.0f - fn) + out2[threadID * 2 + 1] * fn;
+	
 }
 // cufftComplex pointwise multiplication
 __global__ void ComplexPointwiseMulInPlace(const cufftComplex* in, cufftComplex* out, int size) {
@@ -232,6 +230,7 @@ __global__ void fill_kernel(thrust::device_ptr<float> dev_ptr, long long old_siz
 	thrust::fill(dev_ptr + old_size, dev_ptr + new_size, (float)0.0f);
 }
 
+__global__ void doNothing() {}
 __global__ void fillZeros(float* buf, int size) {
 	const int numThreads = blockDim.x * gridDim.x;
 	const int threadID = blockIdx.x * blockDim.x + threadIdx.x;
