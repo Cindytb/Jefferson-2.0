@@ -1,6 +1,5 @@
 ﻿<Model DefinitionId="3a3ca3f4-7ba7-4c09-a182-6ba59bf12599" DisplayName="Analysis Activity" xmlns="clr-namespace:Ark.PropertyModel;assembly=Ark">
-    <Property Name="ActivityType" Value="CommandLineProfile" />
-    <Property Name="Application" Value="D:\Projects\OpenGL\Projects\Jefferson\x64\Debug\Jefferson.exe" />
+    <Property Name="Application" Value="D:\Projects\OpenGL\Projects\Jefferson\x64\GPU_FD_COMPLEX\Jefferson.exe" />
     <Property Name="Arguments" Value="media/Castanets-441.wav media/s1_r1_b_441_mono.wav" />
     <Property Name="EnableCudaApiContextAttachDetach" Value="True" />
     <Property Name="EnableCudaApiContextManagement" Value="True" />
@@ -125,6 +124,7 @@
     <Property Name="EnableToolsExtResourceNaming" Value="True" />
     <Property Name="EnableToolsExtStartEndRangeTrace" Value="True" />
     <Property Name="ExtensionsToSynchronize" Value="*;" />
+    <Property Name="InitialReport" Value="SystemTimeline" />
     <Property Name="ProfileOptionReportSections" Value="Occupancy;LaunchStats;SpeedOfLight;ComputeWorkloadAnalysis;MemoryWorkloadAnalysis;MemoryWorkloadAnalysis_Chart;MemoryWorkloadAnalysis_Tables;SchedulerStats;WarpStateStats;InstructionStats;SourceCounters;" />
     <Property Name="WorkingDirectory" Value="D:\Projects\OpenGL\Projects\Jefferson\Jefferson\" />
 </Model>

@@ -87,7 +87,7 @@ __global__ void generateDistanceFactor(cufftComplex *in, float frac, float fsvs,
 	WARNING: This kernel is not scalable. This kernel was designed to have 1 block
 */
 __global__ void crossFade(float* out1, float* out2, int numFrames){
-	int threadID = threadIdx.x;
+	const int threadID = blockIdx.x * blockDim.x + threadIdx.x;
 	float fn = float(threadID) / (numFrames - 1.0f);
 	out1[threadID * 2] = out1[threadID * 2] * (1.0f - fn) + out2[threadID * 2] * fn;
 	out1[threadID * 2 + 1] = out1[threadID * 2 + 1] * (1.0f - fn) + out2[threadID * 2 + 1] * fn;
@@ -249,7 +249,7 @@ void fillWithZeroes(float** target_buf, long long old_size, long long new_size) 
 	fill_kernel << <1, 1>> > (dev_ptr, old_size, new_size);
 }
 void fillWithZeroesKernel(float* buf, int size, cudaStream_t s) {
-	int numThreads = 256;
+	int numThreads = 64;
 	int numBlocks = (size + numThreads - 1) / numThreads;
 	fillZeros << < numThreads, numBlocks, 0, s >> > (buf, size);
 }

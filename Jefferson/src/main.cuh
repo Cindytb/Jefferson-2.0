@@ -10,6 +10,8 @@
 #include "Audio.cuh"
 #include "DataTag.cuh"
 
+#include <cuda_profiler_api.h>
+
 #define SAMPLE_RATE 44100
 /*Initialize data structure*/
 extern Data data, *p;

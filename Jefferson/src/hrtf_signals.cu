@@ -123,16 +123,14 @@ int read_hrtf_signals(void) {
 	}
 	checkCudaErrors(cudaMemcpy(d_hrtf, hrtf, size, cudaMemcpyHostToDevice));
 	/*fftw_plan fftw_plan_many_dft_r2c(int rank, const int *n, int howmany,
-                                 double *in, const int *inembed,
-                                 int istride, int idist,
-                                 fftw_complex *out, const int *onembed,
-                                 int ostride, int odist,
-                                 unsigned flags);
+								 double *in, const int *inembed,
+								 int istride, int idist,
+								 fftw_complex *out, const int *onembed,
+								 int ostride, int odist,
+								 unsigned flags);
 								 */
-#ifdef CPU_FD_BASIC
+#if defined CPU_FD_BASIC || defined CPU_FD_COMPLEX
 	fft_hrtf = fftwf_alloc_complex(NUM_HRTF * HRTF_CHN * (PAD_LEN / 2 + 1));
-	printf("%p\n", fft_hrtf);
-	printf("%p\n", fft_hrtf + NUM_HRTF * HRTF_CHN * (PAD_LEN / 2 + 1));
 	int n[] = { PAD_LEN };
 	fftwf_plan plan = fftwf_plan_many_dft_r2c(
 		1, n, NUM_HRTF * 2, 

@@ -16,9 +16,10 @@ StopWatchInterface *timer = NULL;
 float g_fAnim = 0.0;
 
 //ball variables
-float ball_x = 0.5, ball_y = 0.0, ball_z = 0.0;
+//float coordinates.x = 0.5, coordinates.y = 0.0, coordinates.z = 0.0;
 float ball_rotate_x = 0.0, ball_rotate_y = 0.0, ball_rotate_z = 0.0;
-float temp = 0.005f;
+float temp = 0.05f;
+//float temp = 0.1f;
 
 // mouse controls
 int mouse_old_x, mouse_old_y;
@@ -37,15 +38,15 @@ double rotation_z = 0, rotation_z_increment = 0.03;
 int filling = 1; //0=OFF 1=ON
 
 //Lights settings
-GLfloat light_ambient[] = { 0.0f, 0.0f, 0.0f, 1.0f };
-GLfloat light_diffuse[] = { 0.1f, 0.1f, 0.1f, 1.0f };
+GLfloat light_ambient[] = { 0.1f, 0.1f, 0.1f, 1.0f };
+GLfloat light_diffuse[] = { 0.2f, 0.2f, 0.2f, 1.0f };
 GLfloat light_specular[] = { 1.0f, 1.0f, 1.0f, 1.0f };
-GLfloat light_position[] = { 200.0f, 200.0f, 200.0f, 1.0f };
+GLfloat light_position[] = { 0.0f, 1.0f, 1.0f, 1.0f };
 
 //Materials settings
 GLfloat mat_ambient[] = { 0.1f, 0.1f, 0.1f, 0.0f };
-GLfloat mat_diffuse[] = { -0.2f, -0.2f, -0.2f, -0.0f };
-GLfloat mat_specular[] = { -0.2f, -0.2f, -0.2f, -0.0f };
+GLfloat mat_diffuse[] = { 0.2f, 0.2f, 0.2f, 0.0f };
+GLfloat mat_specular[] = { 0.2f, 0.2f, 0.2f, 0.0f };
 GLfloat mat_shininess[] = { 0.01f };
 
 // Auto-Verification Code
@@ -373,10 +374,13 @@ void display()
 	//moveBar(*GP);
 #if(DEBUGMODE != 1)
 	SoundSource* source = &(GP->all_sources[0]);
-	source->coordinates.x = ball_x;
-	source->coordinates.y = ball_y;
-	source->coordinates.z = ball_z;
-	source->updateInfo();
+	source->updateFromCartesian();
+	/*source->azi += 3.0f;
+	if (source->azi > 360) {
+		source->azi -= 360;
+	}
+	source->updateFromSpherical();*/
+	
 	//source->drawWaveform();
 #endif
 	
@@ -404,7 +408,7 @@ void display()
 	tmp = 1.f / tmp;
 
 	/*Move Jefferson down so his ears are at the the origin*/
-	glTranslatef(0.0f, -0.2f, 0.0f);
+	glTranslatef(-0.05f, -0.2f, 0.00f);
 	/*Scale Jefferson to a proper size*/
 	glScalef(tmp, tmp, tmp);
 	/* center the model */
@@ -443,12 +447,14 @@ void display()
 	float blue = 131.0f / 256.0f;
 	
 	glColor3f(red, green, blue);
-	glTranslatef(ball_x, ball_y, ball_z);
+	glTranslatef(p->all_sources[0].coordinates.x, p->all_sources[0].coordinates.y, p->all_sources[0].coordinates.z);
 	gluSphere(quadric, 0.1, 20, 50);
 	glPopMatrix();
 
-	
-	/*Push out the OpenGL buffer*/
+	//p->all_sources[0].updateFromCartesian();
+	/*printf("Cartesian: %.3f %.3f %.3f\n", p->all_sources[0].coordinates.x, p->all_sources[0].coordinates.y, p->all_sources[0].coordinates.z);
+	printf("Spherical: %3f %3f %3f\n", p->all_sources[0].azi, p->all_sources[0].ele, p->all_sources[0].r);*/
+	/*Push out the OpenGL buffer*/ 
 	glutSwapBuffers();
 	sdkStopTimer(&timer);
 	computeFPS();
@@ -479,7 +485,8 @@ void cleanup()
 ////////////////////////////////////////////////////////////////////////////////
 void keyboard(unsigned char key, int /*x*/, int /*y*/)
 {
-	float dist = std::sqrt(ball_x * ball_x + ball_z * ball_z);
+	SoundSource* source = &(GP->all_sources[0]);
+	float dist = std::sqrt(source->coordinates.x * source->coordinates.x + source->coordinates.z * source->coordinates.z);
 	/*Calculate the radius, distance, elevation, and azimuth*/
 	//float ele = (float)atan2(coordinates.y, dist) * 180.0f / PI;
 	switch (key)
@@ -488,32 +495,32 @@ void keyboard(unsigned char key, int /*x*/, int /*y*/)
 		rotate_x = 0.0f;
 		rotate_y = 0.0f;
 		translate_z = -3.0f;
-		ball_x = 0.5;
-		ball_y = 0.0;
-		ball_z = 0.0;
+		source->coordinates.x = 0.5;
+		source->coordinates.y = 0.0;
+		source->coordinates.z = 0.0;
 		break;
 	case('W'):
 	case('w'):
 		//value is 40 degrees in radians
-		if (ball_y >= 0 || ball_y < 0 && (atan((ball_y + temp) / dist) * 180.0f / PI > -40))
-			ball_y += temp;
+		if (source->coordinates.y >= 0 || source->coordinates.y < 0 && (atan((source->coordinates.y + temp) / dist) * 180.0f / PI > -40))
+			source->coordinates.y += temp;
 		break;
 	case('S'):
 	case('s'):
-		if (ball_y >= 0 || ball_y < 0 && (atan((ball_y - temp) / dist) * 180.0f / PI > -40))
-			ball_y -= temp;
-		
+		if (source->coordinates.y >= 0 || source->coordinates.y < 0 && (atan((source->coordinates.y - temp) / dist) * 180.0f / PI > -40))
+			source->coordinates.y -= temp;
+
 		break;
 		/*TODO: Fix this logic*/
 	case('A'):
 	case('a'):
-		if (atan(ball_y / std::sqrt((ball_x - temp) * (ball_x - temp) + ball_z * ball_z)) * 180.0f / PI > -40)
-			ball_x -= temp;
+		if (atan(source->coordinates.y / std::sqrt((source->coordinates.x - temp) * (source->coordinates.x - temp) + source->coordinates.z * source->coordinates.z)) * 180.0f / PI > -40)
+			source->coordinates.x -= temp;
 		break;
 	case('D'):
 	case('d'):
-		if (atan(ball_y / std::sqrt((ball_x + temp) * (ball_x + temp) + ball_z * ball_z)) * 180.0f / PI > -40)
-			ball_x += temp;
+		if (atan(source->coordinates.y / std::sqrt((source->coordinates.x + temp) * (source->coordinates.x + temp) + source->coordinates.z * source->coordinates.z)) * 180.0f / PI > -40)
+			source->coordinates.x += temp;
 		break;
 	case (27):
 		printf("Finished playout\n");
@@ -526,23 +533,23 @@ void keyboard(unsigned char key, int /*x*/, int /*y*/)
 	}
 }
 void specialKeys(int key, int x, int y) {
-
+	SoundSource* source = &(GP->all_sources[0]);
 	switch (key) {
 	case GLUT_KEY_LEFT:
-		if (atan(ball_y / std::sqrt((ball_x - temp) * (ball_x - temp) + ball_z * ball_z)) * 180.0f / PI > -40)
-			ball_x -= temp;
+		if (atan(source->coordinates.y / std::sqrt((source->coordinates.x - temp) * (source->coordinates.x - temp) + source->coordinates.z * source->coordinates.z)) * 180.0f / PI > -40)
+			source->coordinates.x -= temp;
 		break;
 	case GLUT_KEY_RIGHT:
-		if (atan(ball_y / std::sqrt((ball_x + temp) * (ball_x + temp) + ball_z * ball_z)) * 180.0f / PI > -40)
-			ball_x += temp;
+		if (atan(source->coordinates.y / std::sqrt((source->coordinates.x + temp) * (source->coordinates.x + temp) + source->coordinates.z * source->coordinates.z)) * 180.0f / PI > -40)
+			source->coordinates.x += temp;
 		break;
 	case GLUT_KEY_UP:
-		if (atan(ball_y / std::sqrt(ball_x * ball_x + (ball_z - temp) * (ball_z - temp))) * 180.0f / PI > -40)
-			ball_z -= temp;
+		if (atan(source->coordinates.y / std::sqrt(source->coordinates.x * source->coordinates.x + (source->coordinates.z - temp) * (source->coordinates.z - temp))) * 180.0f / PI > -40)
+			source->coordinates.z -= temp;
 		break;
 	case GLUT_KEY_DOWN:
-		if (atan(ball_y / std::sqrt(ball_x * ball_x + (ball_z + temp) * (ball_z + temp))) * 180.0f / PI > -40)
-			ball_z += temp;
+		if (atan(source->coordinates.y / std::sqrt(source->coordinates.x * source->coordinates.x + (source->coordinates.z + temp) * (source->coordinates.z + temp))) * 180.0f / PI > -40)
+			source->coordinates.z += temp;
 		break;
 	}
 }

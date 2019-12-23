@@ -29,7 +29,7 @@ int main(int argc, char *argv[]){
 		if (read_hrtf_signals() != 0) {
 			exit(EXIT_FAILURE);
 		}
-	#ifndef RT_GPU_TD
+	#if defined RT_GPU && !defined RT_GPU_TD 
 		transform_hrtfs();
 	#endif
 		fprintf(stderr, "Opening output file\n");
@@ -41,7 +41,7 @@ int main(int argc, char *argv[]){
 		
 	#ifdef RT_GPU
 		printf("Blocks in flight: %i\n", FLIGHT_NUM);
-		cudaProfilerStart();
+		
 
 		p->blockNo = 0;
 		for (int i = 0; i < FLIGHT_NUM; i++) {
@@ -56,28 +56,8 @@ int main(int argc, char *argv[]){
 				);
 				curr_source->count += FRAMES_PER_BUFFER;
 
-
 				curr_source->chunkProcess(buf_block);
-				///*Send*/
-				//checkCudaErrors(cudaMemcpyAsync(
-				//	curr_source->d_input[buf_block],
-				//	curr_source->x[buf_block],
-				//	PAD_LEN * sizeof(float),
-				//	cudaMemcpyHostToDevice,
-				//	curr_source->streams[(buf_block % FLIGHT_NUM) * STREAMS_PER_FLIGHT])
-				//);
-				///*Process*/
-				//curr_source->process(buf_block);
-				//checkCudaErrors(cudaDeviceSynchronize());
-				///*Receive*/
-				//checkCudaErrors(cudaMemcpyAsync(
-				//	curr_source->intermediate[buf_block % FLIGHT_NUM],
-				//	curr_source->d_output[buf_block % FLIGHT_NUM] + 2 * (PAD_LEN - FRAMES_PER_BUFFER),
-				//	FRAMES_PER_BUFFER * 2 * sizeof(float),
-				//	cudaMemcpyDeviceToHost,
-				//	curr_source->streams[(buf_block % FLIGHT_NUM) * STREAMS_PER_FLIGHT])
-				//);
-				checkCudaErrors(cudaStreamSynchronize(curr_source->streams[buf_block * FLIGHT_NUM]));
+
 				checkCudaErrors(cudaDeviceSynchronize());
 				/*overlap-save*/
 				memmove(
@@ -85,64 +65,14 @@ int main(int argc, char *argv[]){
 					curr_source->x[buf_block % FLIGHT_NUM] + FRAMES_PER_BUFFER,
 					sizeof(float) * (PAD_LEN - FRAMES_PER_BUFFER)
 				);
+				curr_source->azi += 1;
 			}
 			p->blockNo++;
+			
 		}
 		checkCudaErrors(cudaDeviceSynchronize());
 	#endif
 
-	// #ifdef RT_GPU
-	// 	printf("Blocks in flight: %i\n", FLIGHT_NUM);
-	// 	cudaProfilerStart();		
-
-	// 	p->blockNo = 0;
-	// 	for (int i = 0; i < FLIGHT_NUM; i++) {
-	// 		for(int j = 0; j < p->num_sources; j++){
-	// 			SoundSource* curr_source = &(p->all_sources[j]);
-	// 			/*Copy new input chunk into pinned memory*/
-	// 			memcpy(
-	// 				curr_source->x[p->blockNo] + (PAD_LEN - FRAMES_PER_BUFFER),  /*Go to the end and work backwards*/
-	// 				curr_source->buf + curr_source->count, 
-	// 				FRAMES_PER_BUFFER * sizeof(float)
-	// 			);
-	// 			curr_source->count += FRAMES_PER_BUFFER;
-
-	// 			/*Send*/
-	// 			checkCudaErrors(cudaMemcpyAsync(
-	// 				curr_source->d_input[p->blockNo],
-	// 				curr_source->x[p->blockNo],
-	// 				PAD_LEN * sizeof(float),
-	// 				cudaMemcpyHostToDevice,
-	// 				curr_source->streams[p->blockNo * STREAMS_PER_FLIGHT])
-	// 			);
-	// 			if (i == 0) {
-	// 				goto end;
-	// 			}
-	// 			/*Process*/
-	// 			curr_source->process(p->blockNo - 1);
-	// 			if (i == 1) {
-	// 				goto end;
-	// 			}
-	// 			checkCudaErrors(cudaMemcpyAsync(
-	// 				curr_source->intermediate[(p->blockNo - 2) % FLIGHT_NUM],
-	// 				curr_source->d_output[(p->blockNo - 2) % FLIGHT_NUM] + 2 * (PAD_LEN - FRAMES_PER_BUFFER),
-	// 				FRAMES_PER_BUFFER * 2 * sizeof(float),
-	// 				cudaMemcpyDeviceToHost,
-	// 				curr_source->streams[(p->blockNo - 2) % FLIGHT_NUM * STREAMS_PER_FLIGHT])
-	// 			);
-				
-	// 		end: /*overlap-save*/
-	// 			memmove(
-	// 				curr_source->x[(p->blockNo + 1) % FLIGHT_NUM],
-	// 				curr_source->x[(p->blockNo) % FLIGHT_NUM] + FRAMES_PER_BUFFER,
-	// 				sizeof(float) * (PAD_LEN - FRAMES_PER_BUFFER)
-	// 			);
-	// 		}
-	// 		p->blockNo++;
-	// 	}
-	// 	checkCudaErrors(cudaDeviceSynchronize());
-	// #endif
-	
 #endif
 #if(DEBUGMODE != 1)
 	fprintf(stderr, "\n\n\n\nInitializing PortAudio\n\n\n\n");
@@ -153,22 +83,47 @@ int main(int argc, char *argv[]){
 	/*MAIN FUNCTIONAL LOOP*/
 	/*Here to debug without graphics*/
 #if DEBUGMODE == 2
-	//std::this_thread::sleep_for(std::chrono::seconds((p->all_sources[0].length / 5) / 44100));
-	std::this_thread::sleep_for(std::chrono::seconds(1));
-	p->all_sources[0].azi = 273;
-	std::this_thread::sleep_for(std::chrono::seconds(1));
-	//std::this_thread::sleep_for(std::chrono::seconds((p->all_sources[0].length / 5) / 44100));
-	p->all_sources[0].azi = 270;
-	p->all_sources[0].ele = 5;
-	std::this_thread::sleep_for(std::chrono::seconds(1));
-	//std::this_thread::sleep_for(std::chrono::seconds((p->all_sources[0].length / 5) / 44100));
-	p->all_sources[0].azi = 273;
-	std::this_thread::sleep_for(std::chrono::seconds(1));
-	//std::this_thread::sleep_for(std::chrono::seconds((p->all_sources[0].length / 5) / 44100));
-	p->all_sources[0].azi = 277;
+	cudaProfilerStart();
+
+	int counter = 1;
+	while (p->all_sources[0].count < (counter * 44100) % p->all_sources[0].length) {
+		std::this_thread::sleep_for(std::chrono::milliseconds(100));
+	}
+	counter++;
+	p->all_sources[0].azi = 2;
+	p->all_sources[0].ele = 4;
+	p->all_sources[0].updateFromSpherical();
+
+	while (p->all_sources[0].count < (counter * 44100) % p->all_sources[0].length) {
+		std::this_thread::sleep_for(std::chrono::milliseconds(100));
+	}
+	counter++;
+	p->all_sources[0].azi = 1;
+	p->all_sources[0].ele = 3;
+	p->all_sources[0].updateFromSpherical();
+	//std::this_thread::sleep_for(std::chrono::seconds(1));
+	while (p->all_sources[0].count < (counter * 44100) % p->all_sources[0].length) {
+		std::this_thread::sleep_for(std::chrono::milliseconds(100));
+	}
+	counter++;
+	p->all_sources[0].azi = 4;
+	p->all_sources[0].ele = 2;
+	p->all_sources[0].updateFromSpherical();
+	while (p->all_sources[0].count < (counter * 44100) % p->all_sources[0].length) {
+		std::this_thread::sleep_for(std::chrono::milliseconds(100));
+	}
+	counter++;
+	p->all_sources[0].azi = 7;
 	p->all_sources[0].ele = 9;
-	std::this_thread::sleep_for(std::chrono::seconds(1));
-	//std::this_thread::sleep_for(std::chrono::seconds((p->all_sources[0].length / 5) / 44100));
+	p->all_sources[0].updateFromSpherical();
+	while (p->all_sources[0].count < (counter * 44100) % p->all_sources[0].length) {
+		std::this_thread::sleep_for(std::chrono::milliseconds(100));
+	}
+	counter++;
+	p->all_sources[0].azi = 0;
+	p->all_sources[0].ele = 0;
+	p->all_sources[0].updateFromSpherical();
+	std::this_thread::sleep_for(std::chrono::seconds(2));
 	//char merp = getchar();
 #else
 	graphicsMain(argc, argv, p);
@@ -177,6 +132,7 @@ int main(int argc, char *argv[]){
 	/*THIS SECTION WILL NOT RUN IF GRAPHICS IS TURNED ON*/
 	/*Placed here to properly close files when debugging without graphics*/
 	cudaProfilerStop();
+
 	fprintf(stderr, "Number of function calls: %llu\n", p->all_sources[0].num_calls);
 	closeEverything();
 

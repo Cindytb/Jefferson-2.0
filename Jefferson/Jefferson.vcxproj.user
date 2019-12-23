@@ -3,8 +3,8 @@
   <PropertyGroup>
     <ShowAllFiles>false</ShowAllFiles>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <LocalDebuggerCommandArguments>media/Castanets-441.wav media/s1_r1_b_441_mono.wav 2&gt;Jefferson.log</LocalDebuggerCommandArguments>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='GPU_FD_COMPLEX|x64'">
+    <LocalDebuggerCommandArguments>media/Vltava.wav media/s1_r1_b_441_mono.wav 2&gt;Jefferson.log</LocalDebuggerCommandArguments>
     <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='GPU_FD_BASIC|x64'">
@@ -20,6 +20,10 @@
     <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='CPU_FD_BASIC|x64'">
+    <LocalDebuggerCommandArguments>media/Vltava.wav media/s1_r1_b_441_mono.wav 2&gt;Jefferson.log</LocalDebuggerCommandArguments>
+    <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='CPU_FD_COMPLEX|x64'">
     <LocalDebuggerCommandArguments>media/Castanets-441.wav media/s1_r1_b_441_mono.wav 2&gt;Jefferson.log</LocalDebuggerCommandArguments>
     <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
   </PropertyGroup>
