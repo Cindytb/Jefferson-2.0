@@ -18,7 +18,7 @@ static int paCallback(const void *inputBuffer, void *outputBuffer,
 	const PaStreamCallbackTimeInfo* timeInfo,
 	PaStreamCallbackFlags statusFlags,
 	void *userData);
-
+void callback_func(float* output, Data* p);
 void initializePA(int fs);
 void closePA();
 

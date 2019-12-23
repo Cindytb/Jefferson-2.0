@@ -15,5 +15,5 @@
 #define SAMPLE_RATE 44100
 /*Initialize data structure*/
 extern Data data, *p;
-
+void benchmarkTesting();
 #endif

@@ -74,14 +74,16 @@ int main(int argc, char *argv[]){
 	#endif
 
 #endif
-#if(DEBUGMODE != 1)
+#if(DEBUGMODE % 2 == 0)
 	fprintf(stderr, "\n\n\n\nInitializing PortAudio\n\n\n\n");
 	initializePA(SAMPLE_RATE);
 	printf("\n\n\n\nStarting playout\n");
 #endif
 	///////////////////////////////////////////////////////////////////////////////////////////////////
 	/*MAIN FUNCTIONAL LOOP*/
-	/*Here to debug without graphics*/
+#if DEBUGMODE == 1
+	graphicsMain(argc, argv, p);
+#endif
 #if DEBUGMODE == 2
 	cudaProfilerStart();
 
@@ -125,9 +127,6 @@ int main(int argc, char *argv[]){
 	p->all_sources[0].updateFromSpherical();
 	std::this_thread::sleep_for(std::chrono::seconds(2));
 	//char merp = getchar();
-#else
-	graphicsMain(argc, argv, p);
-#endif
 
 	/*THIS SECTION WILL NOT RUN IF GRAPHICS IS TURNED ON*/
 	/*Placed here to properly close files when debugging without graphics*/
@@ -135,7 +134,10 @@ int main(int argc, char *argv[]){
 
 	fprintf(stderr, "Number of function calls: %llu\n", p->all_sources[0].num_calls);
 	closeEverything();
-
+#endif
+#if DEBUGMODE == 3
+	benchmarkTesting();
+#endif
 	return 0;
 }
 
@@ -148,4 +150,44 @@ void closeEverything(){
 	fftwf_free(fft_hrtf);
 #endif
 	checkCudaErrors(cudaFree(d_hrtf));	
+}
+
+void benchmarkTesting(){
+	cudaProfilerStart();
+	float* output = new float[FRAMES_PER_BUFFER * 2];
+	int num_iterations = 300;
+	for(int i = 0; i < num_iterations; i++){
+		callback_func(output, p);
+	}
+	
+	p->all_sources[0].azi = 2;
+	p->all_sources[0].ele = 4;
+	p->all_sources[0].updateFromSpherical();
+	for(int i = 0; i < num_iterations; i++){
+		callback_func(output, p);
+	}
+	p->all_sources[0].azi = 1;
+	p->all_sources[0].ele = 3;
+	p->all_sources[0].updateFromSpherical();
+	for(int i = 0; i < 100; i++){
+		callback_func(output, p);
+	}
+	p->all_sources[0].azi = 4;
+	p->all_sources[0].ele = 2;
+	p->all_sources[0].updateFromSpherical();
+	for(int i = 0; i < num_iterations; i++){
+		callback_func(output, p);
+	}
+	p->all_sources[0].azi = 7;
+	p->all_sources[0].ele = 9;
+	p->all_sources[0].updateFromSpherical();
+	for(int i = 0; i < num_iterations; i++){
+		callback_func(output, p);
+	}
+	p->all_sources[0].azi = 13;
+	p->all_sources[0].ele = 14;
+	p->all_sources[0].updateFromSpherical();
+	for (int i = 0; i < 1000; i++) {
+		callback_func(output, p);
+	}
 }
