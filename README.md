@@ -2,15 +2,30 @@
 
 ## Binaural Spatializer in OpenGL and CUDA
 
-This project uses OpenGL to create a 3D visualization of two objects in space and then convolves audio using an HRTF to match the distance and angle of the two objects. It also utilizes parallel processing and the speed of a GPU. The project’s original purpose was to experiment with parallel processing and to see if CUDA can speed up real-time convolution, an experiment still in progress. However, this result can be useful for VR/AR audio and being able to record audio whose source is being moved in 3D space.
+This project uses OpenGL to create a 3D visualization of a sound source and a listener. The audio is processed using 3D Audio techniques to match the distance and angles of the sound source compared to the listener. The project utilizes the HRTF interpolation and distance delay algorithms found in Jose Belloch's paper.
 
-Using libsndfile, this project takes in a 44.1k sample rate input file and reverb impulse response. If the input file is stereo, it is summed to mono using the formula R[i] = (L[i] + R[i]) / 2. If the reverb file is in stereo, the program terminates. Using cuFFT, it does convolution reverberation on the input file, and then stores that data into a buffer in the RAM and onto the disk as a file. I used thrust to calculate the RMS of both signals. Then, the program reads and stores 366 different HRTF impulse responses at various elevations and azimuths. The audio starts playing through PortAudio, and the graphical interface is then displayed to affect what is played.
+## Program Flow
+### Preprocessing
+- Read input & reverb file
+- (optional) do convolution reverb on input
+- Read HRIRs
+- Transform (all 710 * 2) HRIRs to HRTFs
+- Create and allocate all audio buffers
+- Create FFT Plans
+- Import 3D model
+- Create mesh for floor
 
-Different branches of this repository are experiments with different playback libraries and experimenting with real time GPU convolution.
+### Runtime
+- Graphics side of the program updates the X, Y, and Z coordinates of the sound source
+    - Write to the sound source class
+    - Computes azimuth and elevation with each frame refresh
+- Audio side buffer size ~128 or 256 at 44.1k sample rate
+    - 128 samples = 2.8 milliseconds
+    - GPU computation takes ~0.3 milliseconds in the worst case scenario
 
 A purple cartoon character indicates the listener, which remains is movable around the space. The green indicates the sound source which is stationary in the middle. Different keys listed below will move the sound source in the X, Y, and Z axes. The visualization can also be rotated by left clicking and dragging the visualization which helps to better visualize the 3D space. The user can also zoom in and out by clicking and dragging the right arrow key or by using the scroll wheel. The R key will reset back to the default perspective and position. My program also optionally writes the output to a sound file.
 
-The cartoon character, which I’ve fondly named Jefferson, is available here as a [free]( https://free3d.com/3d-model/cartoon-character-47048.html) download. The letter J was created in Microsoft’s Paint 3D. I used Blender to combine, resize, scale, and export the character’s parts to a 3ds file, which I then imported into my program. 
+The cartoon character, which I’ve fondly named Jefferson, was created by Vinnie Huynh in Blender. I exported the model to an FBX file and imported it that way.
 
 ## Tools list:
 **OpenGL** - short for Open Graphics Library. It is an API/library in several programming languages to draw 2D and 3D images. It’s portable and it’s implemented primarily in each computer’s hardware.
@@ -51,7 +66,7 @@ The cartoon character, which I’ve fondly named Jefferson, is available here as
 [More Info](https://www.steinberg.net/en/company/developers.html)
 
 
-**Libsndfile** – Portable audio library used to read contents of wave files
+**libsndfile** – Portable audio library used to read contents of wave files
 
 [Download link](http://www.mega-nerd.com/libsndfile/)
 
@@ -59,14 +74,9 @@ The cartoon character, which I’ve fondly named Jefferson, is available here as
 
 [Download link](https://blender.org/)
 
-**3ds** – 3D Model file type importable/exportable by blender. I used [Damiano Vitulli’s](http://spacesimulator.net/tutorials/index.html) code to import 3ds files into my OpenGL program.
+**ASSIMP** – Acronym for Open Asset Import Library. It “is a portable Open Source library to import various well known 3D model formats in a uniform manner.” This was used to import an FBX file into OpenGL.
 
-## Future Plans:
-(in no particular order)  
--Incorporate more GPU Acceleration (Getting there!)
+[Documentation](http://www.assimp.org)
 
--Attempt to use NVIDIA's ray-tracing technology for audio  
-
--Include a waveform that passes through Jefferson's head  (Have one, but need to find a way to allow longer waveforms)
-
--Be able to include more sound objects  (audio-wise, it's ready. graphics-wise, no)
+## Sources
+Belloch, J. A., Ferrer, M., Gonzalez, A., Martinez-Zaldivar, F. J., & Vidal, A. M. (2013). Headphone-based virtual spatialization of sound with a GPU accelerator. Journal of the Audio Engineering Society, 61 (7/8), 546-561.
