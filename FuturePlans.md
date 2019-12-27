@@ -1,4 +1,7 @@
 # Future Plans:
+# High Priority Bug Fixes
+- [ ] GPU Frequency Domain HRTF Interpolation has sporadic clicking sounds when crossfading between two locations
+- [ ] GPU FD sounds staticky even when it's not clicking
 
 # Overhauls
 - [ ] Revamp the OpenGL implementation to modern OpenGL
