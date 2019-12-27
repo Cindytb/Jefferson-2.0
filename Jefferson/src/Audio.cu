@@ -100,57 +100,49 @@ void callback_func(float *output, Data *p){
 
 		SoundSource* curr_source = &(p->all_sources[source_no]);
 		/*Enable pausing of audio*/
-		if (p->pauseStatus == true) {
-			for (int i = 0; i < FRAMES_PER_BUFFER; i++) {
-				output[2 * i] = 0;
-				output[2 * i + 1] = 0;
-			}
+		if (p->pauseStatus == true)
 			break;
-		}
 
 #ifdef RT_GPU
 		/*Copy intermediate --> output*/
-		//memcpy(output, curr_source->intermediate[p->blockNo % FLIGHT_NUM], FRAMES_PER_BUFFER * 2 * sizeof(float));
-		int buf_block = (p->blockNo - FLIGHT_NUM) % FLIGHT_NUM;
-		checkCudaErrors(cudaStreamSynchronize(curr_source->streams[buf_block]));
+		int buf_block = p->blockNo % FLIGHT_NUM;
+
+		checkCudaErrors(cudaStreamSynchronize(curr_source->streams[buf_block * STREAMS_PER_FLIGHT]));
+
 		for (int i = 0; i < FRAMES_PER_BUFFER * 2; i++) {
 			output[i] += curr_source->intermediate[buf_block][i];
 			if (output[i] > 1.0) {
 				fprintf(stderr, "ALERT! CLIPPING AUDIO!\n");
 			}
 		}
-		int blockNo = p->blockNo % FLIGHT_NUM;
-		/*Copy into curr_source->x pinned memory*/
-		if (curr_source->count + FRAMES_PER_BUFFER < curr_source->length) {
-			memcpy(
-				curr_source->x[blockNo] + (PAD_LEN - FRAMES_PER_BUFFER),  /*Go to the end and work backwards*/
-				curr_source->buf + curr_source->count,
-				FRAMES_PER_BUFFER * sizeof(float));
-			curr_source->count += FRAMES_PER_BUFFER;
-		}
-		else {
-			int rem = curr_source->length - curr_source->count;
-			memcpy(
-				curr_source->x[blockNo] + (PAD_LEN - FRAMES_PER_BUFFER),
-				curr_source->buf + curr_source->count,
-				rem * sizeof(float));
-			memcpy(
-				curr_source->x[blockNo] + (PAD_LEN - FRAMES_PER_BUFFER) + rem,
-				curr_source->buf,
-				(FRAMES_PER_BUFFER - rem) * sizeof(float));
-			curr_source->count = FRAMES_PER_BUFFER - rem;
-		}
-		curr_source->chunkProcess(blockNo);
-		for (int b = 0; b < FLIGHT_NUM; b++) {
-			if(cudaStreamQuery(curr_source->streams[b * STREAMS_PER_FLIGHT])) {
-				/*Overlap-save*/
-				memmove(
-					curr_source->x[(b + 1) % FLIGHT_NUM],
-					curr_source->x[b] + FRAMES_PER_BUFFER,
-					sizeof(float) * (PAD_LEN - FRAMES_PER_BUFFER)
-				);
-			}
-		}
+		
+		///*Copy into curr_source->x pinned memory*/
+		//if (curr_source->count + FRAMES_PER_BUFFER < curr_source->length) {
+		//	memcpy(
+		//		curr_source->x[blockNo] + (PAD_LEN - FRAMES_PER_BUFFER),  /*Go to the end and work backwards*/
+		//		curr_source->buf + curr_source->count,
+		//		FRAMES_PER_BUFFER * sizeof(float));
+		//	curr_source->count += FRAMES_PER_BUFFER;
+		//}
+		//else {
+		//	int rem = curr_source->length - curr_source->count;
+		//	memcpy(
+		//		curr_source->x[blockNo] + (PAD_LEN - FRAMES_PER_BUFFER),
+		//		curr_source->buf + curr_source->count,
+		//		rem * sizeof(float));
+		//	memcpy(
+		//		curr_source->x[blockNo] + (PAD_LEN - FRAMES_PER_BUFFER) + rem,
+		//		curr_source->buf,
+		//		(FRAMES_PER_BUFFER - rem) * sizeof(float));
+		//	curr_source->count = FRAMES_PER_BUFFER - rem;
+		//}
+		///*Overlap save*/
+		//memcpy(
+		//	curr_source->x[(blockNo + 1) % FLIGHT_NUM],
+		//	curr_source->x[blockNo % FLIGHT_NUM] + FRAMES_PER_BUFFER,
+		//	sizeof(float) * (PAD_LEN - FRAMES_PER_BUFFER)
+		//);
+		curr_source->chunkProcess(p->blockNo);
 
 #else
 		/*Copy into curr_source->x pinned memory*/

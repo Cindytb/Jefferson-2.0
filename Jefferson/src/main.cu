@@ -42,35 +42,14 @@ int main(int argc, char *argv[]){
 	#ifdef RT_GPU
 		printf("Blocks in flight: %i\n", FLIGHT_NUM);
 		
-
+		float* output = new float[FRAMES_PER_BUFFER * 2];
 		p->blockNo = 0;
 		for (int i = 0; i < FLIGHT_NUM; i++) {
 			for (int j = 0; j < p->num_sources; j++) {
-				SoundSource* curr_source = &(p->all_sources[j]);
-				/*Copy new input chunk into pinned memory*/
-				int buf_block = p->blockNo;
-				memcpy(
-					curr_source->x[buf_block] + (PAD_LEN - FRAMES_PER_BUFFER),  /*Go to the end and work backwards*/
-					curr_source->buf + curr_source->count,
-					FRAMES_PER_BUFFER * sizeof(float)
-				);
-				curr_source->count += FRAMES_PER_BUFFER;
-
-				curr_source->chunkProcess(buf_block);
-
-				checkCudaErrors(cudaDeviceSynchronize());
-				/*overlap-save*/
-				memmove(
-					curr_source->x[(buf_block + 1) % FLIGHT_NUM],
-					curr_source->x[buf_block % FLIGHT_NUM] + FRAMES_PER_BUFFER,
-					sizeof(float) * (PAD_LEN - FRAMES_PER_BUFFER)
-				);
-				curr_source->azi += 1;
-			}
-			p->blockNo++;
-			
+				callback_func(output, p);
+			}			
 		}
-		checkCudaErrors(cudaDeviceSynchronize());
+		delete[] output;
 	#endif
 
 #endif
@@ -155,7 +134,7 @@ void closeEverything(){
 void benchmarkTesting(){
 	cudaProfilerStart();
 	float* output = new float[FRAMES_PER_BUFFER * 2];
-	int num_iterations = 300;
+	int num_iterations = 500;
 	for(int i = 0; i < num_iterations; i++){
 		callback_func(output, p);
 	}
@@ -169,7 +148,7 @@ void benchmarkTesting(){
 	p->all_sources[0].azi = 1;
 	p->all_sources[0].ele = 3;
 	p->all_sources[0].updateFromSpherical();
-	for(int i = 0; i < 100; i++){
+	for(int i = 0; i < num_iterations; i++){
 		callback_func(output, p);
 	}
 	p->all_sources[0].azi = 4;
@@ -190,4 +169,5 @@ void benchmarkTesting(){
 	for (int i = 0; i < 1000; i++) {
 		callback_func(output, p);
 	}
+	delete[] output;
 }

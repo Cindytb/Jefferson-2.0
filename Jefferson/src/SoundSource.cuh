@@ -11,7 +11,12 @@
 #include <cmath>
 #include <fftw3.h>
 #include <omp.h>
-
+struct callback_data {
+	float* input;
+	float* output;
+	size_t size;
+	int blockNo;
+};
 class SoundSource {
 public:
 	float* buf;									/*Reverberated signal on host*/
@@ -24,6 +29,7 @@ public:
 	float* d_output[FLIGHT_NUM];				/*2 * (PAD_LEN + 2) * 2  sized for the output, *2 for switching method*/
 	float* d_output2[FLIGHT_NUM];				/*2 * (PAD_LEN + 2)  sized for the output, part of the crossfading function*/
 
+	callback_data callback_data_blocks[FLIGHT_NUM * 3];
 	fftwf_complex* fftw_intermediate;			/*2 * (PAD_LEN / 2 + 1) complex values. Padded buffer for fftw output*/
 	fftwf_complex* fftw_conv_bufs;				/*2 * (PAD_LEN / 2 + 1) complex values. Buffer for interpolation, 8 of them total*/
 	fftwf_complex* fftw_distance_factor;		/*Buffer for the complex factor to account for distance scaling PAD_LEN / 2 + 1 Complex values*/
@@ -54,6 +60,10 @@ public:
 	void updateFromSpherical(float azi, float ele, float r);
 	void updateFromSpherical();
 	void chunkProcess(int blockNo);
+	void sendBlock(int blockNo);
+	void overlapSave(int blockNo);
+	void copyIncomingBlock(int blockNo);
+	void receiveBlock(int blockNo);
 	
 	void cpuInterpolateLoops(fftwf_complex* output, fftwf_complex* convbufs, int* hrtf_indices, float* omegas);
 private:
@@ -62,9 +72,6 @@ private:
 	void interpolateConvolve(int blockNo); /*Uses Belloch's technique of interpolation*/
 	void gpuTDConvolve(float* input, float* d_output, int outputLen, float gain, cudaStream_t* streams);
 	void allKernels(float* d_input, float* d_output, cufftComplex* d_convbufs, cufftComplex* d_distance_factor, cudaStream_t* streams, float* omegas, int* hrtf_indices, cudaEvent_t fft_in); /*All of the kernels for interpolation*/
-	void allKernelsXfade(float* d_input, float* d_output, float* d_output2,
-		cufftComplex* d_convbufs, cufftComplex* d_distance_factor,
-		cudaStream_t* streams, float* old_omegas, int* old_hrtfs, cudaEvent_t fft_in);
 	void interpolationCalculations(float ele, float azi, int* hrtf_indices, float* omegas); /*Determine all omegas and hrtf indices*/
 	void gpuCalculateDistanceFactor(int blockNo, cudaStream_t stream);
 	void cpuCalculateDistanceFactor();
@@ -77,5 +84,6 @@ private:
 	int num_iterations = 0;
 	cufftHandle in_plan, out_plan, out_plan2;
 	fftwf_plan fftw_in_plan, fftw_out_plan; 
+	cudaEvent_t incomingTransfers[FLIGHT_NUM * 3];
 };
 #endif

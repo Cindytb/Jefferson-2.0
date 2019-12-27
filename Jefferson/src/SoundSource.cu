@@ -30,6 +30,21 @@ void complexScaling(fftwf_complex* f_x, float scale, int size) {
 		f_x[i][1] *= scale;
 	}
 }
+
+void callback_memcpy(float* src, float* dest, size_t size) {
+	memcpy(
+		dest,
+		src,
+		sizeof(float) * size
+	);
+}
+
+void CUDART_CB memcpyCallback(void* data) {
+	// Check status of GPU after stream operations are done
+	callback_data* p = (callback_data*)(data);
+	callback_memcpy(p->input, p->output, p->size);
+}
+
 SoundSource::SoundSource() {
 	count = 0;
 	length = 0;
@@ -41,8 +56,12 @@ SoundSource::SoundSource() {
 	azi = 3;
 	ele = 5;
 	r = 0.5;
+	
 	streams = new cudaStream_t[FLIGHT_NUM * STREAMS_PER_FLIGHT];
 	for (int i = 0; i < FLIGHT_NUM; i++) {
+		checkCudaErrors(cudaEventCreate(&incomingTransfers[i * 3]));
+		checkCudaErrors(cudaEventCreate(&incomingTransfers[i * 3 + 1]));
+		checkCudaErrors(cudaEventCreate(&incomingTransfers[i * 3 + 2]));
 		/*Allocating pinned memory for incoming transfer*/
 		checkCudaErrors(cudaMallocHost(x + i, (PAD_LEN + 2) * sizeof(float)));
 		/*Allocating memory for the inputs*/
@@ -102,6 +121,7 @@ SoundSource::SoundSource() {
 		(float*)fftw_intermediate, NULL, 
 		2, 1, FFTW_ESTIMATE
 	);
+	
 	old_azi = azi;
 	old_ele = ele;
 }
@@ -388,6 +408,8 @@ void SoundSource::allKernels(float* d_input, float* d_output,
 				curr_scale = scale * omegas[4] * omegas[2];
 				break;
 			}
+			int blah = buf_size / 2 * buf_no;
+			int blah2 = buf_size * (buf_no % 2);
 			ComplexPointwiseMulAndScaleOutPlace << < numBlocks, numThreads, 0, streams[buf_no] >> > (
 				(cufftComplex*)d_input,
 				(cufftComplex*)(d_hrtf + hrtf_indices[hrtf_index] * (PAD_LEN + 2) * HRTF_CHN + ((buf_no % 2) * (PAD_LEN + 2))),
@@ -409,178 +431,14 @@ void SoundSource::allKernels(float* d_input, float* d_output,
 	}
 }
 
-void SoundSource::allKernelsXfade(float* d_input, float* d_output, float* d_output2,
-	cufftComplex* d_convbufs, cufftComplex* d_distance_factor,
-	cudaStream_t* streams, float *old_omegas, int* old_hrtfs, cudaEvent_t fft_in) {
-
-
-	float scale = 1.0f / ((float)PAD_LEN);
-
-	int numThreads = 64;
-	int numBlocks = (PAD_LEN / 2 + numThreads) / numThreads;
-	size_t buf_size = PAD_LEN + 2;
-	for (int i = 0; i < 16; i++) {
-		checkCudaErrors(cudaStreamWaitEvent(streams[i], fft_in, 0));
-	}
-	/*The azi & ele falls exactly on an hrtf resolution*/
-	if (hrtf_indices[0] == hrtf_indices[1] && hrtf_indices[1] == hrtf_indices[2] && hrtf_indices[2] == hrtf_indices[3]) {
-		float curr_scale = scale;
-		for (int i = 0; i < 2; i++) {
-			float* d_curr_output = i == 0 ? d_output : d_output2;
-			cufftComplex* d_curr_conv_bufs = d_convbufs + (i == 0 ? 0 : 4 * 2 * (PAD_LEN + 2));
-			for (int buf_no = 0; buf_no < 2; buf_no++) {
-				ComplexPointwiseMulAndScaleOutPlace << < numBlocks, numThreads, 0, streams[buf_no] >> > (
-					(cufftComplex*)d_input,
-					(cufftComplex*)(d_hrtf + hrtf_indices[buf_no] * (PAD_LEN + 2) * HRTF_CHN + ((buf_no % 2) * (PAD_LEN + 2))),
-					d_curr_conv_bufs + buf_size / 2 * buf_no,
-					PAD_LEN / 2 + 1,
-					curr_scale
-					);
-				ComplexPointwiseMulInPlace << < numBlocks, numThreads, 0, streams[buf_no] >> > (
-					d_distance_factor,
-					d_curr_conv_bufs + buf_size / 2 * buf_no,
-					PAD_LEN / 2 + 1
-					);
-				ComplexPointwiseAdd << < numBlocks, numThreads, 0, streams[buf_no] >> > (
-					d_curr_conv_bufs + buf_size / 2 * buf_no,
-					(cufftComplex*)(d_curr_output + buf_size * (buf_no % 2)),
-					PAD_LEN / 2 + 1
-					);
-			}
-		}
-	}
-	/*If the elevation falls on the resolution, interpolate the azimuth*/
-	else if (hrtf_indices[0] == hrtf_indices[2]) {
-		for (int i = 0; i < 2; i++) {
-			float* d_curr_output = i == 0 ? d_output : d_output2;
-			cufftComplex* d_curr_conv_bufs = d_convbufs + (i == 0 ? 0 : 4 * 2 * (PAD_LEN + 2));
-			for (int buf_no = 0; buf_no < 4; buf_no++) {
-				/*Even buf numbers are the left channel, odd ones are the right channel*/
-				float curr_scale;
-				if (buf_no < 2)
-					curr_scale = scale * omegas[1];
-				else {
-					curr_scale = scale * omegas[0];
-				}
-				int hrtf_index;
-				if (buf_no < 2)
-					hrtf_index = hrtf_indices[0];
-				else
-					hrtf_index = hrtf_indices[1];
-				ComplexPointwiseMulAndScaleOutPlace << < numBlocks, numThreads, 0, streams[buf_no] >> > (
-					(cufftComplex*)d_input,
-					(cufftComplex*)(d_hrtf + hrtf_index * (PAD_LEN + 2) * HRTF_CHN + ((buf_no % 2) * (PAD_LEN + 2))),
-					d_curr_conv_bufs + buf_size / 2 * buf_no,
-					PAD_LEN / 2 + 1,
-					curr_scale
-					);
-				ComplexPointwiseMulInPlace << < numBlocks, numThreads, 0, streams[buf_no] >> > (
-					d_distance_factor,
-					d_curr_conv_bufs + buf_size / 2 * buf_no,
-					PAD_LEN / 2 + 1
-					);
-				ComplexPointwiseAdd << < numBlocks, numThreads, 0, streams[buf_no] >> > (
-					d_curr_conv_bufs + buf_size / 2 * buf_no,
-					(cufftComplex*)(d_curr_output + buf_size * (buf_no % 2)),
-					PAD_LEN / 2 + 1
-					);
-			}
-		}
-
-	}
-	/*If the azimuth falls on the resolution, interpolate the elevation*/
-	else if (hrtf_indices[0] == hrtf_indices[1] && hrtf_indices[0] != hrtf_indices[2]) {
-		for (int i = 0; i < 2; i++) {
-			float* d_curr_output = i == 0 ? d_output : d_output2;
-			cufftComplex* d_curr_conv_bufs = d_convbufs + (i == 0 ? 0 : 4 * 2 * (PAD_LEN + 2));
-			for (int buf_no = 0; buf_no < 4; buf_no++) {
-				/*Even buf numbers are the left channel, odd ones are the right channel*/
-				float curr_scale;
-				int hrtf_index;
-				switch (buf_no) {
-				case 0:
-				case 1:
-					curr_scale = scale * omegas[5]; //double check these scalings
-					hrtf_index = 0;
-					break;
-				case 2:
-				case 3:
-					curr_scale = scale * omegas[4];
-					hrtf_index = 2;
-					break;
-				}
-
-				ComplexPointwiseMulAndScaleOutPlace << < numBlocks, numThreads, 0, streams[buf_no] >> > (
-					(cufftComplex*)d_input,
-					(cufftComplex*)(d_hrtf + hrtf_index * (PAD_LEN + 2) * HRTF_CHN + ((buf_no % 2) * (PAD_LEN + 2))),
-					d_curr_conv_bufs + buf_size / 2 * buf_no,
-					PAD_LEN / 2 + 1,
-					curr_scale
-					);
-				ComplexPointwiseMulInPlace << < numBlocks, numThreads, 0, streams[buf_no] >> > (
-					d_distance_factor,
-					d_curr_conv_bufs + buf_size / 2 * buf_no,
-					PAD_LEN / 2 + 1
-					);
-				ComplexPointwiseAdd << < numBlocks, numThreads, 0, streams[buf_no] >> > (
-					d_curr_conv_bufs + buf_size / 2 * buf_no,
-					(cufftComplex*)(d_curr_output + buf_size * (buf_no % 2)),
-					PAD_LEN / 2 + 1
-					);
-			}
-		}
-	}
-	/*Worst case scenario*/
-	else {
-		for (int i = 0; i < 2; i++) {
-			float* d_curr_output = i == 0 ? d_output : d_output2;
-			cufftComplex* d_curr_conv_bufs = d_convbufs + (i == 0 ? 0 : 4 * 2 * (PAD_LEN + 2));
-			for (int buf_no = 0; buf_no < 8; buf_no++) {
-				/*Even buf numbers are the left channel, odd ones are the right channel*/
-				float curr_scale;
-				int hrtf_index = buf_no / 2;
-				switch (hrtf_index) {
-				case 0:
-					curr_scale = scale * omegas[5] * omegas[1];
-					break;
-				case 1:
-					curr_scale = scale * omegas[5] * omegas[0];
-					break;
-				case 2:
-					curr_scale = scale * omegas[4] * omegas[3];
-					break;
-				case 3:
-					curr_scale = scale * omegas[4] * omegas[2];
-					break;
-				}
-				ComplexPointwiseMulAndScaleOutPlace << < numBlocks, numThreads, 0, streams[buf_no] >> > (
-					(cufftComplex*)d_input,
-					(cufftComplex*)(d_hrtf + hrtf_index * (PAD_LEN + 2) * HRTF_CHN + ((buf_no % 2) * (PAD_LEN + 2))),
-					d_curr_conv_bufs + buf_size / 2 * buf_no,
-					PAD_LEN / 2 + 1,
-					curr_scale
-					);
-				ComplexPointwiseMulInPlace << < numBlocks, numThreads, 0, streams[buf_no] >> > (
-					d_distance_factor,
-					d_curr_conv_bufs + buf_size / 2 * buf_no,
-					PAD_LEN / 2 + 1
-					);
-				ComplexPointwiseAdd << < numBlocks, numThreads, 0, streams[buf_no] >> > (
-					d_curr_conv_bufs + buf_size / 2 * buf_no,
-					(cufftComplex*)(d_curr_output + buf_size * (buf_no % 2)),
-					PAD_LEN / 2 + 1
-					);
-			}
-		}
-	}
-}
+/*blockNo MUST be modulo FLIGHT_NUM*/
 void SoundSource::interpolateConvolve(int blockNo) {
-	cufftComplex* d_distance_factor = this->distance_factor[blockNo % FLIGHT_NUM];
-	float* d_input = this->d_input[blockNo % FLIGHT_NUM];
-	float* d_output = this->d_output[blockNo % FLIGHT_NUM];
-	float* d_output2 = this->d_output2[blockNo % FLIGHT_NUM];
-	cufftComplex* d_convbufs = this->d_convbufs[blockNo % FLIGHT_NUM];
-	cufftComplex* d_convbufs2 = this->d_convbufs[blockNo % FLIGHT_NUM] + 8 * (PAD_LEN + 2);
+	cufftComplex* d_distance_factor = this->distance_factor[blockNo];
+	float* d_input = this->d_input[blockNo];
+	float* d_output = this->d_output[blockNo];
+	float* d_output2 = this->d_output2[blockNo];
+	cufftComplex* d_convbufs = this->d_convbufs[blockNo];
+	cufftComplex* d_convbufs2 = this->d_convbufs[blockNo] + 8 * (PAD_LEN + 2);
 	cudaStream_t* streams = this->streams + blockNo * STREAMS_PER_FLIGHT;
 	cudaEvent_t fft_in_event, xfade_fft_out;
 	cudaEvent_t* kernel_launches = new cudaEvent_t[STREAMS_PER_FLIGHT];
@@ -600,7 +458,7 @@ void SoundSource::interpolateConvolve(int blockNo) {
 		xfade = true;
 		interpolationCalculations(old_ele, old_azi, old_hrtf_indices, old_omegas);
 	}
-	gpuCalculateDistanceFactor(blockNo % FLIGHT_NUM, streams[1]);
+	gpuCalculateDistanceFactor(blockNo, streams[1]);
 	fillWithZeroesKernel(d_output, 2 * (PAD_LEN + 2), streams[2]);
 	if (xfade) {
 		fillWithZeroesKernel(d_output2, 2 * (PAD_LEN + 2), streams[3]);
@@ -710,9 +568,10 @@ void SoundSource::gpuTDConvolve(float* input, float* d_output, int outputLen, fl
 		gain);
 
 }
-
-void SoundSource::chunkProcess(int blockNo) {
+void SoundSource::sendBlock(int blockNo) {
 	cudaStream_t* streams = this->streams + blockNo * STREAMS_PER_FLIGHT;
+	checkCudaErrors(cudaStreamWaitEvent(streams[0], incomingTransfers[blockNo * 3], 0));
+	checkCudaErrors(cudaStreamWaitEvent(streams[0], incomingTransfers[blockNo * 3 + 1], 0));
 	/*Send*/
 	checkCudaErrors(cudaMemcpyAsync(
 		d_input[blockNo],
@@ -721,9 +580,10 @@ void SoundSource::chunkProcess(int blockNo) {
 		cudaMemcpyHostToDevice,
 		streams[0])
 	);
-	/*Process*/
-	process(blockNo);
-	/*Receive*/
+	
+}
+void SoundSource::receiveBlock(int blockNo) {
+	cudaStream_t* streams = this->streams + blockNo * STREAMS_PER_FLIGHT;
 	checkCudaErrors(cudaMemcpyAsync(
 		intermediate[blockNo],
 		d_output[blockNo] + 2 * (PAD_LEN - FRAMES_PER_BUFFER),
@@ -731,6 +591,72 @@ void SoundSource::chunkProcess(int blockNo) {
 		cudaMemcpyDeviceToHost,
 		streams[0])
 	);
+}
+void SoundSource::chunkProcess(int blockNo) {
+	copyIncomingBlock(blockNo % FLIGHT_NUM);
+	overlapSave(blockNo);
+	sendBlock(blockNo % FLIGHT_NUM);
+	/*Process*/
+	process(blockNo % FLIGHT_NUM);
+	/*Receive*/
+	receiveBlock(blockNo % FLIGHT_NUM);
+}
+/*Must send un-modded block number*/
+void SoundSource::overlapSave(int blockNo) {
+	if (blockNo == 0) {
+		return;
+	}
+	int moddedBlockNo = blockNo % FLIGHT_NUM;
+	checkCudaErrors(cudaStreamWaitEvent(streams[moddedBlockNo * STREAMS_PER_FLIGHT], incomingTransfers[((blockNo - 1) % FLIGHT_NUM) * 3], 0));
+	checkCudaErrors(cudaStreamWaitEvent(streams[moddedBlockNo * STREAMS_PER_FLIGHT], incomingTransfers[((blockNo - 1) % FLIGHT_NUM) * 3 + 1], 0));
+	/*Overlap-save, put the function in a stream*/
+	
+	callback_data_blocks[moddedBlockNo * 3 + 1].input = x[(blockNo - 1) % FLIGHT_NUM] + FRAMES_PER_BUFFER;
+	callback_data_blocks[moddedBlockNo * 3 + 1].output = x[moddedBlockNo];
+	callback_data_blocks[moddedBlockNo * 3 + 1].size = PAD_LEN - FRAMES_PER_BUFFER;
+	cudaHostFn_t fn = memcpyCallback;
+	checkCudaErrors(cudaLaunchHostFunc(streams[moddedBlockNo * STREAMS_PER_FLIGHT + 1], fn, &callback_data_blocks[moddedBlockNo * 3 + 1]));
+	checkCudaErrors(cudaEventRecord(incomingTransfers[moddedBlockNo * 3 + 1], streams[moddedBlockNo * STREAMS_PER_FLIGHT + 1]));
+	
+}
+/*Must send modulo'd block number*/
+void SoundSource::copyIncomingBlock(int blockNo) {
+	/*Copy into curr_source->x pinned memory*/
+	if (count + FRAMES_PER_BUFFER < length) {
+		callback_data_blocks[blockNo * 3].input = buf + count;
+		callback_data_blocks[blockNo * 3].output = x[blockNo] + (PAD_LEN - FRAMES_PER_BUFFER);
+		callback_data_blocks[blockNo * 3].size = FRAMES_PER_BUFFER;
+		callback_data_blocks[blockNo * 3].blockNo = blockNo;
+		cudaHostFn_t fn = memcpyCallback;
+		checkCudaErrors(cudaLaunchHostFunc(streams[blockNo * STREAMS_PER_FLIGHT], fn, &callback_data_blocks[blockNo * 3]));
+		checkCudaErrors(cudaEventRecord(incomingTransfers[blockNo * 3], streams[blockNo * STREAMS_PER_FLIGHT]));
+		count += FRAMES_PER_BUFFER;
+	}
+	else {
+		int rem = length - count;
+		callback_data_blocks[blockNo * 3].input = buf + count;
+		callback_data_blocks[blockNo * 3].output = x[blockNo] + (PAD_LEN - FRAMES_PER_BUFFER);
+		callback_data_blocks[blockNo * 3].size = rem;
+		callback_data_blocks[blockNo * 3].blockNo = blockNo;
+		cudaHostFn_t fn = memcpyCallback;
+		checkCudaErrors(cudaLaunchHostFunc(streams[blockNo * STREAMS_PER_FLIGHT], fn, &callback_data_blocks[blockNo * 3]));
+		memcpy(
+			x[blockNo] + (PAD_LEN - FRAMES_PER_BUFFER),
+			buf + count,
+			rem * sizeof(float));
+		memcpy(
+			x[blockNo] + (PAD_LEN - FRAMES_PER_BUFFER) + rem,
+			buf,
+			(FRAMES_PER_BUFFER - rem) * sizeof(float));
+		callback_data_blocks[blockNo * 3 + 2].input = buf;
+		callback_data_blocks[blockNo * 3 + 2].output = x[blockNo] + (PAD_LEN - FRAMES_PER_BUFFER) + rem;
+		callback_data_blocks[blockNo * 3 + 2].size = FRAMES_PER_BUFFER - rem;
+		callback_data_blocks[blockNo * 3 + 2].blockNo = blockNo;
+		fn = memcpyCallback;
+		checkCudaErrors(cudaLaunchHostFunc(streams[blockNo * STREAMS_PER_FLIGHT], fn, &callback_data_blocks[blockNo * 3 + 2]));
+		checkCudaErrors(cudaEventRecord(incomingTransfers[blockNo * 3], streams[blockNo * STREAMS_PER_FLIGHT]));
+		count = FRAMES_PER_BUFFER - rem;
+	}
 }
 void SoundSource::process(int blockNo){
 #ifdef RT_GPU_INTERPOLATE
