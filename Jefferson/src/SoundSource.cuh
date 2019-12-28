@@ -6,6 +6,7 @@
 #include "VBO.cuh"
 #include "cufftDefines.cuh"
 #include "hrtf_signals.cuh"
+#include "functions.h"
 
 #include <math.h>
 #include <cmath>

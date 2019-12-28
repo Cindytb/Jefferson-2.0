@@ -111,11 +111,11 @@ int main(int argc, char *argv[]){
 	/*Placed here to properly close files when debugging without graphics*/
 	cudaProfilerStop();
 
-	fprintf(stderr, "Number of function calls: %llu\n", p->all_sources[0].num_calls);
 	closeEverything();
 #endif
 #if DEBUGMODE == 3
 	benchmarkTesting();
+	fprintf(stderr, "Number of function calls: %llu\n", p->all_sources[0].num_calls);
 #endif
 	return 0;
 }
@@ -134,84 +134,46 @@ void closeEverything(){
 void benchmarkTesting(){
 	cudaProfilerStart();
 	float* output = new float[FRAMES_PER_BUFFER * 2];
-	int num_iterations = 86;
+	int num_iterations = 172;
 	fprintf(stderr, "Testing no interpolation\n");
-	for (int repeats = 0; repeats < 10; repeats++) {
+	for (int repeats = 0; repeats < 2; repeats++) {
+		p->all_sources[0].azi = 0;
+		p->all_sources[0].ele = 0;
+		int ele_idx = 4;
 		for (int i = 0; i < num_iterations; i++) {
 			callback_func(output, p);
 		}
-
-		p->all_sources[0].azi = 5;
-		p->all_sources[0].ele = 10;
-		p->all_sources[0].updateFromSpherical();
-		for (int i = 0; i < num_iterations; i++) {
-			callback_func(output, p);
-		}
-		p->all_sources[0].azi = 10;
-		p->all_sources[0].updateFromSpherical();
-		for (int i = 0; i < num_iterations; i++) {
-			callback_func(output, p);
-		}
-		p->all_sources[0].azi = 15;
-		p->all_sources[0].updateFromSpherical();
-		for (int i = 0; i < num_iterations; i++) {
-			callback_func(output, p);
-		}
-		p->all_sources[0].azi = 20;
-		p->all_sources[0].updateFromSpherical();
-		for (int i = 0; i < num_iterations; i++) {
-			callback_func(output, p);
-		}
-		p->all_sources[0].azi = 25;
-		p->all_sources[0].updateFromSpherical();
-		for (int i = 0; i < 1000; i++) {
-			callback_func(output, p);
-		}
-		p->all_sources[0].azi = 30;
-		p->all_sources[0].updateFromSpherical();
-		for (int i = 0; i < num_iterations; i++) {
-			callback_func(output, p);
+		for (int i = 0; i < 36; i++) {
+			p->all_sources[0].azi += azimuth_inc[ele_idx];
+			if (i % 4 == 0) {
+				p->all_sources[0].ele += 10;
+				ele_idx++;
+			}
+			p->all_sources[0].updateFromSpherical();
+			for (int j = 0; j < num_iterations; j++) {
+				callback_func(output, p);
+			}
 		}
 	}
-	/*fprintf(stderr, "Testing azimuth interpolation\n");
-	for (int repeats = 0; repeats < 10; repeats++) {
-		for (int i = 0; i < num_iterations; i++) {
-			callback_func(output, p);
-		}
+	fprintf(stderr, "Testing azimuth interpolation\n");
+	for (int repeats = 0; repeats < 2; repeats++) {
 		p->all_sources[0].azi = 1;
-		p->all_sources[0].updateFromSpherical();
+		p->all_sources[0].ele = 0;
 		for (int i = 0; i < num_iterations; i++) {
 			callback_func(output, p);
 		}
-		p->all_sources[0].azi = 6;
-		p->all_sources[0].updateFromSpherical();
-		for (int i = 0; i < num_iterations; i++) {
-			callback_func(output, p);
+		for (int i = 0; i < 72; i++) {
+			p->all_sources[0].azi += 2.5;
+			if (i % 8 == 0) {
+				p->all_sources[0].ele += 10;
+			}
+			p->all_sources[0].updateFromSpherical();
+			for (int j = 0; j < num_iterations / 2; j++) {
+				callback_func(output, p);
+			}
 		}
-		p->all_sources[0].azi = 11;
-		p->all_sources[0].updateFromSpherical();
-		for (int i = 0; i < num_iterations; i++) {
-			callback_func(output, p);
-		}
-		p->all_sources[0].azi = 18;
-		p->all_sources[0].updateFromSpherical();
-		for (int i = 0; i < num_iterations; i++) {
-			callback_func(output, p);
-		}
-		p->all_sources[0].azi = 23;
-		p->all_sources[0].updateFromSpherical();
-		for (int i = 0; i < 1000; i++) {
-			callback_func(output, p);
-		}
-		p->all_sources[0].azi = 27;
-		p->all_sources[0].updateFromSpherical();
-		for (int i = 0; i < num_iterations; i++) {
-			callback_func(output, p);
-		}
-		p->all_sources[0].azi = 33;
-		p->all_sources[0].updateFromSpherical();
 	}
-	fprintf(stderr, "Testing Elevation interpolation\n");
+	/*fprintf(stderr, "Testing Elevation interpolation\n");
 	p->all_sources[0].azi = 0;
 	p->all_sources[0].ele = 5;
 	p->all_sources[0].updateFromSpherical();
@@ -298,8 +260,8 @@ void benchmarkTesting(){
 		p->all_sources[0].azi = 33;
 		p->all_sources[0].ele = 75;
 		p->all_sources[0].updateFromSpherical();
-	}
-	*/
+	}*/
+	
 	for (int i = 0; i < num_iterations; i++) {
 		callback_func(output, p);
 	}

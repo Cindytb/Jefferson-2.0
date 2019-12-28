@@ -1,35 +1,4 @@
 ﻿#include "SoundSource.cuh"
-void pointwiseAddition(fftwf_complex* a, fftwf_complex* b, int size) {
-#pragma omp parallel for
-	for (int i = 0; i < size; i++) {
-		a[i][0] += b[i][0];
-		a[i][1] += b[i][1];
-	}
-}
-void pointwiseAddition(fftwf_complex* a, fftwf_complex* b, fftwf_complex* c, int size) {
-#pragma omp parallel for
-	for (int i = 0; i < size; i++) {
-		c[i][0] = a[i][0] + b[i][0];
-		c[i][1] = a[i][1] + b[i][1];
-	}
-}
-void pointwiseMultiplication(fftwf_complex* a, fftwf_complex* b, int size) {
-#pragma omp parallel for
-	for (int i = 0; i < size; i++) {
-		fftwf_complex temp;
-		temp[0] = a[i][0];
-		temp[1] = a[i][1];
-		a[i][0] = temp[0] * b[i][0] - temp[1] * b[i][1];
-		a[i][1] = temp[0] * b[i][1] + temp[1] * b[i][0];
-	}
-}
-void complexScaling(fftwf_complex* f_x, float scale, int size) {
-#pragma omp parallel for
-	for (int i = 0; i < size; i++) {
-		f_x[i][0] *= scale;
-		f_x[i][1] *= scale;
-	}
-}
 
 void callback_memcpy(float* src, float* dest, size_t size) {
 	memcpy(
@@ -761,29 +730,28 @@ void SoundSource::cpuInterpolateLoops(fftwf_complex* output, fftwf_complex* conv
 	}
 	/*If the elevation falls on the resolution, interpolate the azimuth*/
 	else if (hrtf_indices[0] == hrtf_indices[2]) {
-		memcpy(convbufs, output, (PAD_LEN + 2) * sizeof(fftwf_complex));
-		memcpy(convbufs + (PAD_LEN + 2), output, (PAD_LEN + 2) * sizeof(fftwf_complex));
-		pointwiseMultiplication(convbufs,
+		pointwiseMultiplication(output,
 			fft_hrtf + hrtf_indices[0] * HRTF_CHN * (PAD_LEN / 2 + 1),
-			PAD_LEN + 2
-		);
-		pointwiseMultiplication(convbufs,
-			fft_hrtf + hrtf_indices[1] * HRTF_CHN * (PAD_LEN / 2 + 1),
-			PAD_LEN + 2
-		);
-		#pragma omp parallel for
-		for (int i = 0; i < PAD_LEN / 2 + 1; i++) {
-			convbufs[i][0] *= omegas[1];
-			convbufs[(PAD_LEN + 2) + i][0] *= omegas[0];
-		}
-		pointwiseMultiplication(
 			convbufs,
-			fftw_distance_factor,
 			PAD_LEN + 2
 		);
+		pointwiseMultiplication(output,
+			fft_hrtf + hrtf_indices[1] * HRTF_CHN * (PAD_LEN / 2 + 1),
+			convbufs + PAD_LEN + 2,
+			PAD_LEN + 2
+		);
+		complexScaling(convbufs, omegas[1], PAD_LEN + 2);
+		complexScaling(convbufs + PAD_LEN + 2, omegas[0], PAD_LEN + 2);
+		for (int i = 0; i < 4; i++) {
+			pointwiseMultiplication(
+				convbufs + (PAD_LEN / 2 + 1) * i,
+				fftw_distance_factor,
+				PAD_LEN / 2 + 1
+			);
+		}
 		pointwiseAddition(
 			convbufs, 
-			convbufs + (PAD_LEN + 2), 
+			convbufs + PAD_LEN + 2, 
 			output, 
 		PAD_LEN + 2);
 		
@@ -791,31 +759,25 @@ void SoundSource::cpuInterpolateLoops(fftwf_complex* output, fftwf_complex* conv
 	}
 	/*If the azimuth falls on the resolution, interpolate the elevation*/
 	else if (hrtf_indices[0] == hrtf_indices[1] && hrtf_indices[0] != hrtf_indices[2]) {
-		memcpy(convbufs, output, (PAD_LEN + 2) * sizeof(fftwf_complex));
-		memcpy(convbufs + (PAD_LEN + 2), output, (PAD_LEN + 2) * sizeof(fftwf_complex));
-		pointwiseMultiplication(convbufs,
+		pointwiseMultiplication(output,
 			fft_hrtf + hrtf_indices[0] * HRTF_CHN * (PAD_LEN / 2 + 1),
-			PAD_LEN + 2
-		);
-		pointwiseMultiplication(convbufs + (PAD_LEN + 2),
-			fft_hrtf + hrtf_indices[2] * HRTF_CHN * (PAD_LEN / 2 + 1),
-			PAD_LEN + 2
-		);
-		#pragma omp parallel for
-		for (int i = 0; i < PAD_LEN / 2 + 1; i++) {
-			convbufs[i][0] *= omegas[5];
-			convbufs[(PAD_LEN + 2) + i][0] *= omegas[4];
-		}
-		pointwiseMultiplication(
 			convbufs,
-			fftw_distance_factor,
 			PAD_LEN + 2
 		);
-		pointwiseMultiplication(
-			convbufs + (PAD_LEN + 2),
-			fftw_distance_factor,
+		pointwiseMultiplication(output,
+			fft_hrtf + hrtf_indices[2] * HRTF_CHN * (PAD_LEN / 2 + 1),
+			convbufs + PAD_LEN + 2,
 			PAD_LEN + 2
 		);
+		complexScaling(convbufs, omegas[5], PAD_LEN + 2);
+		complexScaling(convbufs + PAD_LEN + 2, omegas[4], PAD_LEN + 2);
+		for (int i = 0; i < 4; i++) {
+			pointwiseMultiplication(
+				convbufs + (PAD_LEN / 2 + 1) * i,
+				fftw_distance_factor,
+				PAD_LEN / 2 + 1
+			);
+		}
 		pointwiseAddition(
 			convbufs,
 			convbufs + (PAD_LEN + 2),
@@ -826,32 +788,40 @@ void SoundSource::cpuInterpolateLoops(fftwf_complex* output, fftwf_complex* conv
 	else {
 		#pragma omp parallel for
 		for (int i = 0; i < 4; i++) {
-			memcpy(convbufs + (PAD_LEN + 2) * i, output, (PAD_LEN + 2) * sizeof(fftwf_complex));
-			pointwiseMultiplication(convbufs + (PAD_LEN + 2) * i,
+			pointwiseMultiplication(
+				output,
 				fft_hrtf + hrtf_indices[i] * HRTF_CHN * (PAD_LEN / 2 + 1),
+				convbufs + (PAD_LEN + 2) * i,
+				PAD_LEN + 2
+			);
+			pointwiseMultiplication(
+				output,
+				fft_hrtf + hrtf_indices[0] * HRTF_CHN * (PAD_LEN / 2 + 1),
+				convbufs,
 				PAD_LEN + 2
 			);
 			pointwiseMultiplication(
 				convbufs + (PAD_LEN + 2) * i,
 				fftw_distance_factor,
-				PAD_LEN + 2
+				PAD_LEN / 2 + 1
+			);
+			pointwiseMultiplication(
+				convbufs + (PAD_LEN + 2) * i + PAD_LEN / 2 + 1,
+				fftw_distance_factor,
+				PAD_LEN / 2 + 1
 			);
 		}
-		#pragma omp parallel for
-		for (int i = 0; i < PAD_LEN / 2 + 1; i++) {
-			convbufs[i][0] *= omegas[5] * omegas[1];
-			convbufs[(PAD_LEN + 2) + i][0] *= omegas[5] * omegas[0];
-			convbufs[((PAD_LEN + 2)) * 2 + i][0] *= omegas[5] * omegas[0];
-			convbufs[((PAD_LEN + 2)) * 3 + i][0] *= omegas[4] * omegas[2];
-		}
-		
+		complexScaling(convbufs, omegas[5] * omegas[1], PAD_LEN + 2);
+		complexScaling(convbufs + PAD_LEN + 2, omegas[5] * omegas[0], PAD_LEN + 2);
+		complexScaling(convbufs + 2 * (PAD_LEN + 2), omegas[4] * omegas[0], PAD_LEN + 2);
+		complexScaling(convbufs + 3 * (PAD_LEN + 2), omegas[4] *omegas[1], PAD_LEN + 2);
+
 		pointwiseAddition(
 			convbufs,
 			convbufs + (PAD_LEN + 2),
 			output,
 			PAD_LEN + 2);
-		#pragma omp parallel for
-		for (int i = 1; i < 4; i++) {
+		for (int i = 2; i < 4; i++) {
 			pointwiseAddition(output,
 				convbufs + (PAD_LEN + 2) * i,
 				PAD_LEN + 2);
@@ -879,35 +849,36 @@ void SoundSource::cpuFFTInterpolate(){
 	if (old_azi != azi || old_ele != ele) {
 		xfade = true;
 		interpolationCalculations(old_ele, old_azi, old_hrtf_indices, old_omegas);
-	}
-	cpuCalculateDistanceFactor();
-	cpuInterpolateLoops(fftw_intermediate, fftw_conv_bufs, hrtf_indices, omegas);
-	
-	if(xfade){
 		memcpy(
 			fftw_intermediate + PAD_LEN + 2,
 			fftw_intermediate,
 			(PAD_LEN + 2) * sizeof(fftwf_complex)
 		);
-		cpuInterpolateLoops(fftw_intermediate + PAD_LEN + 2, fftw_conv_bufs + (PAD_LEN + 2) * 4, old_hrtf_indices, old_omegas);
 	}
+	cpuCalculateDistanceFactor();
+	cpuInterpolateLoops(fftw_intermediate, fftw_conv_bufs, hrtf_indices, omegas);
 	fftwf_execute(fftw_out_plan);
-	if (xfade) {
+
+	if(xfade){
+		cpuInterpolateLoops(fftw_intermediate + PAD_LEN + 2, fftw_conv_bufs + (PAD_LEN + 2) * 4, old_hrtf_indices, old_omegas);
 		fftwf_execute_dft_c2r(
 			fftw_out_plan, 
 			fftw_intermediate + (PAD_LEN + 2), 
-			(float*)(fftw_intermediate + (PAD_LEN + 2))
+			(float*)(fftw_intermediate + PAD_LEN + 2)
 		);
 		float* out1 = ((float*)fftw_intermediate) + 2 * (PAD_LEN - FRAMES_PER_BUFFER);
-		float* out2 = ((float*)fftw_intermediate) + PAD_LEN + 2 + 2 * (PAD_LEN - FRAMES_PER_BUFFER);
+		float* out2 = ((float*)fftw_intermediate) + 2 * PAD_LEN + 4 + 2 * (PAD_LEN - FRAMES_PER_BUFFER);//PAD_LEN + 2 + 2 * (PAD_LEN - FRAMES_PER_BUFFER);
 		#pragma omp parallel for
 		for(int i = 0; i < FRAMES_PER_BUFFER; i++){
 			float fn = float(i) / (FRAMES_PER_BUFFER - 1.0f);
-			out1[i * 2] = out1[i * 2] * (1.0f - fn) + out2[i * 2] * fn;
-			out1[i * 2 + 1] = out1[i * 2 + 1] * (1.0f - fn) + out2[i * 2 + 1] * fn;
+			out1[i * 2] = out1[i * 2] * fn + out2[i * 2] * (1.0f - fn);
+			out1[i * 2 + 1] = out1[i * 2 + 1] * fn + out2[i * 2 + 1] * (1.0f - fn);
 		}
 	}
 	num_calls++;
+
+	old_azi = azi;
+	old_ele = ele;
 	/*cudaEventRecord(stop);
 	cudaEventSynchronize(stop);
 	float milliseconds = 0;

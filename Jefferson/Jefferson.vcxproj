@@ -44,6 +44,7 @@
     <ClInclude Include="src\cudaPart.cuh" />
     <ClInclude Include="src\cufftDefines.cuh" />
     <ClInclude Include="src\DataTag.cuh" />
+    <ClInclude Include="src\functions.h" />
     <ClInclude Include="src\graphics.cuh" />
     <ClInclude Include="src\hrtf_signals.cuh" />
     <ClInclude Include="src\hrtf_signals.h" />
@@ -341,6 +342,7 @@
     <CudaInclude Include="src\vbo.cuh" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="src\functions.cpp" />
     <ClCompile Include="src\hrtf_signals.cpp" />
     <ClCompile Include="src\import_model.cpp" />
   </ItemGroup>
