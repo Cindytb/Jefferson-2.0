@@ -19,47 +19,46 @@ struct square
 typedef float2 Complex; 
 const bool reverbFlag = false;
 int readFile(const char *name, float **buf, int &numCh) {
-	SF_INFO info;
-	SNDFILE *sndfile;
-	memset(&info, 0, sizeof(info));
-	info.format = 0;
-	sndfile = sf_open(name, SFM_READ, &info);
-	if (sndfile == NULL) {
-		fprintf(stderr, "ERROR. Cannot open %s\n", name);
-		exit(1);
-	}
-
-	int size = info.frames;
-	numCh = info.channels;
+	SndfileHandle file = SndfileHandle(name);
+	int size = file.frames();
+	numCh = file.channels();
 
 	*buf = (float*)malloc(sizeof(float) * size);
 
-	if (info.channels == 1) {
-		sf_read_float(sndfile, *buf, size);
+	if (numCh == 1) {
+		size_t count = file.readf(*buf, size);
+		if (count != size) {
+			fprintf(stderr, "ERROR. Cannot read all of %s\n", name);
+			exit(1);
+		}
 	}
 
 	else {
 		/*Sum into mono & do RMS*/
-		if (info.channels == 2) {
+		if (numCh == 2) {
 			/*Allocate temporary memory for wave file*/
-			float *temp_buf = (float*)malloc(sizeof(float) * info.frames * 2);
+			float *temp_buf = new float[size * 2];
 
 			/*Read wave file into temporary memory*/
-			sf_read_float(sndfile, temp_buf, info.frames * 2);
-
-			/*Sum R & L*/
-			for (int i = 0; i < info.frames; i++) {
-				*buf[i] = temp_buf[i * 2] / 2.0 + temp_buf[i * 2 + 1] / 2.0;
+			size_t count = file.readf(temp_buf, size);
+			if (count != size) {
+				fprintf(stderr, "ERROR. Cannot read all of %s\n", name);
+				exit(1);
 			}
 
-			free(temp_buf);
+			/*Sum R & L*/
+			for (int i = 0; i < size; i++) {
+				(*buf)[i] = temp_buf[i * 2] / 2.0 + temp_buf[i * 2 + 1] / 2.0;
+			}
+
+			delete[] temp_buf;
 
 		}
 		else {
 			fprintf(stderr, "ERROR: %s : Only mono or stereo accepted", name);
+			exit(1);
 		}
 	}
-	sf_close(sndfile);
 	return size;
 }
 
