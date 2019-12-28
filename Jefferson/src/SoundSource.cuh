@@ -33,7 +33,7 @@ public:
 	fftwf_complex* fftw_intermediate;			/*2 * (PAD_LEN / 2 + 1) complex values. Padded buffer for fftw output*/
 	fftwf_complex* fftw_conv_bufs;				/*2 * (PAD_LEN / 2 + 1) complex values. Buffer for interpolation, 8 of them total*/
 	fftwf_complex* fftw_distance_factor;		/*Buffer for the complex factor to account for distance scaling PAD_LEN / 2 + 1 Complex values*/
-	cudaStream_t* streams;			/*Streams associated with each block in flight*/
+	cudaStream_t streams[FLIGHT_NUM * STREAMS_PER_FLIGHT];			/*Streams associated with each block in flight*/
 
 	int count;						/*Current frame count for the audio callback*/
 	int hrtf_idx; 					/*Index to the correct HRTF elevation/azimuth*/
@@ -82,8 +82,11 @@ private:
 	float sum_ms = 0;
 	float avg_ms = 0;
 	int num_iterations = 0;
-	cufftHandle in_plan, out_plan, out_plan2;
+	cufftHandle plans[FLIGHT_NUM * 3];
 	fftwf_plan fftw_in_plan, fftw_out_plan; 
 	cudaEvent_t incomingTransfers[FLIGHT_NUM * 3];
+	cudaEvent_t fft_events[FLIGHT_NUM];
+	cudaEvent_t kernel_launches[STREAMS_PER_FLIGHT * FLIGHT_NUM];
+
 };
 #endif

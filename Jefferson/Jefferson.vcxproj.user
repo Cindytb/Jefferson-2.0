@@ -4,7 +4,7 @@
     <ShowAllFiles>false</ShowAllFiles>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='GPU_FD_COMPLEX|x64'">
-    <LocalDebuggerCommandArguments>media/Vltava.wav media/s1_r1_b_441_mono.wav 2&gt;Jefferson.log</LocalDebuggerCommandArguments>
+    <LocalDebuggerCommandArguments>media/Guitar.wav media/s1_r1_b_441_mono.wav</LocalDebuggerCommandArguments>
     <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='GPU_FD_BASIC|x64'">
@@ -24,7 +24,7 @@
     <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='CPU_FD_COMPLEX|x64'">
-    <LocalDebuggerCommandArguments>media/Castanets-441.wav media/s1_r1_b_441_mono.wav 2&gt;Jefferson.log</LocalDebuggerCommandArguments>
+    <LocalDebuggerCommandArguments>media/Vltava.wav media/s1_r1_b_441_mono.wav</LocalDebuggerCommandArguments>
     <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">

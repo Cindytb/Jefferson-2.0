@@ -134,39 +134,173 @@ void closeEverything(){
 void benchmarkTesting(){
 	cudaProfilerStart();
 	float* output = new float[FRAMES_PER_BUFFER * 2];
-	int num_iterations = 500;
-	for(int i = 0; i < num_iterations; i++){
-		callback_func(output, p);
+	int num_iterations = 86;
+	fprintf(stderr, "Testing no interpolation\n");
+	for (int repeats = 0; repeats < 10; repeats++) {
+		for (int i = 0; i < num_iterations; i++) {
+			callback_func(output, p);
+		}
+
+		p->all_sources[0].azi = 5;
+		p->all_sources[0].ele = 10;
+		p->all_sources[0].updateFromSpherical();
+		for (int i = 0; i < num_iterations; i++) {
+			callback_func(output, p);
+		}
+		p->all_sources[0].azi = 10;
+		p->all_sources[0].updateFromSpherical();
+		for (int i = 0; i < num_iterations; i++) {
+			callback_func(output, p);
+		}
+		p->all_sources[0].azi = 15;
+		p->all_sources[0].updateFromSpherical();
+		for (int i = 0; i < num_iterations; i++) {
+			callback_func(output, p);
+		}
+		p->all_sources[0].azi = 20;
+		p->all_sources[0].updateFromSpherical();
+		for (int i = 0; i < num_iterations; i++) {
+			callback_func(output, p);
+		}
+		p->all_sources[0].azi = 25;
+		p->all_sources[0].updateFromSpherical();
+		for (int i = 0; i < 1000; i++) {
+			callback_func(output, p);
+		}
+		p->all_sources[0].azi = 30;
+		p->all_sources[0].updateFromSpherical();
+		for (int i = 0; i < num_iterations; i++) {
+			callback_func(output, p);
+		}
 	}
-	
-	p->all_sources[0].azi = 2;
-	p->all_sources[0].ele = 4;
-	p->all_sources[0].updateFromSpherical();
-	for(int i = 0; i < num_iterations; i++){
-		callback_func(output, p);
+	/*fprintf(stderr, "Testing azimuth interpolation\n");
+	for (int repeats = 0; repeats < 10; repeats++) {
+		for (int i = 0; i < num_iterations; i++) {
+			callback_func(output, p);
+		}
+		p->all_sources[0].azi = 1;
+		p->all_sources[0].updateFromSpherical();
+		for (int i = 0; i < num_iterations; i++) {
+			callback_func(output, p);
+		}
+		p->all_sources[0].azi = 6;
+		p->all_sources[0].updateFromSpherical();
+		for (int i = 0; i < num_iterations; i++) {
+			callback_func(output, p);
+		}
+		p->all_sources[0].azi = 11;
+		p->all_sources[0].updateFromSpherical();
+		for (int i = 0; i < num_iterations; i++) {
+			callback_func(output, p);
+		}
+		p->all_sources[0].azi = 18;
+		p->all_sources[0].updateFromSpherical();
+		for (int i = 0; i < num_iterations; i++) {
+			callback_func(output, p);
+		}
+		p->all_sources[0].azi = 23;
+		p->all_sources[0].updateFromSpherical();
+		for (int i = 0; i < 1000; i++) {
+			callback_func(output, p);
+		}
+		p->all_sources[0].azi = 27;
+		p->all_sources[0].updateFromSpherical();
+		for (int i = 0; i < num_iterations; i++) {
+			callback_func(output, p);
+		}
+		p->all_sources[0].azi = 33;
+		p->all_sources[0].updateFromSpherical();
 	}
-	p->all_sources[0].azi = 1;
-	p->all_sources[0].ele = 3;
+	fprintf(stderr, "Testing Elevation interpolation\n");
+	p->all_sources[0].azi = 0;
+	p->all_sources[0].ele = 5;
 	p->all_sources[0].updateFromSpherical();
-	for(int i = 0; i < num_iterations; i++){
-		callback_func(output, p);
+	for (int repeats = 0; repeats < 10; repeats++) {
+		for (int i = 0; i < num_iterations; i++) {
+			callback_func(output, p);
+		}
+		p->all_sources[0].ele = 15;
+		p->all_sources[0].updateFromSpherical();
+		for (int i = 0; i < num_iterations; i++) {
+			callback_func(output, p);
+		}
+		p->all_sources[0].ele = 25;
+		p->all_sources[0].updateFromSpherical();
+		for (int i = 0; i < num_iterations; i++) {
+			callback_func(output, p);
+		}
+		p->all_sources[0].ele = 35;
+		p->all_sources[0].updateFromSpherical();
+		for (int i = 0; i < num_iterations; i++) {
+			callback_func(output, p);
+		}
+		p->all_sources[0].ele = 45;
+		p->all_sources[0].updateFromSpherical();
+		for (int i = 0; i < num_iterations; i++) {
+			callback_func(output, p);
+		}
+		p->all_sources[0].ele = 55;
+		p->all_sources[0].updateFromSpherical();
+		for (int i = 0; i < 1000; i++) {
+			callback_func(output, p);
+		}
+		p->all_sources[0].ele = 65;
+		p->all_sources[0].updateFromSpherical();
+		for (int i = 0; i < num_iterations; i++) {
+			callback_func(output, p);
+		}
+		p->all_sources[0].ele = 75;
+		p->all_sources[0].updateFromSpherical();
 	}
-	p->all_sources[0].azi = 4;
-	p->all_sources[0].ele = 2;
+	fprintf(stderr, "Testing both interpolation\n");
+	p->all_sources[0].azi = 3;
+	p->all_sources[0].ele = 5;
 	p->all_sources[0].updateFromSpherical();
-	for(int i = 0; i < num_iterations; i++){
-		callback_func(output, p);
+	for (int repeats = 0; repeats < 10; repeats++) {
+		for (int i = 0; i < num_iterations; i++) {
+			callback_func(output, p);
+		}
+		p->all_sources[0].azi = 6;
+		p->all_sources[0].ele = 15;
+		p->all_sources[0].updateFromSpherical();
+		for (int i = 0; i < num_iterations; i++) {
+			callback_func(output, p);
+		}
+		p->all_sources[0].azi = 11;
+		p->all_sources[0].ele = 25;
+		p->all_sources[0].updateFromSpherical();
+		for (int i = 0; i < num_iterations; i++) {
+			callback_func(output, p);
+		}
+		p->all_sources[0].azi = 18;
+		p->all_sources[0].ele = 35;
+		p->all_sources[0].updateFromSpherical();
+		for (int i = 0; i < num_iterations; i++) {
+			callback_func(output, p);
+		}
+		p->all_sources[0].azi = 23;
+		p->all_sources[0].ele = 45;
+		p->all_sources[0].updateFromSpherical();
+		for (int i = 0; i < num_iterations; i++) {
+			callback_func(output, p);
+		}
+		p->all_sources[0].azi = 28;
+		p->all_sources[0].ele = 55;
+		p->all_sources[0].updateFromSpherical();
+		for (int i = 0; i < num_iterations; i++) {
+			callback_func(output, p);
+		}
+		p->all_sources[0].ele = 65;
+		p->all_sources[0].updateFromSpherical();
+		for (int i = 0; i < num_iterations; i++) {
+			callback_func(output, p);
+		}
+		p->all_sources[0].azi = 33;
+		p->all_sources[0].ele = 75;
+		p->all_sources[0].updateFromSpherical();
 	}
-	p->all_sources[0].azi = 7;
-	p->all_sources[0].ele = 9;
-	p->all_sources[0].updateFromSpherical();
-	for(int i = 0; i < num_iterations; i++){
-		callback_func(output, p);
-	}
-	p->all_sources[0].azi = 13;
-	p->all_sources[0].ele = 14;
-	p->all_sources[0].updateFromSpherical();
-	for (int i = 0; i < 1000; i++) {
+	*/
+	for (int i = 0; i < num_iterations; i++) {
 		callback_func(output, p);
 	}
 	delete[] output;
