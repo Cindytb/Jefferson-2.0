@@ -23,7 +23,7 @@ const int STREAMS_PER_FLIGHT = 16;
 	2 - audio-only
 	3 - audio functions, no realtime portaudio and manual calls to the callback function
 */
-#define DEBUGMODE 3
+#define DEBUGMODE 0
 void closeEverything();
 
 const float ratio = 1 / (float)44100;

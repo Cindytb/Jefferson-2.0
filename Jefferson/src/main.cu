@@ -60,7 +60,7 @@ int main(int argc, char *argv[]){
 #endif
 	///////////////////////////////////////////////////////////////////////////////////////////////////
 	/*MAIN FUNCTIONAL LOOP*/
-#if DEBUGMODE == 1
+#if DEBUGMODE == 1 || DEBUGMODE == 0
 	graphicsMain(argc, argv, p);
 #endif
 #if DEBUGMODE == 2

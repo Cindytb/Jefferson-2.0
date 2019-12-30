@@ -727,6 +727,16 @@ void SoundSource::cpuInterpolateLoops(fftwf_complex* output, fftwf_complex* conv
 		pointwiseMultiplication(output,
 			fft_hrtf + hrtf_indices[0] * HRTF_CHN * (PAD_LEN / 2 + 1),
 			PAD_LEN + 2);
+		pointwiseMultiplication(
+			output,
+			fftw_distance_factor,
+			PAD_LEN / 2 + 1
+		);
+		pointwiseMultiplication(
+			output + PAD_LEN / 2 + 1,
+			fftw_distance_factor,
+			PAD_LEN / 2 + 1
+		);
 	}
 	/*If the elevation falls on the resolution, interpolate the azimuth*/
 	else if (hrtf_indices[0] == hrtf_indices[2]) {
