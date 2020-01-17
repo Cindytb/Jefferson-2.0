@@ -25,10 +25,8 @@
 #include <thrust/host_vector.h>
 #include <cmath>
 
-extern fftwf_complex* fft_hrtf;
 /*Forward Declarations*/
-void cudaFFT(int argc, char **argv, Data *p);
+void cudaFFT(std::string input, std::string reverb, Data *p);
 
-void transform_hrtfs();
 
 #endif

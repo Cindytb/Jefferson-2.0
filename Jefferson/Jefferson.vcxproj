@@ -41,16 +41,19 @@
     <ClInclude Include="portaudio\src\common\pa_ringbuffer.h" />
     <ClInclude Include="portaudio\src\common\pa_stream.h" />
     <ClInclude Include="src\Audio.cuh" />
+    <ClInclude Include="src\CPUSoundSource.h" />
     <ClInclude Include="src\cudaPart.cuh" />
     <ClInclude Include="src\cufftDefines.cuh" />
     <ClInclude Include="src\DataTag.cuh" />
     <ClInclude Include="src\functions.h" />
+    <ClInclude Include="src\GPUSoundSource.cuh" />
     <ClInclude Include="src\graphics.cuh" />
     <ClInclude Include="src\hrtf_signals.cuh" />
     <ClInclude Include="src\hrtf_signals.h" />
     <ClInclude Include="src\import_model.h" />
     <ClInclude Include="src\kernels.cuh" />
     <ClInclude Include="src\main.cuh" />
+    <ClInclude Include="src\precision_test.cuh" />
     <ClInclude Include="src\SoundSource.cuh" />
     <ClInclude Include="src\Universal.cuh" />
     <ClInclude Include="src\vbo.cuh" />
@@ -213,6 +216,7 @@
     <CudaCompile>
       <TargetMachinePlatform>64</TargetMachinePlatform>
       <CodeGeneration>compute_61,sm_61</CodeGeneration>
+      <GPUDebugInfo>true</GPUDebugInfo>
     </CudaCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='GPU_FD_BASIC|x64'">
@@ -324,10 +328,12 @@
   <ItemGroup>
     <CudaCompile Include="src\Audio.cu" />
     <CudaCompile Include="src\cudaPart.cu" />
+    <CudaCompile Include="src\GPUSoundSource.cu" />
     <CudaCompile Include="src\graphics.cu" />
     <CudaCompile Include="src\hrtf_signals.cu" />
     <CudaCompile Include="src\kernels.cu" />
     <CudaCompile Include="src\main.cu" />
+    <CudaCompile Include="src\precision_test.cu" />
     <CudaCompile Include="src\SoundSource.cu" />
     <CudaCompile Include="src\vbo.cu" />
     <CudaInclude Include="src\Audio.cuh" />
@@ -342,6 +348,7 @@
     <CudaInclude Include="src\vbo.cuh" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="src\CPUSoundSource.cpp" />
     <ClCompile Include="src\functions.cpp" />
     <ClCompile Include="src\hrtf_signals.cpp" />
     <ClCompile Include="src\import_model.cpp" />

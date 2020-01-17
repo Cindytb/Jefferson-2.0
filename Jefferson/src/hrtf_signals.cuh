@@ -23,6 +23,10 @@
 #define SAMP_RATE   44100
 #define NUM_ELEV    14
 
+extern float* hrtf;
+extern float* d_hrtf;
+extern fftwf_complex* fft_hrtf;
+extern cufftComplex* d_fft_hrtf;
 
 #define PATH_LEN    256
 extern int elevation_pos[NUM_ELEV];
@@ -31,6 +35,8 @@ extern int azimuth_offset[NUM_ELEV + 1];
 /* function prototypes */
 int read_hrtf_signals(void);
 int pick_hrtf(float obj_ele, float obj_azi);
+void cleanup_hrtf_buffers();
+void transform_hrtfs();
 
 extern fftwf_complex* fft_hrtf;
 #endif /* __HRTF_SIGNALS_CUDA */

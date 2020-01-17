@@ -6,8 +6,6 @@
 #include <sndfile.h>
 #include <sndfile.hh>
 #include <portaudio.h>
-extern float* d_hrtf;
-extern float* hrtf;
 const int HRTF_LEN = 512;
 const int FRAMES_PER_BUFFER = 128;  //buffer in portaudio i/o buffer
 const int HRTF_CHN = 2;
@@ -23,8 +21,16 @@ const int STREAMS_PER_FLIGHT = 16;
 	2 - audio-only
 	3 - audio functions, no realtime portaudio and manual calls to the callback function
 */
-#define DEBUGMODE 0
+#define DEBUGMODE 3
 void closeEverything();
+enum processes {
+	GPU_FD_COMPLEX,
+	GPU_FD_BASIC,
+	GPU_TD,
+	CPU_FD_COMPLEX,
+	CPU_FD_BASIC,
+	CPU_TD
+};
 
 const float ratio = 1 / (float)44100;
 #endif

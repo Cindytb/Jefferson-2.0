@@ -1,7 +1,7 @@
 #include "Audio.cuh"
 
 #include <cuda.h>
-PaStream *stream;
+PaStream* stream;
 extern Data data;
 
 void initializePA(int fs) {
@@ -59,8 +59,8 @@ void initializePA(int fs) {
 }
 
 void closePA() {
+#if DEBUGMODE == 0 || DEBUGMODE == 2
 	PaError err;
-#if DEBUG != 1
 	/* Stop stream */
 	err = Pa_StopStream(stream);
 	if (err != paNoError) {
@@ -92,101 +92,73 @@ void closePA() {
 	}
 #endif
 }
-void callback_func(float *output, Data *p){
-	for(int i = 0; i < FRAMES_PER_BUFFER * 2; i++){
+void callback_func(float* output, Data* p) {
+	for (int i = 0; i < FRAMES_PER_BUFFER * 2; i++) {
 		output[i] = 0.0f;
 	}
 	for (int source_no = 0; source_no < p->num_sources; source_no++) {
 
-		SoundSource* curr_source = &(p->all_sources[source_no]);
 		/*Enable pausing of audio*/
 		if (p->pauseStatus == true)
 			break;
 
-#ifdef RT_GPU
-		/*Copy intermediate --> output*/
-		int buf_block = p->blockNo % FLIGHT_NUM;
+		if (p->type == GPU_FD_COMPLEX || p->type == GPU_FD_BASIC || p->type == GPU_TD) {
+			GPUSoundSource* source = &(p->all_sources[source_no]);
+			int buf_block = p->blockNo % FLIGHT_NUM;
+			if (p->type == GPU_FD_COMPLEX) {
+				checkCudaErrors(cudaStreamSynchronize(source->streams[buf_block * STREAMS_PER_FLIGHT]));
 
-		checkCudaErrors(cudaStreamSynchronize(curr_source->streams[buf_block * STREAMS_PER_FLIGHT]));
-
-		for (int i = 0; i < FRAMES_PER_BUFFER * 2; i++) {
-			output[i] += curr_source->intermediate[buf_block][i];
-			if (output[i] > 1.0) {
-				fprintf(stderr, "ALERT! CLIPPING AUDIO!\n");
+				for (int i = 0; i < FRAMES_PER_BUFFER * 2; i++) {
+					output[i] += source->intermediate[buf_block][i];
+					if (output[i] > 1.0) {
+						fprintf(stderr, "ALERT! CLIPPING AUDIO!\n");
+					}
+				}
+				source->process(p->blockNo, p->type);
 			}
 		}
-		
-		///*Copy into curr_source->x pinned memory*/
-		//if (curr_source->count + FRAMES_PER_BUFFER < curr_source->length) {
-		//	memcpy(
-		//		curr_source->x[blockNo] + (PAD_LEN - FRAMES_PER_BUFFER),  /*Go to the end and work backwards*/
-		//		curr_source->buf + curr_source->count,
-		//		FRAMES_PER_BUFFER * sizeof(float));
-		//	curr_source->count += FRAMES_PER_BUFFER;
-		//}
-		//else {
-		//	int rem = curr_source->length - curr_source->count;
-		//	memcpy(
-		//		curr_source->x[blockNo] + (PAD_LEN - FRAMES_PER_BUFFER),
-		//		curr_source->buf + curr_source->count,
-		//		rem * sizeof(float));
-		//	memcpy(
-		//		curr_source->x[blockNo] + (PAD_LEN - FRAMES_PER_BUFFER) + rem,
-		//		curr_source->buf,
-		//		(FRAMES_PER_BUFFER - rem) * sizeof(float));
-		//	curr_source->count = FRAMES_PER_BUFFER - rem;
-		//}
-		///*Overlap save*/
-		//memcpy(
-		//	curr_source->x[(blockNo + 1) % FLIGHT_NUM],
-		//	curr_source->x[blockNo % FLIGHT_NUM] + FRAMES_PER_BUFFER,
-		//	sizeof(float) * (PAD_LEN - FRAMES_PER_BUFFER)
-		//);
-		curr_source->chunkProcess(p->blockNo);
-
-#else
-		/*Copy into curr_source->x pinned memory*/
-		if (curr_source->count + FRAMES_PER_BUFFER < curr_source->length) {
-			memcpy(
-				curr_source->x[0] + (PAD_LEN - FRAMES_PER_BUFFER),  /*Go to the end and work backwards*/
-				curr_source->buf + curr_source->count,
-				FRAMES_PER_BUFFER * sizeof(float));
-			curr_source->count += FRAMES_PER_BUFFER;
-		}
+		//else if (p->type == CPU_FD_BASIC || p->type == CPU_FD_COMPLEX || p->type == CPU_TD) {
 		else {
-			int rem = curr_source->length - curr_source->count;
-			memcpy(
-				curr_source->x[0] + (PAD_LEN - FRAMES_PER_BUFFER),
-				curr_source->buf + curr_source->count,
-				rem * sizeof(float));
-			memcpy(
-				curr_source->x[0] + (PAD_LEN - FRAMES_PER_BUFFER) + rem,
-				curr_source->buf,
-				(FRAMES_PER_BUFFER - rem) * sizeof(float));
-			curr_source->count = FRAMES_PER_BUFFER - rem;
-		}
-		
-		/*Process*/
-#ifdef CPU_TD
-		curr_source->cpuTDConvolve(curr_source->x[0] + (PAD_LEN - FRAMES_PER_BUFFER), output, FRAMES_PER_BUFFER, 1);
-#else
-		curr_source->process(0);
-		/*Write to output*/
-		for (int i = 0; i < FRAMES_PER_BUFFER * 2; i++) {
-			output[i] += ((float*)curr_source->fftw_intermediate)[i + 2 * (PAD_LEN - FRAMES_PER_BUFFER)];
-			if (output[i] > 1.0) {
-				fprintf(stderr, "ALERT! CLIPPING AUDIO!\n");
+			CPUSoundSource* source = (CPUSoundSource*)&(p->all_sources[source_no]);
+			/*Copy into curr_source->x pinned memory*/
+			if (source->count + FRAMES_PER_BUFFER < source->length) {
+				memcpy(
+					source->x + (PAD_LEN - FRAMES_PER_BUFFER),  /*Go to the end and work backwards*/
+					source->buf + source->count,
+					FRAMES_PER_BUFFER * sizeof(float));
+				source->count += FRAMES_PER_BUFFER;
 			}
+			else {
+				int rem = source->length - source->count;
+				memcpy(
+					source->x + (PAD_LEN - FRAMES_PER_BUFFER),
+					source->buf + source->count,
+					rem * sizeof(float));
+				memcpy(
+					source->x + (PAD_LEN - FRAMES_PER_BUFFER) + rem,
+					source->buf,
+					(FRAMES_PER_BUFFER - rem) * sizeof(float));
+				source->count = FRAMES_PER_BUFFER - rem;
+			}
+
+			/*Process*/
+			source->process(p->type);
+
+			/*Write to output*/
+			for (int i = 0; i < FRAMES_PER_BUFFER * 2; i++) {
+				output[i] += ((float*)source->intermediate)[i + 2 * (PAD_LEN - FRAMES_PER_BUFFER)];
+				if (output[i] > 1.0) {
+					fprintf(stderr, "ALERT! CLIPPING AUDIO!\n");
+				}
+			}
+
+			/*Overlap-save*/
+			memmove(
+				source->x,
+				source->x + FRAMES_PER_BUFFER,
+				sizeof(float) * (PAD_LEN - FRAMES_PER_BUFFER)
+			);
 		}
-#endif
-		
-		/*Overlap-save*/
-		memmove(
-			curr_source->x[0],
-			curr_source->x[0] + FRAMES_PER_BUFFER,
-			sizeof(float) * (PAD_LEN - FRAMES_PER_BUFFER)
-		);
-#endif
 	}
 	p->blockNo++;
 	if (p->blockNo > FLIGHT_NUM * 2) {
@@ -195,15 +167,15 @@ void callback_func(float *output, Data *p){
 	sf_writef_float(p->sndfile, output, FRAMES_PER_BUFFER);
 	return;
 }
-static int paCallback(const void *inputBuffer, void *outputBuffer,
+static int paCallback(const void* inputBuffer, void* outputBuffer,
 	unsigned long framesPerBuffer,
 	const PaStreamCallbackTimeInfo* timeInfo,
 	PaStreamCallbackFlags statusFlags,
-	void *userData)
+	void* userData)
 {
 	/* Cast data passed through stream to our structure. */
-	Data *p = (Data *)userData;
-	float *output = (float *)outputBuffer;
+	Data* p = (Data*)userData;
+	float* output = (float*)outputBuffer;
 	callback_func(output, p);
 	return 0;
 }

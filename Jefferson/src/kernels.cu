@@ -41,7 +41,7 @@ __global__ void simple_vbo_kernel(float4 *pos, unsigned int width, unsigned int 
 }
 
 // cufftComplex pointwise multiplication
-__global__ void ComplexPointwiseMulAndScale(cufftComplex *a, const cufftComplex *b, int size, float scale)
+__global__ void ComplexPointwiseMulAndScale(cufftComplex *a, const cufftComplex *b, float scale, int size)
 {
 	const int numThreads = blockDim.x * gridDim.x;
 	const int threadID = blockIdx.x * blockDim.x + threadIdx.x;
@@ -51,7 +51,7 @@ __global__ void ComplexPointwiseMulAndScale(cufftComplex *a, const cufftComplex 
 		a[i] = cufftComplexScale(cufftComplexMul(a[i], b[i]), scale);
 	}
 }
-__global__ void ComplexPointwiseMulAndScaleOutPlace(const cufftComplex* a, const cufftComplex* b, cufftComplex* c, int size, float scale)
+__global__ void ComplexPointwiseMulAndScaleOutPlace(const cufftComplex* a, const cufftComplex* b, cufftComplex* c, float scale, int size)
 {
 	const int numThreads = blockDim.x * gridDim.x;
 	const int threadID = blockIdx.x * blockDim.x + threadIdx.x;
@@ -59,6 +59,49 @@ __global__ void ComplexPointwiseMulAndScaleOutPlace(const cufftComplex* a, const
 	for (int i = threadID; i < size; i += numThreads)
 	{
 		c[i] = cufftComplexScale(cufftComplexMul(a[i], b[i]), scale);
+	}
+}
+__global__ void ComplexPointwiseMulOutPlace(const cufftComplex* a, const cufftComplex* b, cufftComplex* out, int size) {
+	const int numThreads = blockDim.x * gridDim.x;
+	const int threadID = blockIdx.x * blockDim.x + threadIdx.x;
+
+	for (int i = threadID; i < size; i += numThreads)
+	{
+		out[i] = cufftComplexMul(a[i], b[i]);
+	}
+}
+__global__ void ComplexPointwiseMulInPlace(const cufftComplex* in, cufftComplex* out, int size) {
+	const int numThreads = blockDim.x * gridDim.x;
+	const int threadID = blockIdx.x * blockDim.x + threadIdx.x;
+
+	for (int i = threadID; i < size; i += numThreads)
+	{
+		out[i] = cufftComplexMul(out[i], in[i]);
+	}
+}
+__global__ void ComplexPointwiseAdd(cufftComplex* in, cufftComplex* out, int size)
+{
+	const int numThreads = blockDim.x * gridDim.x;
+	const int threadID = blockIdx.x * blockDim.x + threadIdx.x;
+
+	for (int i = threadID; i < size; i += numThreads)
+	{
+
+		atomicAdd(&(out[i].x), in[i].x);
+		atomicAdd(&(out[i].y), in[i].y);
+		// out[i].x += in[i].x;
+		// out[i].y += in[i].y;
+	}
+}
+
+// cufftComplex pointwise multiplication
+__global__ void ComplexPointwiseMul(cufftComplex* a, const cufftComplex* b, cufftComplex* c, int size){
+	const int numThreads = blockDim.x * gridDim.x;
+	const int threadID = blockIdx.x * blockDim.x + threadIdx.x;
+
+	for (int i = threadID; i < size; i += numThreads)
+	{
+		c[i] = cufftComplexMul(a[i], b[i]);
 	}
 }
 /*
@@ -93,30 +136,6 @@ __global__ void crossFade(float* out1, float* out2, int numFrames){
 	out1[threadID * 2 + 1] = out1[threadID * 2 + 1] * (1.0f - fn) + out2[threadID * 2 + 1] * fn;
 	
 }
-// cufftComplex pointwise multiplication
-__global__ void ComplexPointwiseMulInPlace(const cufftComplex* in, cufftComplex* out, int size) {
-	const int numThreads = blockDim.x * gridDim.x;
-	const int threadID = blockIdx.x * blockDim.x + threadIdx.x;
-
-	for (int i = threadID; i < size; i += numThreads)
-	{
-		out[i] = cufftComplexMul(out[i], in[i]);
-	}
-}
-__global__ void ComplexPointwiseAdd(cufftComplex* in, cufftComplex* out, int size)
-{
-	const int numThreads = blockDim.x * gridDim.x;
-	const int threadID = blockIdx.x * blockDim.x + threadIdx.x;
-
-	for (int i = threadID; i < size; i += numThreads)
-	{
-
-		atomicAdd(&(out[i].x), in[i].x);
-		atomicAdd(&(out[i].y), in[i].y);
-		// out[i].x += in[i].x;
-		// out[i].y += in[i].y;
-	}
-}
 
 __global__ void timeDomainConvolutionNaive(float* ibuf, float* rbuf, float* obuf, long long oframes,
 	long long rframes, int ch, float gain) {
@@ -137,27 +156,15 @@ __global__ void interleave(float* input, float* output, int size) {
 		output[2 * i + 1] = input[size + 2 + i];
 	}
 }
-
-// cufftComplex pointwise multiplication
-__global__ void ComplexPointwiseMul(cufftComplex* a, const cufftComplex* b, cufftComplex* c, int size){
+__global__ void MyFloatScale(float *a, float scale, int size) {
 	const int numThreads = blockDim.x * gridDim.x;
 	const int threadID = blockIdx.x * blockDim.x + threadIdx.x;
 
 	for (int i = threadID; i < size; i += numThreads)
 	{
-		c[i] = cufftComplexMul(a[i], b[i]);
+		a[i] *= scale;
 	}
 }
-__global__ void MyFloatScale(float *a, int size, float scale) {
-	const int numThreads = blockDim.x * gridDim.x;
-	const int threadID = blockIdx.x * blockDim.x + threadIdx.x;
-
-	for (int i = threadID; i < size; i += numThreads)
-	{
-		a[i] = a[i] * scale;
-	}
-}
-
 
 // Pad data
 int PadData(const float *signal, float **padded_signal, int signal_size,

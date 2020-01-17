@@ -343,7 +343,8 @@ void moveBar(Data p) {
 	if (p.pauseStatus == true) {
 		return;
 	}
-	translate_x = (float)p.all_sources[0].count * -(GP->all_sources[0].waveform->ratio);
+	SoundSource* curr_source = (SoundSource*)&(GP->all_sources[0]);
+	translate_x = (float)curr_source->count * -(curr_source->waveform->ratio);
 }
 ////////////////////////////////////////////////////////////////////////////////
 //! Display callback
@@ -373,7 +374,7 @@ void display()
 	/*Setup animation for waveform VBO*/
 	//moveBar(*GP);
 #if(DEBUGMODE != 1)
-	SoundSource* source = &(GP->all_sources[0]);
+	SoundSource* source = (SoundSource*) &(GP->all_sources[0]);
 	source->updateFromCartesian();
 	/*source->azi += 3.0f;
 	if (source->azi > 360) {
@@ -445,13 +446,13 @@ void display()
 	float red = 119.0f / 256.0f;
 	float green = 207.0f / 256.0f;
 	float blue = 131.0f / 256.0f;
-	
+	SoundSource* curr_source = (SoundSource*)&(p->all_sources[0]);
 	glColor3f(red, green, blue);
-	glTranslatef(p->all_sources[0].coordinates.x, p->all_sources[0].coordinates.y, p->all_sources[0].coordinates.z);
+	glTranslatef(curr_source->coordinates.x, curr_source->coordinates.y, curr_source->coordinates.z);
 	gluSphere(quadric, 0.1, 20, 50);
 	glPopMatrix();
 
-	//p->all_sources[0].updateFromCartesian();
+	//curr_source->updateFromCartesian();
 	/*printf("Cartesian: %.3f %.3f %.3f\n", p->all_sources[0].coordinates.x, p->all_sources[0].coordinates.y, p->all_sources[0].coordinates.z);
 	printf("Spherical: %3f %3f %3f\n", p->all_sources[0].azi, p->all_sources[0].ele, p->all_sources[0].r);*/
 	/*Push out the OpenGL buffer*/ 
@@ -485,7 +486,7 @@ void cleanup()
 ////////////////////////////////////////////////////////////////////////////////
 void keyboard(unsigned char key, int /*x*/, int /*y*/)
 {
-	SoundSource* source = &(GP->all_sources[0]);
+	SoundSource* source = (SoundSource*) &(GP->all_sources[0]);
 	float dist = std::sqrt(source->coordinates.x * source->coordinates.x + source->coordinates.z * source->coordinates.z);
 	/*Calculate the radius, distance, elevation, and azimuth*/
 	//float ele = (float)atan2(coordinates.y, dist) * 180.0f / PI;
@@ -533,7 +534,7 @@ void keyboard(unsigned char key, int /*x*/, int /*y*/)
 	}
 }
 void specialKeys(int key, int x, int y) {
-	SoundSource* source = &(GP->all_sources[0]);
+	SoundSource* source = (SoundSource*) &(GP->all_sources[0]);
 	switch (key) {
 	case GLUT_KEY_LEFT:
 		if (atan(source->coordinates.y / std::sqrt((source->coordinates.x - temp) * (source->coordinates.x - temp) + source->coordinates.z * source->coordinates.z)) * 180.0f / PI > -40)

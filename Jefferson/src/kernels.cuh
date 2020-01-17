@@ -21,7 +21,7 @@
 #include <cmath>
 
 __global__ void simple_vbo_kernel(float4 *pos, unsigned int width, unsigned int height, float time);
-__global__ void MyFloatScale(float *a, int size, float scale);
+__global__ void MyFloatScale(float *a, float scale, int size);
 __device__ __host__ inline cufftComplex cufftComplexScale(cufftComplex a, float s);
 __device__ __host__ inline cufftComplex cufftComplexMul(cufftComplex a, cufftComplex b);
 int PadData(const float *signal, float **padded_signal, int signal_size,
@@ -29,8 +29,9 @@ int PadData(const float *signal, float **padded_signal, int signal_size,
 __global__ void averagingKernel(float4 *pos, float *d_buf, unsigned int size, double ratio, int averageSize);
 __global__ void generateDistanceFactor(cufftComplex* in, float frac, float fsvs, float r, int N);
 __global__ void crossFade(float* out1, float* out2, int numFrames);
-__global__ void ComplexPointwiseMulAndScale(cufftComplex *a, const cufftComplex *b, int size, float scale);
-__global__ void ComplexPointwiseMulAndScaleOutPlace(const cufftComplex* a, const cufftComplex* b, cufftComplex* c, int size, float scale);
+__global__ void ComplexPointwiseMulAndScale(cufftComplex *a, const cufftComplex *b, float scale, int size);
+__global__ void ComplexPointwiseMulAndScaleOutPlace(const cufftComplex* a, const cufftComplex* b, cufftComplex* c, float scale, int size);
+__global__ void ComplexPointwiseMulOutPlace(const cufftComplex* a, const cufftComplex* b, cufftComplex* out, int size);
 __global__ void ComplexPointwiseMulInPlace(const cufftComplex* in, cufftComplex* out, int size);
 __global__ void ComplexPointwiseMul(cufftComplex* a, const cufftComplex* b, cufftComplex* c, int size);
 __global__ void ComplexPointwiseAdd(cufftComplex* in, cufftComplex* out, int size);

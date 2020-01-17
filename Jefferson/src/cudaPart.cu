@@ -62,18 +62,7 @@ int readFile(const char *name, float **buf, int &numCh) {
 	return size;
 }
 
-void cudaFFT(int argc, char **argv, Data *p) {
-	
-	std::string input = "media/Castanets-441.wav";
-	std::string reverb = "media/s1_r1_b_441_mono.wav";
-	if (argc == 2) {
-		if (argv[1][1] != '>')
-			input = argv[1];
-	}
-	if (argc == 3) {
-		input = argv[1];
-		reverb = argv[2];
-	}
+void cudaFFT(std::string input, std::string reverb, Data *p) {
 
 	float *ibuf, *rbuf;
 	int SIGNAL_SIZE = 0, FILTER_KERNEL_SIZE = 0;
@@ -88,8 +77,7 @@ void cudaFFT(int argc, char **argv, Data *p) {
 		fprintf(stderr, "ERROR: Only mono reverb sources accepted");
 		exit(2);
 	}
-
-	findCudaDevice(argc, (const char **)argv);
+	SoundSource* curr_source = (SoundSource*)&(p->all_sources[0]);
 	if (reverbFlag) {
 		fprintf(stderr, "Doing GPU Convolution\n");
 		/*Pad signal and filter kernel to same length*/
@@ -179,8 +167,9 @@ void cudaFFT(int argc, char **argv, Data *p) {
 		/*MOVE BACK TO CPU & STORE IN STRUCT*/
 		float* obuf = (float*)malloc(sizeof(float) * new_size);
 		checkCudaErrors(cudaMemcpy(obuf, d_signal, new_size * sizeof(float), cudaMemcpyDeviceToHost));
-		p->all_sources[0].buf = obuf;
-		p->all_sources[0].length = new_size;
+		
+		curr_source->buf = obuf;
+		curr_source->length = new_size;
 
 		fprintf(stderr, "Samples: %i\nTotal Bytes: %i\nTotal KB: %f3\nTotal MB: %f3\n\n\n", new_size, mem_size, mem_size / (float)1024, mem_size / (float)1024 / (float)1024);
 
@@ -206,36 +195,11 @@ void cudaFFT(int argc, char **argv, Data *p) {
 		checkCudaErrors(cudaFree(d_filter_complex));
 	}
 	else {
-		p->all_sources[0].buf = ibuf;
-		p->all_sources[0].length = SIGNAL_SIZE;
+		curr_source->buf = ibuf;
+		curr_source->length = SIGNAL_SIZE;
 		free(rbuf);
 	}
 	
 
 
-}
-
-void transform_hrtfs() {
-
-	cufftHandle plan;
-	CHECK_CUFFT_ERRORS(cufftPlan1d(&plan, PAD_LEN, CUFFT_R2C, NUM_HRTF * 2));
-	CHECK_CUFFT_ERRORS(cufftExecR2C(plan, d_hrtf, (cufftComplex*)d_hrtf));
-	CHECK_CUFFT_ERRORS(cufftDestroy(plan));
-
-#ifdef CPU_FD_BASIC
-	float max_diff = 0;
-	cufftComplex* buf = new cufftComplex[NUM_HRTF * 2 * (PAD_LEN / 2 + 1)];
-	checkCudaErrors(cudaMemcpy(buf, d_hrtf, NUM_HRTF * 2 * (PAD_LEN / 2 + 1) * sizeof(cufftComplex), cudaMemcpyDeviceToHost));
-	int size = NUM_HRTF * HRTF_CHN * (PAD_LEN + 2);
-	for (int i = 0; i < size; i++) {
-		float gpu_val = *(((float*)buf) + i);
-		float cpu_val = *(((float*)fft_hrtf) + i);
-		float diff = fabs(gpu_val - cpu_val);
-		if (max_diff < diff) {
-			max_diff = diff;
-		}
-	}
-	printf("GPU & CPU FFT are within %f precision\n", max_diff);
-	delete[] buf;
-#endif
 }
