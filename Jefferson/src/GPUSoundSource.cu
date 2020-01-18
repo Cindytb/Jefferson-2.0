@@ -361,7 +361,7 @@ void GPUSoundSource::allKernels(float* d_input, float* d_output,
 
 	size_t buf_size = PAD_LEN + 2;
 	size_t complex_buf_size = buf_size / 2;
-	int numThreads = 64;
+	int numThreads = 128;
 	int numBlocks = (buf_size + numThreads - 1) / numThreads;
 	for (int i = 0; i < 8; i++) {
 		checkCudaErrors(cudaStreamWaitEvent(streams[i], fft_in, 0));

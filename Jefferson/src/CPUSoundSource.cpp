@@ -142,76 +142,78 @@ void CPUSoundSource::cpuFFTConvolve() {
 }
 
 void CPUSoundSource::cpuInterpolateLoops(fftwf_complex* output, fftwf_complex* convbufs, int* hrtf_indices, float* omegas) {
+	int buf_size = PAD_LEN + 2;
+	int complex_buf_size = buf_size / 2;
 	if (hrtf_indices[0] == hrtf_indices[1] && hrtf_indices[1] == hrtf_indices[2] && hrtf_indices[2] == hrtf_indices[3]) {
 		pointwiseMultiplication(output,
-			fft_hrtf + hrtf_indices[0] * HRTF_CHN * (PAD_LEN / 2 + 1),
-			PAD_LEN + 2);
+			fft_hrtf + hrtf_indices[0] * HRTF_CHN * complex_buf_size,
+			buf_size);
 		pointwiseMultiplication(
 			output,
 			distance_factor,
-			PAD_LEN / 2 + 1
+			complex_buf_size
 		);
 		pointwiseMultiplication(
-			output + PAD_LEN / 2 + 1,
+			output + complex_buf_size,
 			distance_factor,
-			PAD_LEN / 2 + 1
+			complex_buf_size
 		);
 	}
 	/*If the elevation falls on the resolution, interpolate the azimuth*/
 	else if (hrtf_indices[0] == hrtf_indices[2]) {
 		pointwiseMultiplication(output,
-			fft_hrtf + hrtf_indices[0] * HRTF_CHN * (PAD_LEN / 2 + 1),
+			fft_hrtf + hrtf_indices[0] * HRTF_CHN * complex_buf_size,
 			convbufs,
-			PAD_LEN + 2
+			buf_size
 		);
 		pointwiseMultiplication(output,
-			fft_hrtf + hrtf_indices[1] * HRTF_CHN * (PAD_LEN / 2 + 1),
-			convbufs + PAD_LEN + 2,
-			PAD_LEN + 2
+			fft_hrtf + hrtf_indices[1] * HRTF_CHN * complex_buf_size,
+			convbufs + buf_size,
+			buf_size
 		);
-		complexScaling(convbufs, omegas[1], PAD_LEN + 2);
-		complexScaling(convbufs + PAD_LEN + 2, omegas[0], PAD_LEN + 2);
+		complexScaling(convbufs, omegas[1], buf_size);
+		complexScaling(convbufs + buf_size, omegas[0], buf_size);
 		for (int i = 0; i < 4; i++) {
 			pointwiseMultiplication(
-				convbufs + (PAD_LEN / 2 + 1) * i,
+				convbufs + complex_buf_size * i,
 				distance_factor,
-				PAD_LEN / 2 + 1
+				complex_buf_size
 			);
 		}
 		pointwiseAddition(
 			convbufs,
-			convbufs + PAD_LEN + 2,
+			convbufs + buf_size,
 			output,
-			PAD_LEN + 2);
+			buf_size);
 
 
 	}
 	/*If the azimuth falls on the resolution, interpolate the elevation*/
 	else if (hrtf_indices[0] == hrtf_indices[1] && hrtf_indices[0] != hrtf_indices[2]) {
 		pointwiseMultiplication(output,
-			fft_hrtf + hrtf_indices[0] * HRTF_CHN * (PAD_LEN / 2 + 1),
+			fft_hrtf + hrtf_indices[0] * HRTF_CHN * complex_buf_size,
 			convbufs,
-			PAD_LEN + 2
+			buf_size
 		);
 		pointwiseMultiplication(output,
-			fft_hrtf + hrtf_indices[2] * HRTF_CHN * (PAD_LEN / 2 + 1),
-			convbufs + PAD_LEN + 2,
-			PAD_LEN + 2
+			fft_hrtf + hrtf_indices[2] * HRTF_CHN * complex_buf_size,
+			convbufs + buf_size,
+			buf_size
 		);
-		complexScaling(convbufs, omegas[5], PAD_LEN + 2);
-		complexScaling(convbufs + PAD_LEN + 2, omegas[4], PAD_LEN + 2);
+		complexScaling(convbufs, omegas[5], buf_size);
+		complexScaling(convbufs + buf_size, omegas[4], buf_size);
 		for (int i = 0; i < 4; i++) {
 			pointwiseMultiplication(
-				convbufs + (PAD_LEN / 2 + 1) * i,
+				convbufs + complex_buf_size * i,
 				distance_factor,
-				PAD_LEN / 2 + 1
+				complex_buf_size
 			);
 		}
 		pointwiseAddition(
 			convbufs,
-			convbufs + (PAD_LEN + 2),
+			convbufs + (buf_size),
 			output,
-			PAD_LEN + 2);
+			buf_size);
 	}
 	/*Worst case scenario*/
 	else {
@@ -219,41 +221,41 @@ void CPUSoundSource::cpuInterpolateLoops(fftwf_complex* output, fftwf_complex* c
 		for (int i = 0; i < 4; i++) {
 			pointwiseMultiplication(
 				output,
-				fft_hrtf + hrtf_indices[i] * HRTF_CHN * (PAD_LEN / 2 + 1),
-				convbufs + (PAD_LEN + 2) * i,
-				PAD_LEN + 2
+				fft_hrtf + hrtf_indices[i] * HRTF_CHN * complex_buf_size,
+				convbufs + (buf_size) * i,
+				buf_size
 			);
 			pointwiseMultiplication(
 				output,
-				fft_hrtf + hrtf_indices[0] * HRTF_CHN * (PAD_LEN / 2 + 1),
+				fft_hrtf + hrtf_indices[0] * HRTF_CHN * complex_buf_size,
 				convbufs,
-				PAD_LEN + 2
+				buf_size
 			);
 			pointwiseMultiplication(
-				convbufs + (PAD_LEN + 2) * i,
+				convbufs + (buf_size) * i,
 				distance_factor,
-				PAD_LEN / 2 + 1
+				complex_buf_size
 			);
 			pointwiseMultiplication(
-				convbufs + (PAD_LEN + 2) * i + PAD_LEN / 2 + 1,
+				convbufs + (buf_size) * i + complex_buf_size,
 				distance_factor,
-				PAD_LEN / 2 + 1
+				complex_buf_size
 			);
 		}
-		complexScaling(convbufs, omegas[5] * omegas[1], PAD_LEN + 2);
-		complexScaling(convbufs + PAD_LEN + 2, omegas[5] * omegas[0], PAD_LEN + 2);
-		complexScaling(convbufs + 2 * (PAD_LEN + 2), omegas[4] * omegas[3], PAD_LEN + 2);
-		complexScaling(convbufs + 3 * (PAD_LEN + 2), omegas[4] * omegas[2], PAD_LEN + 2);
+		complexScaling(convbufs, omegas[5] * omegas[1], buf_size);
+		complexScaling(convbufs + buf_size, omegas[5] * omegas[0], buf_size);
+		complexScaling(convbufs + 2 * (buf_size), omegas[4] * omegas[3], buf_size);
+		complexScaling(convbufs + 3 * (buf_size), omegas[4] * omegas[2], buf_size);
 
 		pointwiseAddition(
 			convbufs,
-			convbufs + (PAD_LEN + 2),
+			convbufs + (buf_size),
 			output,
-			PAD_LEN + 2);
+			buf_size);
 		for (int i = 2; i < 4; i++) {
 			pointwiseAddition(output,
-				convbufs + (PAD_LEN + 2) * i,
-				PAD_LEN + 2);
+				convbufs + (buf_size) * i,
+				buf_size);
 		}
 	}
 }

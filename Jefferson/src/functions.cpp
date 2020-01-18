@@ -44,17 +44,24 @@ int precisionChecking(float* in1, float* in2, size_t size) {
 }
 int precisionChecking(float* in1, float* in2, size_t size, float epsilon) {
 	int retval = 0;
+	int first_idx = 0;
 	float max_diff = 0;
 	for (int i = 0; i < size; i++) {
 		float diff = fabs(in1[i] - in2[i]);
 		if (diff > epsilon) {
 			retval = 1;
-			//printf("ERROR: Precision error at %i\n", i);
+			if (first_idx == 0)
+				first_idx = i;
+			
 		}
 		if (max_diff < diff) {
 			max_diff = diff;
 		}
 	}
-	printf("Maximum difference: %.2fe-8\n", max_diff / 1e-8);
+	if (retval) {
+		printf("ERROR: First precision error at %i\n", first_idx);
+		printf("Maximum difference: %.2fe-8\n", max_diff / 1e-8);
+	}
+	
 	return retval;
 }

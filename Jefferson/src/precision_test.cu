@@ -18,20 +18,40 @@ void precisionTest(Data* p) {
 	float* gpu_fft_scaled = new float[buf_size];
 	float* gpu_conv = new float[2 * buf_size];
 
+
+	float* gpu_cb_out = new float[FRAMES_PER_BUFFER * 2];
+	for (int i = 0; i < FLIGHT_NUM; i++) {
+		callback_func(gpu_cb_out, p);
+	}
+	callback_func(gpu_cb_out, p);
 	/////////////////////////////////////////////////////////
 	// COPY INCOMING BLOCK
 	/////////////////////////////////////////////////////////
 
 	// GPU
+	p->blockNo = 0;
 	src->count = 0;
+	for (int i = 0; i < PAD_LEN + 2; i++) {
+		gsrc->x[0][i] = 0.0f;
+	}
+	fillWithZeroesKernel(gsrc->d_output[0], 2 * buf_size, gsrc->streams[0]);
 	gsrc->copyIncomingBlock(0);
 	gsrc->sendBlock(0);
 	// CPU
 	src->count = 0;
 	memcpy(
 		csrc->x + (PAD_LEN - FRAMES_PER_BUFFER),  /*Go to the end and work backwards*/
-		csrc->buf + csrc->count,
+		csrc->buf,
 		FRAMES_PER_BUFFER * sizeof(float));
+
+
+	checkCudaErrors(cudaMemcpy(gpu_fft_in, gsrc->d_input[0], buf_size * sizeof(float), cudaMemcpyDeviceToHost));
+	if (precisionChecking(gpu_fft_in, (float*)csrc->x, PAD_LEN)) {
+		printf("ERROR: Inaccurate Input Copy\n");
+	}
+	else {
+		printf("Accurate Input Copy\n");
+	}
 
 	/////////////////////////////////////////////////////////
 	// CALCULATE WEIGHTS
@@ -200,6 +220,19 @@ void precisionTest(Data* p) {
 		printf("Successfully accurate case 1 output\n");
 	}
 
+	if (precisionChecking(gpu_cb_out, gpu_output, FRAMES_PER_BUFFER * 2)) {
+		printf("ERROR: Callback function is giving different results\n");
+	}
+	else {
+		printf("Successfully accurate callback function\n");
+	}
+
+	if (precisionChecking(gpu_cb_out, cpu_output, FRAMES_PER_BUFFER * 2)) {
+		printf("ERROR: Callback function is giving different results\n");
+	}
+	else {
+		printf("Successfully accurate callback function\n");
+	}
 	/////////////////////////////////////////////////////////
 	// CASE 2 CONVOLUTIONS - Interpolate Azimuth
 	/////////////////////////////////////////////////////////
@@ -647,7 +680,18 @@ void precisionTest(Data* p) {
 	else {
 		printf("Successful Case 4 accurate output\n");
 	}
-
+	for (int i = 0; i < PAD_LEN + 2; i++) {
+		gsrc->x[0][i] = 0.0f;
+		gsrc->x[1][i] = 0.0f;
+		
+		csrc->x[i] = 0.0f;
+	}
+	for (int i = 0; i < FRAMES_PER_BUFFER * 2; i++) {
+		gsrc->intermediate[0][i] = 0.0f;
+		gsrc->intermediate[1][i] = 0.0f;
+	}
+	p->blockNo = 0;
+	src->count = 0;
 	delete[] gpu_output;
 	delete[] cpu_output;
 	delete[] gpu_conv;

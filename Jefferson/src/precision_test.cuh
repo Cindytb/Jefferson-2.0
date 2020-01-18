@@ -5,6 +5,7 @@
 #include "Universal.cuh"
 #include "hrtf_signals.cuh"
 #include "kernels.cuh"
+#include "Audio.cuh"
 //#include "main.cuh"
 
 //#include <fftw3.h>

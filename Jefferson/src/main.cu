@@ -175,124 +175,48 @@ void closeEverything() {
 }
 
 void benchmarkTesting() {
+
 	cudaProfilerStart();
 	float* output = new float[FRAMES_PER_BUFFER * 2];
 	int num_iterations = 10;
-	float* gpu_out = new float[FRAMES_PER_BUFFER * 2 * num_iterations * 37 * 2];
-	float* cpu_out = new float[FRAMES_PER_BUFFER * 2 * num_iterations * 37 * 2];
 	SoundSource* curr_source = (SoundSource*)&(p->all_sources[0]);
+	
+	GPUSoundSource* gsrc = &(p->all_sources[0]);
+	CPUSoundSource* csrc = (CPUSoundSource*)&(p->all_sources[0]);
 	fprintf(stderr, "Testing no interpolation\n");
 	int count = 0;
-	for (int repeats = 0; repeats < 2; repeats++) {
-		curr_source->azi = 0;
-		curr_source->ele = 0;
-		int ele_idx = 4;
-		for (int i = 0; i < num_iterations; i++) {
+	curr_source->azi = 0;
+	curr_source->ele = 0;
+	for (int i = 0; i < num_iterations; i++) {
+		callback_func(output, p);
+	}
+	for (int i = 0; i < 72; i++) {
+		curr_source->azi += 5;
+		if (curr_source->azi >= 360) {
+			curr_source->azi -= 360;
+		}
+		curr_source->updateFromSpherical();
+		for (int j = 0; j < num_iterations; j++) {
 			callback_func(output, p);
-			memcpy(gpu_out + count++ * FRAMES_PER_BUFFER * 2, output, FRAMES_PER_BUFFER * 2 * sizeof(float));
-		}
-		for (int i = 0; i < 36; i++) {
-			if (i % 4 == 0) {
-				curr_source->ele += 10;
-				ele_idx++;
-			}
-			curr_source->azi += azimuth_inc[ele_idx];
-			curr_source->updateFromSpherical();
-			for (int j = 0; j < num_iterations; j++) {
-				callback_func(output, p);
-				memcpy(gpu_out + count++ * FRAMES_PER_BUFFER * 2, output, FRAMES_PER_BUFFER * 2 * sizeof(float));
-			}
 		}
 	}
-	curr_source->count = 0;
-	p->type = CPU_FD_COMPLEX;
-	count = 0;
-	for (int repeats = 0; repeats < 2; repeats++) {
-		curr_source->azi = 0;
-		curr_source->ele = 0;
-		int ele_idx = 4;
-		for (int i = 0; i < num_iterations; i++) {
-			callback_func(output, p);
-			memcpy(cpu_out + count++ * FRAMES_PER_BUFFER * 2, output, FRAMES_PER_BUFFER * 2 * sizeof(float));
-		}
-		for (int i = 0; i < 36; i++) {
-			if (i % 4 == 0) {
-				curr_source->ele += 10;
-				ele_idx++;
-			}
-			curr_source->azi += azimuth_inc[ele_idx];
-			curr_source->updateFromSpherical();
-			for (int j = 0; j < num_iterations; j++) {
-				callback_func(output, p);
-				memcpy(cpu_out + count++ * FRAMES_PER_BUFFER * 2, output, FRAMES_PER_BUFFER * 2 * sizeof(float));
-			}
-		}
-	}
-
-	if (precisionChecking(cpu_out, gpu_out, FRAMES_PER_BUFFER * 2 * num_iterations * 37 * 2)) {
-		printf("ERROR: No interpolation precision error\n");
-	}
-	else {
-		printf("No interpolation precision accurate\n");
-	}
-	curr_source->count = 0;
-	p->type = CPU_FD_COMPLEX;
-	count = 0;
 	fprintf(stderr, "Testing azimuth interpolation\n");
 	for (int repeats = 0; repeats < 2; repeats++) {
 		curr_source->azi = 1;
 		curr_source->ele = 0;
 		for (int i = 0; i < num_iterations; i++) {
 			callback_func(output, p);
-			memcpy(cpu_out + count++ * FRAMES_PER_BUFFER * 2, output, FRAMES_PER_BUFFER * 2 * sizeof(float));
 		}
 		for (int i = 0; i < 72; i++) {
-			curr_source->azi += 2.5;
-			if (i % 8 == 0) {
-				curr_source->ele += 10;
+			curr_source->azi += 5;
+			if (curr_source->azi >= 360) {
+				curr_source->azi -= 360;
 			}
-			curr_source->updateFromSpherical();
 			for (int j = 0; j < num_iterations / 2; j++) {
 				callback_func(output, p);
-				memcpy(cpu_out + count++ * FRAMES_PER_BUFFER * 2, output, FRAMES_PER_BUFFER * 2 * sizeof(float));
 			}
 		}
 	}
-	curr_source->count = 0;
-	p->type = GPU_FD_COMPLEX;
-	callback_func(output, p);
-	callback_func(output, p);
-	count = 0;
-	for (int repeats = 0; repeats < 2; repeats++) {
-		curr_source->azi = 1;
-		curr_source->ele = 0;
-		for (int i = 0; i < num_iterations; i++) {
-			callback_func(output, p);
-			memcpy(gpu_out + count++ * FRAMES_PER_BUFFER * 2, output, FRAMES_PER_BUFFER * 2 * sizeof(float));
-		}
-		for (int i = 0; i < 72; i++) {
-			curr_source->azi += 2.5;
-			if (i % 8 == 0) {
-				curr_source->ele += 10;
-			}
-			curr_source->updateFromSpherical();
-			for (int j = 0; j < num_iterations / 2; j++) {
-				callback_func(output, p);
-				memcpy(gpu_out + count++ * FRAMES_PER_BUFFER * 2, output, FRAMES_PER_BUFFER * 2 * sizeof(float));
-			}
-		}
-	}
-
-	if (precisionChecking(cpu_out, gpu_out, FRAMES_PER_BUFFER * 2 * num_iterations * 37 * 2)) {
-		printf("ERROR: Azimuth interpolation precision error\n");
-	}
-	else {
-		printf("Azimuth interpolation precision accurate\n");
-	}
-
-	curr_source->count = 0;
-	p->type = CPU_FD_COMPLEX;
-	count = 0;
 	fprintf(stderr, "Testing Elevation interpolation\n");
 	curr_source->updateFromSpherical();
 	for (int repeats = 0; repeats < 2; repeats++) {
@@ -301,7 +225,6 @@ void benchmarkTesting() {
 		int ele_idx = 4;
 		for (int i = 0; i < num_iterations; i++) {
 			callback_func(output, p);
-			memcpy(cpu_out + count++ * FRAMES_PER_BUFFER * 2, output, FRAMES_PER_BUFFER * 2 * sizeof(float));
 		}
 		for (int i = 0; i < 36; i++) {
 			curr_source->azi += azimuth_inc[ele_idx];
@@ -312,42 +235,8 @@ void benchmarkTesting() {
 			curr_source->updateFromSpherical();
 			for (int j = 0; j < num_iterations; j++) {
 				callback_func(output, p);
-				memcpy(cpu_out + count++ * FRAMES_PER_BUFFER * 2, output, FRAMES_PER_BUFFER * 2 * sizeof(float));
 			}
 		}
-	}
-	curr_source->count = 0;
-	p->type = GPU_FD_COMPLEX;
-	callback_func(output, p);
-	callback_func(output, p);
-	count = 0;
-	for (int repeats = 0; repeats < 2; repeats++) {
-		curr_source->azi = 0;
-		curr_source->ele = -5;
-		int ele_idx = 4;
-		for (int i = 0; i < num_iterations; i++) {
-			callback_func(output, p);
-			memcpy(gpu_out + count++ * FRAMES_PER_BUFFER * 2, output, FRAMES_PER_BUFFER * 2 * sizeof(float));
-		}
-		for (int i = 0; i < 36; i++) {
-			curr_source->azi += azimuth_inc[ele_idx];
-			if (i % 4 == 0) {
-				curr_source->ele += 10;
-				ele_idx++;
-			}
-			curr_source->updateFromSpherical();
-			for (int j = 0; j < num_iterations; j++) {
-				callback_func(output, p);
-				memcpy(gpu_out + count++ * FRAMES_PER_BUFFER * 2, output, FRAMES_PER_BUFFER * 2 * sizeof(float));
-			}
-		}
-	}
-
-	if (precisionChecking(cpu_out, gpu_out, FRAMES_PER_BUFFER * 2 * num_iterations * 37 * 2)) {
-		printf("ERROR: Elevation interpolation precision error\n");
-	}
-	else {
-		printf("Elevation interpolation precision accurate\n");
 	}
 	fprintf(stderr, "Testing both interpolation\n");
 	curr_source->count = 0;
@@ -360,7 +249,6 @@ void benchmarkTesting() {
 		int ele_idx = 4;
 		for (int i = 0; i < num_iterations; i++) {
 			callback_func(output, p);
-			memcpy(cpu_out + count++ * FRAMES_PER_BUFFER * 2, output, FRAMES_PER_BUFFER * 2 * sizeof(float));
 		}
 		for (int i = 0; i < 36; i++) {
 			curr_source->azi += azimuth_inc[ele_idx];
@@ -371,37 +259,10 @@ void benchmarkTesting() {
 			curr_source->updateFromSpherical();
 			for (int j = 0; j < num_iterations; j++) {
 				callback_func(output, p);
-				memcpy(cpu_out + count++ * FRAMES_PER_BUFFER * 2, output, FRAMES_PER_BUFFER * 2 * sizeof(float));
 			}
 		}
 	}
-	curr_source->count = 0;
-	p->type = GPU_FD_COMPLEX;
-	callback_func(output, p);
-	callback_func(output, p);
-	count = 0;
-	curr_source->updateFromSpherical();
-	for (int repeats = 0; repeats < 10; repeats++) {
-		curr_source->azi = 1;
-		curr_source->ele = -3;
-		int ele_idx = 4;
-		for (int i = 0; i < num_iterations; i++) {
-			callback_func(output, p);
-			memcpy(gpu_out + count++ * FRAMES_PER_BUFFER * 2, output, FRAMES_PER_BUFFER * 2 * sizeof(float));
-		}
-		for (int i = 0; i < 36; i++) {
-			curr_source->azi += azimuth_inc[ele_idx];
-			if (i % 4 == 0) {
-				curr_source->ele += 10;
-				ele_idx++;
-			}
-			curr_source->updateFromSpherical();
-			for (int j = 0; j < num_iterations; j++) {
-				callback_func(output, p);
-				memcpy(gpu_out + count++ * FRAMES_PER_BUFFER * 2, output, FRAMES_PER_BUFFER * 2 * sizeof(float));
-			}
-		}
-	}
+	
 
 	delete[] output;
 }
