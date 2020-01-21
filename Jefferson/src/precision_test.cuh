@@ -10,5 +10,6 @@
 
 //#include <fftw3.h>
 void precisionTest(Data* p);
-
+void xfadePrecisionTest(Data* p);
+void xfadePrecisionCallbackTest(Data* p);
 #endif

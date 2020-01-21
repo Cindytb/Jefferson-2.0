@@ -23,7 +23,10 @@ public:
 //private:
 	void cpuTDConvolve();
 	void cpuFFTConvolve();
-	
+	void caseOneConvolve(fftwf_complex* output, int* hrtf_indices);
+	void caseTwoConvolve(fftwf_complex* output, fftwf_complex* convbufs, int* hrtf_indices, float* omegas);
+	void caseThreeConvolve(fftwf_complex* output, fftwf_complex* convbufs, int* hrtf_indices, float* omegas);
+	void caseFourConvolve(fftwf_complex* output, fftwf_complex* convbufs, int* hrtf_indices, float* omegas);
 	void cpuInterpolateLoops(fftwf_complex* output, fftwf_complex* convbufs, int* hrtf_indices, float* omegas);
     
 	fftwf_complex* conv_bufs;				/*2 * (PAD_LEN / 2 + 1) complex values. Buffer for interpolation, 8 of them total*/

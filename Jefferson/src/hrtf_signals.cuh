@@ -3,6 +3,7 @@
 #define __HRTF_SIGNALS_CUDA
 #include "Universal.cuh"
 #include "kernels.cuh"
+#include "functions.h"
 #include <stdio.h>
 #include <math.h>       /* round, floor, ceil */
 #include <stdlib.h>     /* malloc() */

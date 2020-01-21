@@ -4,7 +4,7 @@
     <ShowAllFiles>false</ShowAllFiles>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='GPU_FD_COMPLEX|x64'">
-    <LocalDebuggerCommandArguments>-i media/Vltava.wav -r media/s1_r1_b_441_mono.wav -o CPU_FD_COMPLEX.wav -t 3</LocalDebuggerCommandArguments>
+    <LocalDebuggerCommandArguments>-i media/Vltava.wav -r media/s1_r1_b_441_mono.wav -o ofile.wav -t 0</LocalDebuggerCommandArguments>
     <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='GPU_FD_BASIC|x64'">

@@ -106,10 +106,10 @@ void callback_func(float* output, Data* p) {
 			GPUSoundSource* source = &(p->all_sources[source_no]);
 			int buf_block = p->blockNo % FLIGHT_NUM;
 			if (p->type == GPU_FD_COMPLEX) {
-				checkCudaErrors(cudaStreamSynchronize(source->streams[buf_block * STREAMS_PER_FLIGHT]));
+				checkCudaErrors(cudaStreamSynchronize(source->streams[0]));
 
 				for (int i = 0; i < FRAMES_PER_BUFFER * 2; i++) {
-					output[i] += source->intermediate[buf_block][i];
+					output[i] += source->intermediate[i];
 					if (output[i] > 1.0) {
 						fprintf(stderr, "ALERT! CLIPPING AUDIO!\n");
 					}
@@ -117,7 +117,6 @@ void callback_func(float* output, Data* p) {
 				source->process(p->blockNo, p->type);
 			}
 		}
-		//else if (p->type == CPU_FD_BASIC || p->type == CPU_FD_COMPLEX || p->type == CPU_TD) {
 		else {
 			CPUSoundSource* source = (CPUSoundSource*)&(p->all_sources[source_no]);
 			/*Copy into curr_source->x pinned memory*/
