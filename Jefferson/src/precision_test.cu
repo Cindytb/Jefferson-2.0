@@ -1,5 +1,5 @@
 #include "precision_test.cuh"
-
+#define M_PI 3.14159265358979323846264338327950288
 
 void precisionTest(Data* p) {
 	SoundSource* src = (SoundSource*)&(p->all_sources[0]);
@@ -22,15 +22,15 @@ void precisionTest(Data* p) {
 	/////////////////////////////////////////////////////////
 
 	// GPU
-	p->blockNo = 0;
+	
 	src->count = 0;
 	for (int i = 0; i < PAD_LEN + 2; i++) {
 		gsrc->x[i] = 0.0f;
 		csrc->x[i] = 0.0f;
 	}
 	fillWithZeroesKernel(gsrc->d_output, 2 * buf_size, gsrc->streams[0]);
-	gsrc->copyIncomingBlock(0);
-	gsrc->sendBlock(0);
+	gsrc->copyIncomingBlock();
+	gsrc->sendBlock();
 	// CPU
 	src->count = 0;
 	memcpy(
@@ -50,7 +50,7 @@ void precisionTest(Data* p) {
 	/////////////////////////////////////////////////////////
 	// CALCULATE WEIGHTS
 	/////////////////////////////////////////////////////////
-	int blockNo = 0;
+	
 	float ele = src->ele;
 	float azi = src->azi;
 	int hrtf_indices[4];
@@ -62,7 +62,7 @@ void precisionTest(Data* p) {
 	/////////////////////////////////////////////////////////
 
 	// GPU
-	gsrc->gpuCalculateDistanceFactor(blockNo);
+	gsrc->gpuCalculateDistanceFactor();
 
 	// CPU
 	csrc->calculateDistanceFactor();
@@ -168,7 +168,7 @@ void precisionTest(Data* p) {
 
 
 	/*Receive*/
-	gsrc->receiveBlock(0);
+	gsrc->receiveBlock();
 	memcpy(gpu_output, gsrc->intermediate, FRAMES_PER_BUFFER * 2 * sizeof(float));
 	memcpy(cpu_output, ((float*)csrc->intermediate) + 2 * (PAD_LEN - FRAMES_PER_BUFFER), FRAMES_PER_BUFFER * 2 * sizeof(float));
 	if (precisionChecking(gpu_output, cpu_output, FRAMES_PER_BUFFER * 2)) {
@@ -261,7 +261,7 @@ void precisionTest(Data* p) {
 	}
 
 	/*Receive*/
-	gsrc->receiveBlock(0);
+	gsrc->receiveBlock();
 	memcpy(gpu_output, gsrc->intermediate, FRAMES_PER_BUFFER * 2 * sizeof(float));
 	memcpy(cpu_output, ((float*)csrc->intermediate) + 2 * (PAD_LEN - FRAMES_PER_BUFFER), FRAMES_PER_BUFFER * 2 * sizeof(float));
 	if (precisionChecking(gpu_output, cpu_output, FRAMES_PER_BUFFER * 2)) {
@@ -338,7 +338,7 @@ void precisionTest(Data* p) {
 	}
 
 	/*Receive*/
-	gsrc->receiveBlock(0);
+	gsrc->receiveBlock();
 	memcpy(gpu_output, gsrc->intermediate, FRAMES_PER_BUFFER * 2 * sizeof(float));
 	memcpy(cpu_output, ((float*)csrc->intermediate) + 2 * (PAD_LEN - FRAMES_PER_BUFFER), FRAMES_PER_BUFFER * 2 * sizeof(float));
 	if (precisionChecking(gpu_output, cpu_output, FRAMES_PER_BUFFER * 2)) {
@@ -424,7 +424,7 @@ void precisionTest(Data* p) {
 	}
 
 	/*Receive*/
-	gsrc->receiveBlock(0);
+	gsrc->receiveBlock();
 	memcpy(gpu_output, gsrc->intermediate, FRAMES_PER_BUFFER * 2 * sizeof(float));
 	memcpy(cpu_output, ((float*)csrc->intermediate) + 2 * (PAD_LEN - FRAMES_PER_BUFFER), FRAMES_PER_BUFFER * 2 * sizeof(float));
 	if (precisionChecking(gpu_output, cpu_output, FRAMES_PER_BUFFER * 2)) {
@@ -440,7 +440,7 @@ void precisionTest(Data* p) {
 	for (int i = 0; i < FRAMES_PER_BUFFER * 2; i++) {
 		gsrc->intermediate[i] = 0.0f;
 	}
-	p->blockNo = 0;
+	
 	src->count = 0;
 	delete[] gpu_output;
 	delete[] cpu_output;
@@ -474,14 +474,14 @@ void xfadePrecisionTest(Data* p) {
 	/////////////////////////////////////////////////////////
 
 	// GPU
-	p->blockNo = 0;
+	
 	src->count = 0;
 	for (int i = 0; i < PAD_LEN + 2; i++) {
 		gsrc->x[i] = 0.0f;
 	}
 	fillWithZeroesKernel(gsrc->d_output, 2 * buf_size, gsrc->streams[0]);
-	gsrc->copyIncomingBlock(0);
-	gsrc->sendBlock(0);
+	gsrc->copyIncomingBlock();
+	gsrc->sendBlock();
 	// CPU
 	src->count = 0;
 	memcpy(
@@ -501,7 +501,7 @@ void xfadePrecisionTest(Data* p) {
 	/////////////////////////////////////////////////////////
 	// CALCULATE WEIGHTS
 	/////////////////////////////////////////////////////////
-	int blockNo = 0;
+	
 	src->old_azi = 0;
 	src->old_ele = 0;
 	src->ele = 10;
@@ -520,7 +520,7 @@ void xfadePrecisionTest(Data* p) {
 	/////////////////////////////////////////////////////////
 
 	// GPU
-	gsrc->gpuCalculateDistanceFactor(blockNo);
+	gsrc->gpuCalculateDistanceFactor();
 
 	// CPU
 	csrc->calculateDistanceFactor();
@@ -548,7 +548,7 @@ void xfadePrecisionTest(Data* p) {
 	float* d_output2 = gsrc->d_output2;
 	cufftComplex* d_convbufs = gsrc->d_convbufs;
 	cufftComplex* d_convbufs2 = gsrc->d_convbufs + 4 * (PAD_LEN + 2);
-	CHECK_CUFFT_ERRORS(cufftExecR2C(gsrc->plans[blockNo * 3], (cufftReal*)d_input, (cufftComplex*)d_input));
+	CHECK_CUFFT_ERRORS(cufftExecR2C(gsrc->plans[3], (cufftReal*)d_input, (cufftComplex*)d_input));
 
 
 	// CPU
@@ -683,7 +683,7 @@ void xfadePrecisionTest(Data* p) {
 		printf("Case 1 Crossfade successful\n");
 	}
 	/*Receive*/
-	gsrc->receiveBlock(0);
+	gsrc->receiveBlock();
 	memcpy(gpu_output, gsrc->intermediate, FRAMES_PER_BUFFER * 2 * sizeof(float));
 	memcpy(cpu_output, ((float*)csrc->intermediate) + 2 * (PAD_LEN - FRAMES_PER_BUFFER), FRAMES_PER_BUFFER * 2 * sizeof(float));
 	if (precisionChecking(gpu_output, cpu_output, FRAMES_PER_BUFFER * 2)) {
@@ -880,7 +880,7 @@ void xfadePrecisionTest(Data* p) {
 	}
 
 	/*Receive*/
-	gsrc->receiveBlock(0);
+	gsrc->receiveBlock();
 	memcpy(gpu_output, gsrc->intermediate, FRAMES_PER_BUFFER * 2 * sizeof(float));
 	memcpy(cpu_output, ((float*)csrc->intermediate) + 2 * (PAD_LEN - FRAMES_PER_BUFFER), FRAMES_PER_BUFFER * 2 * sizeof(float));
 	if (precisionChecking(gpu_output, cpu_output, FRAMES_PER_BUFFER * 2)) {
@@ -1078,7 +1078,7 @@ void xfadePrecisionTest(Data* p) {
 	}
 
 	/*Receive*/
-	gsrc->receiveBlock(0);
+	gsrc->receiveBlock();
 	memcpy(gpu_output, gsrc->intermediate, FRAMES_PER_BUFFER * 2 * sizeof(float));
 	memcpy(cpu_output, ((float*)csrc->intermediate) + 2 * (PAD_LEN - FRAMES_PER_BUFFER), FRAMES_PER_BUFFER * 2 * sizeof(float));
 	if (precisionChecking(gpu_output, cpu_output, FRAMES_PER_BUFFER * 2)) {
@@ -1215,7 +1215,7 @@ void xfadePrecisionTest(Data* p) {
 		printf("Case 4 Crossfade successful\n");
 	}
 	/*Receive*/
-	gsrc->receiveBlock(0);
+	gsrc->receiveBlock();
 	memcpy(gpu_output, gsrc->intermediate, FRAMES_PER_BUFFER * 2 * sizeof(float));
 	memcpy(cpu_output, ((float*)csrc->intermediate) + 2 * (PAD_LEN - FRAMES_PER_BUFFER), FRAMES_PER_BUFFER * 2 * sizeof(float));
 	if (precisionChecking(gpu_output, cpu_output, FRAMES_PER_BUFFER * 2)) {
@@ -1232,7 +1232,7 @@ void xfadePrecisionTest(Data* p) {
 	for (int i = 0; i < FRAMES_PER_BUFFER * 2; i++) {
 		gsrc->intermediate[i] = 0.0f;
 	}
-	p->blockNo = 0;
+	
 	src->count = 0;
 	delete[] gpu_output;
 	delete[] cpu_output;
@@ -1267,14 +1267,14 @@ void xfadePrecisionCallbackTest(Data* p) {
 	/////////////////////////////////////////////////////////
 
 	// GPU
-	p->blockNo = 0;
+	
 	src->count = 0;
 	for (int i = 0; i < PAD_LEN + 2; i++) {
 		gsrc->x[i] = 0.0f;
 	}
 	fillWithZeroesKernel(gsrc->d_output, 2 * buf_size, gsrc->streams[0]);
-	gsrc->copyIncomingBlock(0);
-	gsrc->sendBlock(0);
+	gsrc->copyIncomingBlock();
+	gsrc->sendBlock();
 	// CPU
 	src->count = 0;
 	memcpy(
@@ -1294,7 +1294,7 @@ void xfadePrecisionCallbackTest(Data* p) {
 	/////////////////////////////////////////////////////////
 	// CALCULATE WEIGHTS
 	/////////////////////////////////////////////////////////
-	int blockNo = 0;
+	
 	src->old_azi = 18;
 	src->old_ele = 8;
 	src->ele = 23;
@@ -1315,7 +1315,7 @@ void xfadePrecisionCallbackTest(Data* p) {
 	/////////////////////////////////////////////////////////
 
 	// GPU
-	gsrc->gpuCalculateDistanceFactor(blockNo);
+	gsrc->gpuCalculateDistanceFactor();
 
 	// CPU
 	csrc->calculateDistanceFactor();
@@ -1509,7 +1509,7 @@ void xfadePrecisionCallbackTest(Data* p) {
 		printf("Case 4 Crossfade successful\n");
 	}
 	/*Receive*/
-	gsrc->receiveBlock(0);
+	gsrc->receiveBlock();
 	memcpy(gpu_output, gsrc->intermediate, FRAMES_PER_BUFFER * 2 * sizeof(float));
 	memcpy(cpu_output, ((float*)csrc->intermediate) + 2 * (PAD_LEN - FRAMES_PER_BUFFER), FRAMES_PER_BUFFER * 2 * sizeof(float));
 	if (precisionChecking(gpu_output, cpu_output, FRAMES_PER_BUFFER * 2)) {
@@ -1529,12 +1529,11 @@ void xfadePrecisionCallbackTest(Data* p) {
 		sizeof(float) * (PAD_LEN - FRAMES_PER_BUFFER)
 	);
 
-	p->blockNo++;
-	blockNo = p->blockNo;
+	
 	src->count = 128;
-	gsrc->overlapSave(blockNo);
-	gsrc->copyIncomingBlock(blockNo);
-	gsrc->sendBlock(blockNo);
+	gsrc->overlapSave();
+	gsrc->copyIncomingBlock();
+	gsrc->sendBlock();
 	// CPU
 	src->count = 128;
 	memcpy(
@@ -1555,7 +1554,7 @@ void xfadePrecisionCallbackTest(Data* p) {
 	/////////////////////////////////////////////////////////
 
 	// GPU
-	gsrc->gpuCalculateDistanceFactor(blockNo);
+	gsrc->gpuCalculateDistanceFactor();
 
 	// CPU
 	csrc->calculateDistanceFactor();
@@ -1750,7 +1749,7 @@ void xfadePrecisionCallbackTest(Data* p) {
 		printf("Case 4 Crossfade successful\n");
 	}
 	/*Receive*/
-	gsrc->receiveBlock(blockNo);
+	gsrc->receiveBlock();
 	memcpy(gpu_output, gsrc->intermediate, FRAMES_PER_BUFFER * 2 * sizeof(float));
 	memcpy(cpu_output, ((float*)csrc->intermediate) + 2 * (PAD_LEN - FRAMES_PER_BUFFER), FRAMES_PER_BUFFER * 2 * sizeof(float));
 	if (precisionChecking(gpu_output, cpu_output, FRAMES_PER_BUFFER * 2)) {
@@ -1764,8 +1763,7 @@ void xfadePrecisionCallbackTest(Data* p) {
 	//ROUND THREE!
 	printf("Round 3\n");
 	/*Overlap-save*/
-	p->blockNo++;
-	blockNo = p->blockNo;
+	
 	memmove(
 		csrc->x,
 		csrc->x + FRAMES_PER_BUFFER,
@@ -1773,9 +1771,9 @@ void xfadePrecisionCallbackTest(Data* p) {
 	);
 
 	src->count = 256;
-	gsrc->overlapSave(blockNo);
-	gsrc->copyIncomingBlock(blockNo % FLIGHT_NUM);
-	gsrc->sendBlock(blockNo % FLIGHT_NUM);
+	gsrc->overlapSave();
+	gsrc->copyIncomingBlock();
+	gsrc->sendBlock();
 	// CPU
 	src->count = 256;
 	memcpy(
@@ -1795,7 +1793,7 @@ void xfadePrecisionCallbackTest(Data* p) {
 	// CALCULATE DISTANCE FACTOR
 	/////////////////////////////////////////////////////////
 	// GPU
-	gsrc->gpuCalculateDistanceFactor(blockNo % FLIGHT_NUM);
+	gsrc->gpuCalculateDistanceFactor();
 	csrc->calculateDistanceFactor();
 
 	// Precision Check
@@ -1812,7 +1810,7 @@ void xfadePrecisionCallbackTest(Data* p) {
 	/////////////////////////////////////////////////////////
 
 	// GPU
-	CHECK_CUFFT_ERRORS(cufftExecR2C(gsrc->plans[(blockNo % FLIGHT_NUM) * 3], d_input, (cufftComplex*)d_input));
+	CHECK_CUFFT_ERRORS(cufftExecR2C(gsrc->plans[0], d_input, (cufftComplex*)d_input));
 
 	// CPU
 	fftwf_execute(csrc->in_plan); /*FFT on x --> intermediate*/
@@ -1977,7 +1975,7 @@ void xfadePrecisionCallbackTest(Data* p) {
 		printf("Case 4 Crossfade successful\n");
 	}
 	/*Receive*/
-	gsrc->receiveBlock(blockNo % FLIGHT_NUM);
+	gsrc->receiveBlock();
 	memcpy(gpu_output, gsrc->intermediate, FRAMES_PER_BUFFER * 2 * sizeof(float));
 	memcpy(cpu_output, ((float*)csrc->intermediate) + 2 * (PAD_LEN - FRAMES_PER_BUFFER), FRAMES_PER_BUFFER * 2 * sizeof(float));
 	if (precisionChecking(gpu_output, cpu_output, FRAMES_PER_BUFFER * 2)) {
@@ -1996,7 +1994,7 @@ void xfadePrecisionCallbackTest(Data* p) {
 	}
 	src->old_azi = 0.0f;
 	src->old_ele = 0.0f;
-	p->blockNo = 0;
+	
 	src->count = 0;
 	delete[] gpu_output;
 	delete[] cpu_output;
@@ -2005,4 +2003,242 @@ void xfadePrecisionCallbackTest(Data* p) {
 	delete[] gpu_ifft;
 	delete[] gpu_fft_in;
 	delete[] gpu_fft_scaled;
+}
+
+
+void cufftSanityCheck(Data* p) {
+	SoundSource* src = (SoundSource*)&(p->all_sources[0]);
+	GPUSoundSource* gsrc = &(p->all_sources[0]);
+	CPUSoundSource* csrc = (CPUSoundSource*)&(p->all_sources[0]);
+
+	float scale = 1.0f / ((float)PAD_LEN);
+	size_t buf_size = PAD_LEN + 2;
+	size_t complex_buf_size = buf_size / 2;
+
+	float* gpu_fft_in = fftwf_alloc_real(buf_size * 2);
+	float* gpu_ifft = fftwf_alloc_real(buf_size * 2);
+	float* deinterleaved = new float[PAD_LEN * 2];
+
+	fftwf_plan plan = fftwf_plan_many_dft_r2c(
+		1, &PAD_LEN, 2,
+		gpu_fft_in, NULL,
+		1, buf_size,
+		(fftwf_complex*)gpu_ifft, NULL,
+		1, complex_buf_size, FFTW_ESTIMATE);
+
+	fftwf_plan out_plan = fftwf_plan_many_dft_c2r(
+		1, &PAD_LEN, 2,
+		(fftwf_complex*)gpu_ifft, NULL,
+		1, PAD_LEN / 2 + 1,
+		(float*)gpu_ifft, NULL,
+		2, 1, FFTW_ESTIMATE
+	);
+	for (int i = 0; i < PAD_LEN; i++) {
+		gpu_fft_in[i] = sin(2 * M_PI * 20 * i / PAD_LEN);
+		gpu_fft_in[buf_size + i] = sin(2 * M_PI * 2 * i / PAD_LEN);
+	}
+
+	float* d_buf;
+	checkCudaErrors(cudaMalloc(&d_buf, buf_size * 2 * sizeof(float)));
+	checkCudaErrors(cudaMemcpy(d_buf, gpu_fft_in, buf_size * 2 * sizeof(float), cudaMemcpyHostToDevice));
+	int numThreads = 64;
+	int numBlocks = (buf_size * 2 + numThreads - 1) / numThreads;
+	MyFloatScale << <numThreads, numBlocks >> > (d_buf, scale, buf_size * 2);
+	CHECK_CUFFT_ERRORS(cufftExecR2C(gsrc->plans[0], d_buf, (cufftComplex*)d_buf));
+	CHECK_CUFFT_ERRORS(cufftExecR2C(gsrc->plans[0], d_buf + buf_size, (cufftComplex*)(d_buf + buf_size)));
+	CHECK_CUFFT_ERRORS(cufftExecC2R(gsrc->plans[1], (cufftComplex*)d_buf, d_buf));
+	checkCudaErrors(cudaMemcpy(gpu_ifft, d_buf, buf_size * 2 * sizeof(float), cudaMemcpyDeviceToHost));
+	float epsilon = 1e-8;
+	float max_diff = 0;
+	for (int i = 0; i < PAD_LEN; i++) {
+		float diff1 = fabs(gpu_ifft[i * 2] - gpu_fft_in[i]);
+		float diff2 = fabs(gpu_ifft[i * 2 + 1] - gpu_fft_in[buf_size + i]);
+		if (diff1 > epsilon || diff2 > epsilon) {
+			//printf("ERROR AT %i\n", i);
+		}
+		if (diff1 > max_diff) {
+			max_diff = diff1;
+		}
+		if (diff2 > max_diff) {
+			max_diff = diff2;
+		}
+		deinterleaved[i] = gpu_ifft[i * 2];
+		deinterleaved[PAD_LEN + i] = gpu_ifft[i * 2 + 1];
+	}
+	
+	printf("Max Diff GPU FFT/IFFT %f 1e-8\n", max_diff / 1e-8);
+
+	fftwf_execute(plan);
+	complexScaling((fftwf_complex*)gpu_ifft, scale, buf_size);
+	fftwf_execute(out_plan);
+	max_diff = 0.0f;
+	for (int i = 0; i < PAD_LEN; i++) {
+		float diff1 = fabs(gpu_ifft[i * 2] - gpu_fft_in[i]);
+		float diff2 = fabs(gpu_ifft[i * 2 + 1] - gpu_fft_in[buf_size + i]);
+		if (diff1 > epsilon || diff2 > epsilon) {
+			//printf("ERROR AT %i\n", i);
+		}
+		if (diff1 > max_diff) {
+			max_diff = diff1;
+		}
+		if (diff2 > max_diff) {
+			max_diff = diff2;
+		}
+		deinterleaved[i] = gpu_ifft[i * 2];
+		deinterleaved[PAD_LEN + i] = gpu_ifft[i * 2 + 1];
+	}
+
+	printf("Max Diff CPU FFT/IFFT %f 1e-8\n", max_diff / 1e-8);
+	delete[] deinterleaved;
+	fftwf_free(gpu_ifft);
+	fftwf_free(gpu_fft_in);
+}
+
+
+void test(Data* p, float* gpu_output, float* cpu_output, float* diff, int num_iterations, int num_rounds, float azi, float ele) {
+	SoundSource* curr_source = (SoundSource*)&(p->all_sources[0]);
+	GPUSoundSource* gsrc = &(p->all_sources[0]);
+	CPUSoundSource* csrc = (CPUSoundSource*)&(p->all_sources[0]);
+	int size = FRAMES_PER_BUFFER * 2 * num_iterations * (num_rounds + 1);
+	for (int i = 0; i < PAD_LEN; i++) {
+		csrc->x[i] = 0.0f;
+		gsrc->x[i] = 0.0f;
+	}
+	p->type = GPU_FD_COMPLEX;
+	int count = 0;
+	curr_source->count = 0;
+	curr_source->old_azi = 0.0f;
+	curr_source->old_ele = 0.0f;
+	curr_source->azi = azi;
+	curr_source->ele = ele;
+	curr_source->updateFromSpherical();
+	callback_func(gpu_output, p);
+	for (int i = 0; i < num_iterations - 1; i++) {
+		callback_func(gpu_output + FRAMES_PER_BUFFER * 2 * count++, p);
+	}
+	for (int i = 0; i < num_rounds; i++) {
+		curr_source->azi += 5;
+		if (curr_source->azi >= 360) {
+			curr_source->azi -= 360;
+		}
+		curr_source->updateFromSpherical();
+		for (int j = 0; j < num_iterations; j++) {
+			callback_func(gpu_output + FRAMES_PER_BUFFER * 2 * count++, p);
+		}
+	}
+	callback_func(gpu_output + FRAMES_PER_BUFFER * 2 * count++, p);
+	p->type = CPU_FD_COMPLEX;
+	for (int i = 0; i < PAD_LEN; i++) {
+		csrc->x[i] = 0.0f;
+		gsrc->x[i] = 0.0f;
+	}
+	count = 0;
+	curr_source->count = 0;
+	curr_source->old_azi = 0.0f;
+	curr_source->old_ele = 0.0f;
+	curr_source->azi = azi;
+	curr_source->ele = ele;
+	for (int i = 0; i < num_iterations; i++) {
+		callback_func(cpu_output + FRAMES_PER_BUFFER * 2 * count++, p);
+	}
+	for (int i = 0; i < num_rounds; i++) {
+		curr_source->azi += 5;
+		if (curr_source->azi >= 360) {
+			curr_source->azi -= 360;
+		}
+		curr_source->updateFromSpherical();
+		for (int j = 0; j < num_iterations; j++) {
+			callback_func(cpu_output + FRAMES_PER_BUFFER * 2 * count++, p);
+		}
+	}
+	for (int i = 0; i < size; i++) {
+		diff[i] = gpu_output[i] - cpu_output[i];
+	}
+
+}
+void benchmarkTesting(Data* p) {
+	cudaProfilerStart();
+	int num_iterations = 172;
+	int num_rounds = 72;
+	float epsilon = 2e-7;
+	float* gpu_output = new float[FRAMES_PER_BUFFER * 2 * num_iterations * (num_rounds + 1)];
+	float* cpu_output = new float[FRAMES_PER_BUFFER * 2 * num_iterations * (num_rounds + 1)];
+	float* diff = new float[FRAMES_PER_BUFFER * 2 * num_iterations * (num_rounds + 1)];
+	int size = FRAMES_PER_BUFFER * 2 * num_iterations * (num_rounds + 1);
+	fprintf(stderr, "Testing no interpolation\n");
+	test(p, gpu_output, cpu_output, diff, num_iterations, num_rounds, 0, 0);
+	if (precisionChecking(cpu_output, gpu_output, size, epsilon)) {
+		printf("ERROR: INACCURATE CPU VS GPU BUFFERS\n");
+	}
+	else {
+		printf("Accurate CPU vs GPU No Interpolation Calculations\n");
+	}
+
+	fprintf(stderr, "Testing azimuth interpolation\n");
+	test(p, gpu_output, cpu_output, diff, num_iterations, num_rounds, 3, 0);
+	if (precisionChecking(cpu_output, gpu_output, size, epsilon)) {
+		printf("ERROR: INACCURATE CPU VS GPU BUFFERS\n");
+	}
+	else {
+		printf("Accurate CPU vs GPU Azimuth Interpolation Calculations\n");
+	}
+
+	fprintf(stderr, "Testing Elevation interpolation\n");
+	test(p, gpu_output, cpu_output, diff, num_iterations, num_rounds, 0, 5);
+	if (precisionChecking(cpu_output, gpu_output, size, epsilon)) {
+		printf("ERROR: INACCURATE CPU VS GPU ELEVATION BUFFERS\n");
+	}
+	else {
+		printf("Accurate CPU vs GPU Elevation Interpolation Calculations\n");
+	}
+
+	fprintf(stderr, "Testing both interpolation\n");
+	test(p, gpu_output, cpu_output, diff, num_iterations, num_rounds, 3, 5);
+	if (precisionChecking(cpu_output, gpu_output, size, epsilon)) {
+		printf("ERROR: INACCURATE CPU VS GPU BOTH BUFFERS\n");
+	}
+	else {
+		printf("Accurate CPU vs GPU Both Interpolation Calculations\n");
+	}
+
+	delete[] gpu_output;
+	delete[] cpu_output;
+}
+
+void waveFileTesting(Data* p) {
+	float* out = new float[FRAMES_PER_BUFFER * 2];
+	int num_iterations = 172;
+	int num_rounds = 72;
+	SoundSource* curr_source = (SoundSource*)&(p->all_sources[0]);
+	GPUSoundSource* gsrc = &(p->all_sources[0]);
+	CPUSoundSource* csrc = (CPUSoundSource*)&(p->all_sources[0]);
+
+	for (int blah = 0; blah < 4; blah++) {
+		switch (blah) {
+		case 1:
+			curr_source->azi = 1;
+			break;
+		case 2:
+			curr_source->azi = 0;
+			curr_source->ele = 5;
+			break;
+		case 3:
+			curr_source->azi = 1;
+			break;
+		}
+
+		for (int i = 0; i < num_iterations; i++) {
+			callback_func(out, p);
+		}
+		for (int i = 0; i < num_rounds; i++) {
+			curr_source->azi += 5;
+			if (curr_source->azi >= 360) {
+				curr_source->azi -= 360;
+			}
+			curr_source->updateFromSpherical();
+			for (int j = 0; j < num_iterations; j++) {
+				callback_func(out, p);
+			}
+		}
+	}
 }

@@ -155,95 +155,95 @@ int read_hrtf_signals(void) {
 
 void transform_hrtfs() {
 
-	// Precision Check for HRTFs
+	//// Precision Check for HRTFs
 
-	float* gpu_hrtfs = new float[NUM_HRTF * HRTF_CHN * (PAD_LEN + 2)];
-	/*checkCudaErrors(cudaMemcpy(gpu_hrtfs, d_hrtf, NUM_HRTF * HRTF_CHN * PAD_LEN * sizeof(float), cudaMemcpyDeviceToHost));
+	//float* gpu_hrtfs = new float[NUM_HRTF * HRTF_CHN * (PAD_LEN + 2)];
+	///*checkCudaErrors(cudaMemcpy(gpu_hrtfs, d_hrtf, NUM_HRTF * HRTF_CHN * PAD_LEN * sizeof(float), cudaMemcpyDeviceToHost));
 
-	if (precisionChecking(gpu_hrtfs, hrtf, NUM_HRTF * HRTF_CHN * PAD_LEN)) {
-		printf("ERROR: Inaccurate HRIRs\n");
-	}
-	else {
-		printf("Accurate HRIRs\n");
-	}*/
-	
-	cufftHandle plan;
-	CHECK_CUFFT_ERRORS(cufftPlan1d(&plan, PAD_LEN, CUFFT_R2C, NUM_HRTF * 2));
-	CHECK_CUFFT_ERRORS(cufftExecR2C(plan, d_hrtf, d_fft_hrtf));
-	CHECK_CUFFT_ERRORS(cufftDestroy(plan));
+	//if (precisionChecking(gpu_hrtfs, hrtf, NUM_HRTF * HRTF_CHN * PAD_LEN)) {
+	//	printf("ERROR: Inaccurate HRIRs\n");
+	//}
+	//else {
+	//	printf("Accurate HRIRs\n");
+	//}*/
+	//
+	//cufftHandle plan;
+	//CHECK_CUFFT_ERRORS(cufftPlan1d(&plan, PAD_LEN, CUFFT_R2C, NUM_HRTF * 2));
+	//CHECK_CUFFT_ERRORS(cufftExecR2C(plan, d_hrtf, d_fft_hrtf));
+	//CHECK_CUFFT_ERRORS(cufftDestroy(plan));
 
-	checkCudaErrors(cudaMemcpy(gpu_hrtfs, d_fft_hrtf, NUM_HRTF * HRTF_CHN * (PAD_LEN + 2) * sizeof(float), cudaMemcpyDeviceToHost));
+	//checkCudaErrors(cudaMemcpy(gpu_hrtfs, d_fft_hrtf, NUM_HRTF * HRTF_CHN * (PAD_LEN + 2) * sizeof(float), cudaMemcpyDeviceToHost));
 
-	if (precisionChecking(gpu_hrtfs, (float*)fft_hrtf, NUM_HRTF * HRTF_CHN * (PAD_LEN + 2), 1e-6)) {
-		printf("ERROR: Inaccurate HRTF\n");
-		//exit(EXIT_FAILURE);
-	}
-	else {
-		printf("Accurate HRTFs\n");
-	}
-	printf("\n");
-	int batch = NUM_HRTF * 2;
-	float* d_blah1;
-	cufftComplex* d_blah2;
-	float* blah1 = fftwf_alloc_real(batch * PAD_LEN);
-	fftwf_complex* blah2 = fftwf_alloc_complex(batch * (PAD_LEN / 2 + 1));
-	fftwf_complex* blah3 = fftwf_alloc_complex(batch * (PAD_LEN / 2 + 1));
-	checkCudaErrors(cudaMalloc(&d_blah1, batch * PAD_LEN * sizeof(float)));
-	checkCudaErrors(cudaMalloc(&d_blah2, batch * (PAD_LEN + 2) * sizeof(float)));
-	checkCudaErrors(cudaMemcpy(d_blah1, hrtf, batch * PAD_LEN * sizeof(float), cudaMemcpyHostToDevice));
-	
-	CHECK_CUFFT_ERRORS(cufftPlan1d(&plan, PAD_LEN, CUFFT_R2C, batch));
-	CHECK_CUFFT_ERRORS(cufftExecR2C(plan, d_blah1, d_blah2));
-	CHECK_CUFFT_ERRORS(cufftDestroy(plan));
+	//if (precisionChecking(gpu_hrtfs, (float*)fft_hrtf, NUM_HRTF * HRTF_CHN * (PAD_LEN + 2), 1e-6)) {
+	//	printf("ERROR: Inaccurate HRTF\n");
+	//	//exit(EXIT_FAILURE);
+	//}
+	//else {
+	//	printf("Accurate HRTFs\n");
+	//}
+	//printf("\n");
+	//int batch = NUM_HRTF * 2;
+	//float* d_blah1;
+	//cufftComplex* d_blah2;
+	//float* blah1 = fftwf_alloc_real(batch * PAD_LEN);
+	//fftwf_complex* blah2 = fftwf_alloc_complex(batch * (PAD_LEN / 2 + 1));
+	//fftwf_complex* blah3 = fftwf_alloc_complex(batch * (PAD_LEN / 2 + 1));
+	//checkCudaErrors(cudaMalloc(&d_blah1, batch * PAD_LEN * sizeof(float)));
+	//checkCudaErrors(cudaMalloc(&d_blah2, batch * (PAD_LEN + 2) * sizeof(float)));
+	//checkCudaErrors(cudaMemcpy(d_blah1, hrtf, batch * PAD_LEN * sizeof(float), cudaMemcpyHostToDevice));
+	//
+	//CHECK_CUFFT_ERRORS(cufftPlan1d(&plan, PAD_LEN, CUFFT_R2C, batch));
+	//CHECK_CUFFT_ERRORS(cufftExecR2C(plan, d_blah1, d_blah2));
+	//CHECK_CUFFT_ERRORS(cufftDestroy(plan));
 
-	int n[] = { PAD_LEN };
-	fftwf_plan fftw_plan;
-	fftw_plan = fftwf_plan_many_dft_r2c(
-		1, n, batch,
-		blah1, NULL, 1, PAD_LEN,
-		blah3, NULL, 1, PAD_LEN / 2 + 1,
-		FFTW_ESTIMATE);
-	memcpy(blah1, hrtf, batch * PAD_LEN * sizeof(float));
-	fftwf_execute(fftw_plan);
-	fftwf_destroy_plan(fftw_plan);
+	//int n[] = { PAD_LEN };
+	//fftwf_plan fftw_plan;
+	//fftw_plan = fftwf_plan_many_dft_r2c(
+	//	1, n, batch,
+	//	blah1, NULL, 1, PAD_LEN,
+	//	blah3, NULL, 1, PAD_LEN / 2 + 1,
+	//	FFTW_ESTIMATE);
+	//memcpy(blah1, hrtf, batch * PAD_LEN * sizeof(float));
+	//fftwf_execute(fftw_plan);
+	//fftwf_destroy_plan(fftw_plan);
 
 
-	fftw_plan = fftwf_plan_dft_r2c_1d(PAD_LEN, blah1, blah2, FFTW_ESTIMATE);
-	memcpy(blah1, hrtf, batch * PAD_LEN * sizeof(float));
-	fftwf_execute(fftw_plan);
-	for (int i = 1; i < batch; i++) {
-		fftw_plan = fftwf_plan_dft_r2c_1d(PAD_LEN, blah1 + i * PAD_LEN, blah2 + i * (PAD_LEN / 2 + 1), FFTW_ESTIMATE);
-		fftwf_execute(fftw_plan);
-	}
+	//fftw_plan = fftwf_plan_dft_r2c_1d(PAD_LEN, blah1, blah2, FFTW_ESTIMATE);
+	//memcpy(blah1, hrtf, batch * PAD_LEN * sizeof(float));
+	//fftwf_execute(fftw_plan);
+	//for (int i = 1; i < batch; i++) {
+	//	fftw_plan = fftwf_plan_dft_r2c_1d(PAD_LEN, blah1 + i * PAD_LEN, blah2 + i * (PAD_LEN / 2 + 1), FFTW_ESTIMATE);
+	//	fftwf_execute(fftw_plan);
+	//}
 
-	fftwf_destroy_plan(fftw_plan);
+	//fftwf_destroy_plan(fftw_plan);
 
-	float* buf = new float[batch * (PAD_LEN + 2)];
-	checkCudaErrors(cudaMemcpy(buf, d_blah2, batch * (PAD_LEN + 2) * sizeof(float), cudaMemcpyDeviceToHost));
-	if (precisionChecking((float*)blah2, (float*)buf, batch * (PAD_LEN + 2), 1e-6)) {
-		printf("Inccurate GPU vs manual batched FFTW precision check\n");
-	}
-	else {
-		printf("Successful GPU vs manual batched FFTW precision check\n");
-	}
-	printf("\n");
-	if (precisionChecking((float*)blah3, (float*)blah2, batch * (PAD_LEN + 2))) {
-		printf("FFTW Precision Error\n");
-	}
-	printf("\n");
-	if (precisionChecking((float*)blah3, (float*)buf, batch * (PAD_LEN + 2), 1e-6)) {
-		printf("Inaccurate GPU vs advanced API FFTW check\n");
-	}
-	else {
-		printf("Successful GPU vs advanced API FFTW check\n");
-	}
-	printf("\n");
-	checkCudaErrors(cudaFree(d_blah1));
-	checkCudaErrors(cudaFree(d_blah2));
-	fftwf_free(blah1);
-	fftwf_free(blah2);
-	fftwf_free(blah3);
-	delete[] gpu_hrtfs;
-	delete[] buf;
+	//float* buf = new float[batch * (PAD_LEN + 2)];
+	//checkCudaErrors(cudaMemcpy(buf, d_blah2, batch * (PAD_LEN + 2) * sizeof(float), cudaMemcpyDeviceToHost));
+	//if (precisionChecking((float*)blah2, (float*)buf, batch * (PAD_LEN + 2), 1e-6)) {
+	//	printf("Inccurate GPU vs manual batched FFTW precision check\n");
+	//}
+	//else {
+	//	printf("Successful GPU vs manual batched FFTW precision check\n");
+	//}
+	//printf("\n");
+	//if (precisionChecking((float*)blah3, (float*)blah2, batch * (PAD_LEN + 2))) {
+	//	printf("FFTW Precision Error\n");
+	//}
+	//printf("\n");
+	//if (precisionChecking((float*)blah3, (float*)buf, batch * (PAD_LEN + 2), 1e-6)) {
+	//	printf("Inaccurate GPU vs advanced API FFTW check\n");
+	//}
+	//else {
+	//	printf("Successful GPU vs advanced API FFTW check\n");
+	//}
+	//printf("\n");
+	//checkCudaErrors(cudaFree(d_blah1));
+	//checkCudaErrors(cudaFree(d_blah2));
+	//fftwf_free(blah1);
+	//fftwf_free(blah2);
+	//fftwf_free(blah3);
+	//delete[] gpu_hrtfs;
+	//delete[] buf;
 	checkCudaErrors(cudaMemcpy(d_fft_hrtf, fft_hrtf, NUM_HRTF * 2 * (PAD_LEN + 2) * sizeof(float), cudaMemcpyHostToDevice));
 }

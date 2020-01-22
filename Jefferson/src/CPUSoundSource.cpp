@@ -299,11 +299,14 @@ void CPUSoundSource::cpuFFTInterpolate() {
 		);
 	}
 	calculateDistanceFactor();
-	cpuInterpolateLoops(intermediate, conv_bufs, hrtf_indices, omegas);
-	fftwf_execute(out_plan);
-
-	if (xfade) {
-		cpuInterpolateLoops(intermediate + PAD_LEN + 2, conv_bufs + (PAD_LEN + 2) * 4, old_hrtf_indices, old_omegas);
+	if (!xfade) {
+		cpuInterpolateLoops(intermediate, conv_bufs, hrtf_indices, omegas);
+		fftwf_execute(out_plan);
+	}
+	else{
+		cpuInterpolateLoops(intermediate, conv_bufs, old_hrtf_indices, old_omegas);
+		fftwf_execute(out_plan);
+		cpuInterpolateLoops(intermediate + PAD_LEN + 2, conv_bufs + (PAD_LEN + 2) * 4, hrtf_indices, omegas);
 		fftwf_execute_dft_c2r(
 			out_plan,
 			intermediate + (PAD_LEN + 2),
@@ -311,11 +314,13 @@ void CPUSoundSource::cpuFFTInterpolate() {
 		);
 		float* out1 = ((float*)intermediate) + 2 * (PAD_LEN - FRAMES_PER_BUFFER);
 		float* out2 = ((float*)intermediate) + 2 * PAD_LEN + 4 + 2 * (PAD_LEN - FRAMES_PER_BUFFER);//PAD_LEN + 2 + 2 * (PAD_LEN - FRAMES_PER_BUFFER);
-#pragma omp parallel for
+		
 		for (int i = 0; i < FRAMES_PER_BUFFER; i++) {
 			float fn = float(i) / (FRAMES_PER_BUFFER - 1.0f);
-			out1[i * 2] = out1[i * 2] * fn + out2[i * 2] * (1.0f - fn);
-			out1[i * 2 + 1] = out1[i * 2 + 1] * fn + out2[i * 2 + 1] * (1.0f - fn);
+			float old = out1[i * 2];
+			out1[i * 2] = out1[i * 2] * (1.0f - fn) + out2[i * 2] * fn;
+			out1[i * 2 + 1] = out1[i * 2 + 1] * (1.0f - fn) + out2[i * 2 + 1] * fn;
+			
 		}
 	}
 	num_calls++;

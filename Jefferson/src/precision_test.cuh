@@ -12,4 +12,7 @@
 void precisionTest(Data* p);
 void xfadePrecisionTest(Data* p);
 void xfadePrecisionCallbackTest(Data* p);
+void cufftSanityCheck(Data* p);
+void benchmarkTesting(Data* p);
+void waveFileTesting(Data* p);
 #endif

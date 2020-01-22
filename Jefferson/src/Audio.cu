@@ -104,7 +104,6 @@ void callback_func(float* output, Data* p) {
 
 		if (p->type == GPU_FD_COMPLEX || p->type == GPU_FD_BASIC || p->type == GPU_TD) {
 			GPUSoundSource* source = &(p->all_sources[source_no]);
-			int buf_block = p->blockNo % FLIGHT_NUM;
 			if (p->type == GPU_FD_COMPLEX) {
 				checkCudaErrors(cudaStreamSynchronize(source->streams[0]));
 
@@ -114,7 +113,7 @@ void callback_func(float* output, Data* p) {
 						fprintf(stderr, "ALERT! CLIPPING AUDIO!\n");
 					}
 				}
-				source->process(p->blockNo, p->type);
+				source->process(p->type);
 			}
 		}
 		else {
@@ -158,10 +157,6 @@ void callback_func(float* output, Data* p) {
 				sizeof(float) * (PAD_LEN - FRAMES_PER_BUFFER)
 			);
 		}
-	}
-	p->blockNo++;
-	if (p->blockNo > FLIGHT_NUM * 2) {
-		p->blockNo -= FLIGHT_NUM;
 	}
 	sf_writef_float(p->sndfile, output, FRAMES_PER_BUFFER);
 	return;

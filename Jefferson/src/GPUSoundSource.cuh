@@ -13,14 +13,13 @@ struct callback_data {
 	float* input;
 	float* output;
 	size_t size;
-	int blockNo;
 };
 class GPUSoundSource : CPUSoundSource {
 public:
 
 	cudaStream_t streams[STREAMS_PER_FLIGHT];			/*Streams associated with each block in flight*/
 	float* intermediate;			/*Host data of the output*/
-	void process(int blockNo, processes type); /*Wrapper for the processor convolver. Calls fftConvolve() or interpolateConvolve()*/
+	void process(processes type); /*Wrapper for the processor convolver. Calls fftConvolve() or interpolateConvolve()*/
 	GPUSoundSource();
 	~GPUSoundSource();
 	
@@ -34,13 +33,13 @@ public:
 	float* d_output2;				/*2 * (PAD_LEN + 2)  sized for the output, part of the crossfading function*/
 
 	callback_data callback_data_blocks[3];
-	void chunkProcess(int blockNo);
-	void sendBlock(int blockNo);
-	void overlapSave(int blockNo);
-	void copyIncomingBlock(int blockNo);
-	void receiveBlock(int blockNo);
-	void fftConvolve(int blockNo); /*Uses time domain convolution rounding to the nearest HRTF in the database*/
-	void interpolateConvolve(int blockNo); /*Uses Belloch's technique of interpolation*/
+	void chunkProcess();
+	void sendBlock();
+	void overlapSave();
+	void copyIncomingBlock();
+	void receiveBlock();
+	void fftConvolve(); /*Uses time domain convolution rounding to the nearest HRTF in the database*/
+	void interpolateConvolve(); /*Uses Belloch's technique of interpolation*/
 	void gpuTDConvolve(float* input, float* d_output, int outputLen, float gain, cudaStream_t* streams);
 	void GPUSoundSource::caseOneConvolve(float* d_input, float* d_output, cufftComplex* d_convbufs, cufftComplex* d_distance_factor, cudaStream_t* streams, int* hrtf_indices);
 	void GPUSoundSource::caseTwoConvolve(float* d_input, float* d_output,
@@ -53,8 +52,8 @@ public:
 		cufftComplex* d_convbufs, cufftComplex* d_distance_factor,
 		cudaStream_t* streams, int* hrtf_indices, float* omegas);
 	void allKernels(float* d_input, float* d_output, cufftComplex* d_convbufs, cufftComplex* d_distance_factor, cudaStream_t* streams, float* omegas, int* hrtf_indices, cudaEvent_t fft_in); /*All of the kernels for interpolation*/
-	void gpuCalculateDistanceFactor(int blockNo, cudaStream_t stream);
-	void gpuCalculateDistanceFactor(int blockNo);
+	void gpuCalculateDistanceFactor(cudaStream_t stream);
+	void gpuCalculateDistanceFactor();
 	cufftHandle plans[3];
 	cudaEvent_t incomingTransfers[3];
 	cudaEvent_t fft_events;
