@@ -1,28 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
-    <ProjectConfiguration Include="CPU_FD_BASIC|x64">
-      <Configuration>CPU_FD_BASIC</Configuration>
-      <Platform>x64</Platform>
-    </ProjectConfiguration>
-    <ProjectConfiguration Include="CPU_FD_COMPLEX|x64">
-      <Configuration>CPU_FD_COMPLEX</Configuration>
-      <Platform>x64</Platform>
-    </ProjectConfiguration>
-    <ProjectConfiguration Include="CPU_TD|x64">
-      <Configuration>CPU_TD</Configuration>
-      <Platform>x64</Platform>
-    </ProjectConfiguration>
-    <ProjectConfiguration Include="GPU_FD_COMPLEX|x64">
-      <Configuration>GPU_FD_COMPLEX</Configuration>
-      <Platform>x64</Platform>
-    </ProjectConfiguration>
-    <ProjectConfiguration Include="GPU_FD_BASIC|x64">
-      <Configuration>GPU_FD_BASIC</Configuration>
-      <Platform>x64</Platform>
-    </ProjectConfiguration>
-    <ProjectConfiguration Include="GPU_TD|x64">
-      <Configuration>GPU_TD</Configuration>
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
       <Platform>x64</Platform>
     </ProjectConfiguration>
     <ProjectConfiguration Include="Release|x64">
@@ -85,37 +65,7 @@
     <WindowsTargetPlatformVersion>10.0.17763.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='GPU_FD_COMPLEX|x64'" Label="Configuration">
-    <ConfigurationType>Application</ConfigurationType>
-    <UseDebugLibraries>true</UseDebugLibraries>
-    <CharacterSet>MultiByte</CharacterSet>
-    <PlatformToolset>v142</PlatformToolset>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='GPU_FD_BASIC|x64'" Label="Configuration">
-    <ConfigurationType>Application</ConfigurationType>
-    <UseDebugLibraries>true</UseDebugLibraries>
-    <CharacterSet>MultiByte</CharacterSet>
-    <PlatformToolset>v142</PlatformToolset>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='GPU_TD|x64'" Label="Configuration">
-    <ConfigurationType>Application</ConfigurationType>
-    <UseDebugLibraries>true</UseDebugLibraries>
-    <CharacterSet>MultiByte</CharacterSet>
-    <PlatformToolset>v142</PlatformToolset>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='CPU_TD|x64'" Label="Configuration">
-    <ConfigurationType>Application</ConfigurationType>
-    <UseDebugLibraries>true</UseDebugLibraries>
-    <CharacterSet>MultiByte</CharacterSet>
-    <PlatformToolset>v142</PlatformToolset>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='CPU_FD_BASIC|x64'" Label="Configuration">
-    <ConfigurationType>Application</ConfigurationType>
-    <UseDebugLibraries>true</UseDebugLibraries>
-    <CharacterSet>MultiByte</CharacterSet>
-    <PlatformToolset>v142</PlatformToolset>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='CPU_FD_COMPLEX|x64'" Label="Configuration">
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <CharacterSet>MultiByte</CharacterSet>
@@ -126,74 +76,24 @@
     <UseDebugLibraries>false</UseDebugLibraries>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>MultiByte</CharacterSet>
-    <PlatformToolset>v141</PlatformToolset>
+    <PlatformToolset>v142</PlatformToolset>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
     <Import Project="$(VCTargetsPath)\BuildCustomizations\CUDA 10.1.props" />
   </ImportGroup>
-  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='GPU_FD_COMPLEX|x64'">
-    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
-  </ImportGroup>
-  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='GPU_FD_BASIC|x64'" Label="PropertySheets">
-    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
-  </ImportGroup>
-  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='GPU_TD|x64'" Label="PropertySheets">
-    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
-  </ImportGroup>
-  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='CPU_TD|x64'" Label="PropertySheets">
-    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
-  </ImportGroup>
-  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='CPU_FD_BASIC|x64'" Label="PropertySheets">
-    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
-  </ImportGroup>
-  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='CPU_FD_COMPLEX|x64'" Label="PropertySheets">
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='GPU_FD_COMPLEX|x64'">
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
     <ExecutablePath>D:\Visual Studio Dependences\bin;$(ExecutablePath)</ExecutablePath>
     <IncludePath>D:\Projects\OpenGL\Projects\Jefferson\Jefferson\portaudio\src\os\win;D:\Projects\OpenGL\Projects\Jefferson\Jefferson\portaudio\src\common\;D:\Projects\OpenGL\Projects\Jefferson\Jefferson\portaudio\include;D:\Projects\OpenGL\Projects\Jefferson\Jefferson\ASIOSDK2.3.2\host\pc;D:\Projects\OpenGL\Projects\Jefferson\Jefferson\ASIOSDK2.3.2\host;D:\Projects\OpenGL\Projects\Jefferson\Jefferson\ASIOSDK2.3.2\common;D:\Visual Studio Dependences\include;..\portaudio\include;..\portaudio\src\common;..\portaudio\src\os\win;..\asiosdk2\common;..\asiosdk2\host;..\asiosdk2\host\pc;$(IncludePath)</IncludePath>
     <LibraryPath>D:\Visual Studio Dependences\lib;$(LibraryPath)</LibraryPath>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='GPU_FD_BASIC|x64'">
-    <LinkIncremental>true</LinkIncremental>
-    <ExecutablePath>D:\Visual Studio Dependences\bin;$(ExecutablePath)</ExecutablePath>
-    <IncludePath>D:\Projects\OpenGL\Projects\Jefferson\Jefferson\portaudio\src\os\win;D:\Projects\OpenGL\Projects\Jefferson\Jefferson\portaudio\src\common\;D:\Projects\OpenGL\Projects\Jefferson\Jefferson\portaudio\include;D:\Projects\OpenGL\Projects\Jefferson\Jefferson\ASIOSDK2.3.2\host\pc;D:\Projects\OpenGL\Projects\Jefferson\Jefferson\ASIOSDK2.3.2\host;D:\Projects\OpenGL\Projects\Jefferson\Jefferson\ASIOSDK2.3.2\common;D:\Visual Studio Dependences\include;..\portaudio\include;..\portaudio\src\common;..\portaudio\src\os\win;..\asiosdk2\common;..\asiosdk2\host;..\asiosdk2\host\pc;$(IncludePath)</IncludePath>
-    <LibraryPath>D:\Visual Studio Dependences\lib;$(LibraryPath)</LibraryPath>
-    <TargetName>$(ProjectName)_GPU_FD_BASIC</TargetName>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='GPU_TD|x64'">
-    <LinkIncremental>true</LinkIncremental>
-    <ExecutablePath>D:\Visual Studio Dependences\bin;$(ExecutablePath)</ExecutablePath>
-    <IncludePath>D:\Projects\OpenGL\Projects\Jefferson\Jefferson\portaudio\src\os\win;D:\Projects\OpenGL\Projects\Jefferson\Jefferson\portaudio\src\common\;D:\Projects\OpenGL\Projects\Jefferson\Jefferson\portaudio\include;D:\Projects\OpenGL\Projects\Jefferson\Jefferson\ASIOSDK2.3.2\host\pc;D:\Projects\OpenGL\Projects\Jefferson\Jefferson\ASIOSDK2.3.2\host;D:\Projects\OpenGL\Projects\Jefferson\Jefferson\ASIOSDK2.3.2\common;D:\Visual Studio Dependences\include;..\portaudio\include;..\portaudio\src\common;..\portaudio\src\os\win;..\asiosdk2\common;..\asiosdk2\host;..\asiosdk2\host\pc;$(IncludePath)</IncludePath>
-    <LibraryPath>D:\Visual Studio Dependences\lib;$(LibraryPath)</LibraryPath>
-    <TargetName>$(ProjectName)_GPU_TD</TargetName>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='CPU_TD|x64'">
-    <LinkIncremental>true</LinkIncremental>
-    <ExecutablePath>D:\Visual Studio Dependences\bin;$(ExecutablePath)</ExecutablePath>
-    <IncludePath>D:\Projects\OpenGL\Projects\Jefferson\Jefferson\portaudio\src\os\win;D:\Projects\OpenGL\Projects\Jefferson\Jefferson\portaudio\src\common\;D:\Projects\OpenGL\Projects\Jefferson\Jefferson\portaudio\include;D:\Projects\OpenGL\Projects\Jefferson\Jefferson\ASIOSDK2.3.2\host\pc;D:\Projects\OpenGL\Projects\Jefferson\Jefferson\ASIOSDK2.3.2\host;D:\Projects\OpenGL\Projects\Jefferson\Jefferson\ASIOSDK2.3.2\common;D:\Visual Studio Dependences\include;..\portaudio\include;..\portaudio\src\common;..\portaudio\src\os\win;..\asiosdk2\common;..\asiosdk2\host;..\asiosdk2\host\pc;$(IncludePath)</IncludePath>
-    <LibraryPath>D:\Visual Studio Dependences\lib;$(LibraryPath)</LibraryPath>
-    <TargetName>$(ProjectName)_CPU_TD</TargetName>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='CPU_FD_BASIC|x64'">
-    <LinkIncremental>true</LinkIncremental>
-    <ExecutablePath>D:\Visual Studio Dependences\bin;$(ExecutablePath)</ExecutablePath>
-    <IncludePath>D:\Projects\OpenGL\Projects\Jefferson\Jefferson\portaudio\src\os\win;D:\Projects\OpenGL\Projects\Jefferson\Jefferson\portaudio\src\common\;D:\Projects\OpenGL\Projects\Jefferson\Jefferson\portaudio\include;D:\Projects\OpenGL\Projects\Jefferson\Jefferson\ASIOSDK2.3.2\host\pc;D:\Projects\OpenGL\Projects\Jefferson\Jefferson\ASIOSDK2.3.2\host;D:\Projects\OpenGL\Projects\Jefferson\Jefferson\ASIOSDK2.3.2\common;D:\Visual Studio Dependences\include;..\portaudio\include;..\portaudio\src\common;..\portaudio\src\os\win;..\asiosdk2\common;..\asiosdk2\host;..\asiosdk2\host\pc;$(IncludePath)</IncludePath>
-    <LibraryPath>D:\Visual Studio Dependences\lib;$(LibraryPath)</LibraryPath>
-    <TargetName>$(ProjectName)_CPU_FD_BASIC</TargetName>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='CPU_FD_COMPLEX|x64'">
-    <LinkIncremental>true</LinkIncremental>
-    <ExecutablePath>D:\Visual Studio Dependences\bin;$(ExecutablePath)</ExecutablePath>
-    <IncludePath>D:\Projects\OpenGL\Projects\Jefferson\Jefferson\portaudio\src\os\win;D:\Projects\OpenGL\Projects\Jefferson\Jefferson\portaudio\src\common\;D:\Projects\OpenGL\Projects\Jefferson\Jefferson\portaudio\include;D:\Projects\OpenGL\Projects\Jefferson\Jefferson\ASIOSDK2.3.2\host\pc;D:\Projects\OpenGL\Projects\Jefferson\Jefferson\ASIOSDK2.3.2\host;D:\Projects\OpenGL\Projects\Jefferson\Jefferson\ASIOSDK2.3.2\common;D:\Visual Studio Dependences\include;..\portaudio\include;..\portaudio\src\common;..\portaudio\src\os\win;..\asiosdk2\common;..\asiosdk2\host;..\asiosdk2\host\pc;$(IncludePath)</IncludePath>
-    <LibraryPath>D:\Visual Studio Dependences\lib;$(LibraryPath)</LibraryPath>
-    <TargetName>$(ProjectName)_CPU_FD_COMPLEX</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>true</LinkIncremental>
@@ -201,7 +101,7 @@
     <IncludePath>D:\Projects\OpenGL\Projects\Jefferson\Jefferson\portaudio\src\os\win;D:\Projects\OpenGL\Projects\Jefferson\Jefferson\portaudio\src\common\;D:\Projects\OpenGL\Projects\Jefferson\Jefferson\portaudio\include;D:\Projects\OpenGL\Projects\Jefferson\Jefferson\ASIOSDK2.3.2\host\pc;D:\Projects\OpenGL\Projects\Jefferson\Jefferson\ASIOSDK2.3.2\host;D:\Projects\OpenGL\Projects\Jefferson\Jefferson\ASIOSDK2.3.2\common;D:\Visual Studio Dependences\include;..\portaudio\include;..\portaudio\src\common;..\portaudio\src\os\win;..\asiosdk2\common;..\asiosdk2\host;..\asiosdk2\host\pc;$(IncludePath)</IncludePath>
     <LibraryPath>D:\Visual Studio Dependences\lib;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
-  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='GPU_FD_COMPLEX|x64'">
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
@@ -217,91 +117,6 @@
       <TargetMachinePlatform>64</TargetMachinePlatform>
       <CodeGeneration>compute_61,sm_61</CodeGeneration>
       <GPUDebugInfo>true</GPUDebugInfo>
-    </CudaCompile>
-  </ItemDefinitionGroup>
-  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='GPU_FD_BASIC|x64'">
-    <ClCompile>
-      <WarningLevel>Level3</WarningLevel>
-      <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>RT_GPU;RT_GPU_BASIC;WIN32;WIN64;_DEBUG;_CONSOLE;PA_USE_ASIO=1;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <OpenMPSupport>true</OpenMPSupport>
-    </ClCompile>
-    <Link>
-      <GenerateDebugInformation>true</GenerateDebugInformation>
-      <SubSystem>Console</SubSystem>
-      <AdditionalDependencies>libfftw3f-3.lib;zlibstatic.lib;IrrXML.lib;assimp-vc140-mt.lib;cufft.lib;cudart_static.lib;glew64.lib;freeglut.lib;libsndfile-1.lib;portaudio_x64.lib</AdditionalDependencies>
-    </Link>
-    <CudaCompile>
-      <TargetMachinePlatform>64</TargetMachinePlatform>
-      <CodeGeneration>compute_61,sm_61</CodeGeneration>
-    </CudaCompile>
-  </ItemDefinitionGroup>
-  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='GPU_TD|x64'">
-    <ClCompile>
-      <WarningLevel>Level3</WarningLevel>
-      <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>RT_GPU;RT_GPU_TD;WIN32;WIN64;_DEBUG;_CONSOLE;PA_USE_ASIO=1;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <OpenMPSupport>true</OpenMPSupport>
-    </ClCompile>
-    <Link>
-      <GenerateDebugInformation>true</GenerateDebugInformation>
-      <SubSystem>Console</SubSystem>
-      <AdditionalDependencies>libfftw3f-3.lib;zlibstatic.lib;IrrXML.lib;assimp-vc140-mt.lib;cufft.lib;cudart_static.lib;glew64.lib;freeglut.lib;libsndfile-1.lib;portaudio_x64.lib</AdditionalDependencies>
-    </Link>
-    <CudaCompile>
-      <TargetMachinePlatform>64</TargetMachinePlatform>
-      <CodeGeneration>compute_61,sm_61</CodeGeneration>
-    </CudaCompile>
-  </ItemDefinitionGroup>
-  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='CPU_TD|x64'">
-    <ClCompile>
-      <WarningLevel>Level3</WarningLevel>
-      <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>CPU_TD;WIN32;WIN64;_DEBUG;_CONSOLE;PA_USE_ASIO=1;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <OpenMPSupport>true</OpenMPSupport>
-    </ClCompile>
-    <Link>
-      <GenerateDebugInformation>true</GenerateDebugInformation>
-      <SubSystem>Console</SubSystem>
-      <AdditionalDependencies>libfftw3f-3.lib;zlibstatic.lib;IrrXML.lib;assimp-vc140-mt.lib;cufft.lib;cudart_static.lib;glew64.lib;freeglut.lib;libsndfile-1.lib;portaudio_x64.lib</AdditionalDependencies>
-    </Link>
-    <CudaCompile>
-      <TargetMachinePlatform>64</TargetMachinePlatform>
-      <CodeGeneration>compute_61,sm_61</CodeGeneration>
-    </CudaCompile>
-  </ItemDefinitionGroup>
-  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='CPU_FD_BASIC|x64'">
-    <ClCompile>
-      <WarningLevel>Level3</WarningLevel>
-      <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>CPU_FD_BASIC;WIN32;WIN64;_DEBUG;_CONSOLE;PA_USE_ASIO=1;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <OpenMPSupport>true</OpenMPSupport>
-    </ClCompile>
-    <Link>
-      <GenerateDebugInformation>true</GenerateDebugInformation>
-      <SubSystem>Console</SubSystem>
-      <AdditionalDependencies>libfftw3f-3.lib;zlibstatic.lib;IrrXML.lib;assimp-vc140-mt.lib;cufft.lib;cudart_static.lib;glew64.lib;freeglut.lib;libsndfile-1.lib;portaudio_x64.lib</AdditionalDependencies>
-    </Link>
-    <CudaCompile>
-      <TargetMachinePlatform>64</TargetMachinePlatform>
-      <CodeGeneration>compute_61,sm_61</CodeGeneration>
-    </CudaCompile>
-  </ItemDefinitionGroup>
-  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='CPU_FD_COMPLEX|x64'">
-    <ClCompile>
-      <WarningLevel>Level3</WarningLevel>
-      <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>CPU_FD_COMPLEX;WIN32;WIN64;_DEBUG;_CONSOLE;PA_USE_ASIO=1;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <OpenMPSupport>true</OpenMPSupport>
-    </ClCompile>
-    <Link>
-      <GenerateDebugInformation>true</GenerateDebugInformation>
-      <SubSystem>Console</SubSystem>
-      <AdditionalDependencies>libfftw3f-3.lib;zlibstatic.lib;IrrXML.lib;assimp-vc140-mt.lib;cufft.lib;cudart_static.lib;glew64.lib;freeglut.lib;libsndfile-1.lib;portaudio_x64.lib</AdditionalDependencies>
-    </Link>
-    <CudaCompile>
-      <TargetMachinePlatform>64</TargetMachinePlatform>
-      <CodeGeneration>compute_61,sm_61</CodeGeneration>
     </CudaCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">

@@ -1299,8 +1299,6 @@ void xfadePrecisionCallbackTest(Data* p) {
 	src->old_ele = 8;
 	src->ele = 23;
 	src->azi = 18;
-	float ele = src->ele;
-	float azi = src->azi;
 	int hrtf_indices[4];
 	float omegas[6];
 	int old_hrtf_indices[4];
@@ -1342,7 +1340,6 @@ void xfadePrecisionCallbackTest(Data* p) {
 	float* d_output = gsrc->d_output;
 	float* d_output2 = gsrc->d_output2;
 	cufftComplex* d_convbufs = gsrc->d_convbufs;
-	cufftComplex* d_convbufs2 = gsrc->d_convbufs + 4 * (PAD_LEN + 2);
 	CHECK_CUFFT_ERRORS(cufftExecR2C(gsrc->plans[0], (cufftReal*)d_input, (cufftComplex*)d_input));
 
 
@@ -1581,7 +1578,6 @@ void xfadePrecisionCallbackTest(Data* p) {
 	d_output = gsrc->d_output;
 	d_output2 = gsrc->d_output2;
 	d_convbufs = gsrc->d_convbufs;
-	d_convbufs2 = gsrc->d_convbufs + 4 * (PAD_LEN + 2);
 	CHECK_CUFFT_ERRORS(cufftExecR2C(gsrc->plans[0], (cufftReal*)d_input, (cufftComplex*)d_input));
 
 
@@ -2009,7 +2005,6 @@ void xfadePrecisionCallbackTest(Data* p) {
 void cufftSanityCheck(Data* p) {
 	SoundSource* src = (SoundSource*)&(p->all_sources[0]);
 	GPUSoundSource* gsrc = &(p->all_sources[0]);
-	CPUSoundSource* csrc = (CPUSoundSource*)&(p->all_sources[0]);
 
 	float scale = 1.0f / ((float)PAD_LEN);
 	size_t buf_size = PAD_LEN + 2;
@@ -2018,16 +2013,16 @@ void cufftSanityCheck(Data* p) {
 	float* gpu_fft_in = fftwf_alloc_real(buf_size * 2);
 	float* gpu_ifft = fftwf_alloc_real(buf_size * 2);
 	float* deinterleaved = new float[PAD_LEN * 2];
-
+	int n[] = { (int)PAD_LEN };
 	fftwf_plan plan = fftwf_plan_many_dft_r2c(
-		1, &PAD_LEN, 2,
+		1, n, 2,
 		gpu_fft_in, NULL,
 		1, buf_size,
 		(fftwf_complex*)gpu_ifft, NULL,
 		1, complex_buf_size, FFTW_MEASURE);
 
 	fftwf_plan out_plan = fftwf_plan_many_dft_c2r(
-		1, &PAD_LEN, 2,
+		1, n, 2,
 		(fftwf_complex*)gpu_ifft, NULL,
 		1, PAD_LEN / 2 + 1,
 		(float*)gpu_ifft, NULL,
@@ -2104,7 +2099,7 @@ void test(Data* p, float* gpu_output, float* cpu_output, float* diff, int num_it
 		csrc->x[i] = 0.0f;
 		gsrc->x[i] = 0.0f;
 	}
-	p->type = GPU_FD_COMPLEX;
+	p->type = processes::GPU_FD_COMPLEX;
 	int count = 0;
 	curr_source->count = 0;
 	curr_source->old_azi = 0.0f;
@@ -2127,7 +2122,7 @@ void test(Data* p, float* gpu_output, float* cpu_output, float* diff, int num_it
 		}
 	}
 	callback_func(gpu_output + FRAMES_PER_BUFFER * 2 * count++, p, true);
-	p->type = CPU_FD_COMPLEX;
+	p->type = processes::CPU_FD_COMPLEX;
 	for (int i = 0; i < PAD_LEN; i++) {
 		csrc->x[i] = 0.0f;
 		gsrc->x[i] = 0.0f;
@@ -2234,7 +2229,7 @@ void waveFileTesting(Data* p) {
 		}
 		
 		curr_source->updateFromSpherical();
-		if (p->type = GPU_FD_COMPLEX) {
+		if (p->type == processes::GPU_FD_COMPLEX) {
 			callback_func(out, p, false);
 		}
 		for (int i = 0; i < num_iterations; i++) {

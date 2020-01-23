@@ -36,7 +36,6 @@ void initializePA(int fs) {
 		paNoFlag, /* flags */
 		paCallback,
 		&data);
-	printf("Frames per buffer: %i\n", FRAMES_PER_BUFFER);
 	if (err != paNoError) {
 		printf("PortAudio error: open stream: %s\n", Pa_GetErrorText(err));
 		printf("\nExiting.\n");
@@ -102,9 +101,9 @@ void callback_func(float* output, Data* p, bool write) {
 		if (p->pauseStatus == true)
 			break;
 
-		if (p->type == GPU_FD_COMPLEX || p->type == GPU_FD_BASIC || p->type == GPU_TD) {
+		if (p->type == processes::GPU_FD_COMPLEX || p->type == processes::GPU_FD_BASIC || p->type == processes::GPU_TD) {
 			GPUSoundSource* source = &(p->all_sources[source_no]);
-			if (p->type == GPU_FD_COMPLEX) {
+			if (p->type == processes::GPU_FD_COMPLEX) {
 				checkCudaErrors(cudaStreamSynchronize(source->streams[0]));
 
 				for (int i = 0; i < FRAMES_PER_BUFFER * 2; i++) {
@@ -135,7 +134,7 @@ void callback_func(float* output, Data* p, bool write) {
 				memcpy(
 					source->x + (PAD_LEN - FRAMES_PER_BUFFER) + rem,
 					source->buf,
-					(FRAMES_PER_BUFFER - rem) * sizeof(float));
+					(FRAMES_PER_BUFFER - (size_t)rem) * sizeof(float));
 				source->count = FRAMES_PER_BUFFER - rem;
 			}
 

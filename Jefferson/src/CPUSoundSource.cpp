@@ -6,14 +6,14 @@ CPUSoundSource::CPUSoundSource() {
 	for (int i = 0; i < PAD_LEN + 2; i++) {
 		x[i] = 0.0f;
 	}
-	intermediate = fftwf_alloc_complex(4 * (PAD_LEN + 2));
-	conv_bufs = fftwf_alloc_complex(8 * (PAD_LEN + 2));
+	intermediate = fftwf_alloc_complex(4UL * (PAD_LEN + 2));
+	conv_bufs = fftwf_alloc_complex(8UL * (PAD_LEN + 2));
 	distance_factor = fftwf_alloc_complex(PAD_LEN / 2 + 1);
 
-	
-	in_plan = fftwf_plan_dft_r2c_1d(PAD_LEN, x, intermediate, FFTW_MEASURE);
+	int n[] = { (int)PAD_LEN };
+	in_plan = fftwf_plan_dft_r2c_1d((int)PAD_LEN, x, intermediate, FFTW_MEASURE);
 	out_plan = fftwf_plan_many_dft_c2r(
-		1, &PAD_LEN, 2,
+		1, n, 2,
 		intermediate, NULL,
 		1, PAD_LEN / 2 + 1,
 		(float*)intermediate, NULL,
@@ -40,7 +40,7 @@ void CPUSoundSource::calculateDistanceFactor() {
 	r /= 5;
 	float fsvs = 44100.0 / 343.0;
 	float frac = 1 + fsvs * pow(r, 2);
-	float N = PAD_LEN / 2 + 1;
+	int N = PAD_LEN / 2 + 1;
 	//#pragma omp for
 	for (int i = 0; i < N; i++) {
 		distance_factor[i][0] = cos(2 * PI * fsvs * r * i / N) / frac;
@@ -50,13 +50,13 @@ void CPUSoundSource::calculateDistanceFactor() {
 void CPUSoundSource::process(processes type) {
 	hrtf_idx = pick_hrtf(ele, azi);
 	switch (type) {
-	case CPU_TD:
+	case processes::CPU_TD:
 		cpuTDConvolve();
 		break;
-	case CPU_FD_BASIC:
+	case processes::CPU_FD_BASIC:
 		cpuFFTConvolve();
 		break;
-	case CPU_FD_COMPLEX:
+	case processes::CPU_FD_COMPLEX:
 		cpuFFTInterpolate();
 		break;
 
@@ -72,19 +72,19 @@ void CPUSoundSource::cpuTDConvolve() {
 	float* output = (float*)intermediate;
 	float outputLen = FRAMES_PER_BUFFER;
 	float gain = 1;
-	float* l_hrtf = hrtf + hrtf_idx * HRTF_CHN * (PAD_LEN + 2);
-	float* r_hrtf = hrtf + hrtf_idx * HRTF_CHN * (PAD_LEN + 2) + PAD_LEN + 2;
+	float* l_hrtf = hrtf + (size_t) hrtf_idx * 2UL * (PAD_LEN + 2);
+	float* r_hrtf = hrtf + (size_t) hrtf_idx * 2UL * (PAD_LEN + 2) + PAD_LEN + 2;
 	if (gain > 1)
 		gain = 1;
 
 	/* zero output buffer */
 	//#pragma omp for
-	for (int i = 0; i < outputLen * HRTF_CHN; i++) {
+	for (int i = 0; i < outputLen * 2UL; i++) {
 		output[i] = 0.0;
 	}
 	for (int n = 0; n < outputLen; n++) {
 		for (int k = 0; k < HRTF_LEN; k++) {
-			for (int j = 0; j < HRTF_CHN; j++) {
+			for (int j = 0; j < 2UL; j++) {
 				/* outputLen and HRTF_LEN are n frames, output and hrtf are interleaved
 				* input is mono
 				*/
@@ -118,14 +118,14 @@ void CPUSoundSource::cpuFFTConvolve() {
 	fftwf_execute(in_plan); /*FFT on x --> intermediate*/
 	complexScaling(intermediate, 1.0 / PAD_LEN, PAD_LEN / 2 + 1);
 	/*Copying over for both channels*/
-#pragma omp for
+#pragma omp parallel for
 	for (int i = 0; i < PAD_LEN / 2 + 1; i++) {
 		intermediate[i + PAD_LEN / 2 + 1][0] = intermediate[i][0];
 		intermediate[i + PAD_LEN / 2 + 1][1] = intermediate[i][1];
 	}
 	/*Doing both channels at once since they're contiguous in memory*/
 	pointwiseMultiplication(intermediate,
-		fft_hrtf + hrtf_idx * HRTF_CHN * (PAD_LEN / 2 + 1),
+		fft_hrtf + (size_t)hrtf_idx * 2UL * (PAD_LEN / 2 + 1),
 		PAD_LEN + 2);
 	fftwf_execute(out_plan);
 
@@ -144,7 +144,7 @@ void CPUSoundSource::caseOneConvolve(fftwf_complex* output, int* hrtf_indices) {
 	int buf_size = PAD_LEN + 2;
 	int complex_buf_size = buf_size / 2;
 	pointwiseMultiplication(output,
-		fft_hrtf + hrtf_indices[0] * HRTF_CHN * complex_buf_size,
+		fft_hrtf + (size_t)hrtf_indices[0] * 2UL * complex_buf_size,
 		buf_size);
 	pointwiseMultiplication(
 		output,
@@ -159,21 +159,21 @@ void CPUSoundSource::caseOneConvolve(fftwf_complex* output, int* hrtf_indices) {
 }
 
 void CPUSoundSource::caseTwoConvolve(fftwf_complex* output, fftwf_complex* convbufs, int* hrtf_indices, float* omegas) {
-	int buf_size = PAD_LEN + 2;
-	int complex_buf_size = buf_size / 2;
+	size_t buf_size = PAD_LEN + 2;
+	size_t complex_buf_size = buf_size / 2;
 	pointwiseMultiplication(output,
-		fft_hrtf + hrtf_indices[0] * HRTF_CHN * complex_buf_size,
+		fft_hrtf + (size_t)hrtf_indices[0] * 2UL * complex_buf_size,
 		convbufs,
 		buf_size
 	);
 	pointwiseMultiplication(output,
-		fft_hrtf + hrtf_indices[1] * HRTF_CHN * complex_buf_size,
+		fft_hrtf + (size_t)hrtf_indices[1] * 2UL * complex_buf_size,
 		convbufs + buf_size,
 		buf_size
 	);
 	complexScaling(convbufs, omegas[1], buf_size);
 	complexScaling(convbufs + buf_size, omegas[0], buf_size);
-	for (int i = 0; i < 4; i++) {
+	for (unsigned int i = 0; i < 4; i++) {
 		pointwiseMultiplication(
 			convbufs + complex_buf_size * i,
 			distance_factor,
@@ -187,15 +187,15 @@ void CPUSoundSource::caseTwoConvolve(fftwf_complex* output, fftwf_complex* convb
 		buf_size);
 }
 void CPUSoundSource::caseThreeConvolve(fftwf_complex* output, fftwf_complex* convbufs, int* hrtf_indices, float* omegas) {
-	int buf_size = PAD_LEN + 2;
-	int complex_buf_size = buf_size / 2;
+	size_t buf_size = PAD_LEN + 2;
+	size_t complex_buf_size = buf_size / 2;
 	pointwiseMultiplication(output,
-		fft_hrtf + hrtf_indices[0] * HRTF_CHN * complex_buf_size,
+		fft_hrtf + (size_t)hrtf_indices[0] * 2UL * complex_buf_size,
 		convbufs,
 		buf_size
 	);
 	pointwiseMultiplication(output,
-		fft_hrtf + hrtf_indices[2] * HRTF_CHN * complex_buf_size,
+		fft_hrtf + (size_t)hrtf_indices[2] * 2UL * complex_buf_size,
 		convbufs + buf_size,
 		buf_size
 	);
@@ -215,13 +215,13 @@ void CPUSoundSource::caseThreeConvolve(fftwf_complex* output, fftwf_complex* con
 		buf_size);
 }
 void CPUSoundSource::caseFourConvolve(fftwf_complex* output, fftwf_complex* convbufs, int* hrtf_indices, float* omegas) {
-	int buf_size = PAD_LEN + 2;
-	int complex_buf_size = buf_size / 2;
-	#pragma omp parallel for
+	size_t buf_size = PAD_LEN + 2;
+	size_t complex_buf_size = buf_size / 2;
+#pragma omp parallel for
 	for (int i = 0; i < 4; i++) {
 		pointwiseMultiplication(
 			output,
-			fft_hrtf + hrtf_indices[i] * HRTF_CHN * complex_buf_size,
+			fft_hrtf + (size_t)hrtf_indices[i] * 2UL * complex_buf_size,
 			convbufs + buf_size * i,
 			buf_size
 		);
@@ -238,17 +238,17 @@ void CPUSoundSource::caseFourConvolve(fftwf_complex* output, fftwf_complex* conv
 	}
 	complexScaling(convbufs, omegas[5] * omegas[1], buf_size);
 	complexScaling(convbufs + buf_size, omegas[5] * omegas[0], buf_size);
-	complexScaling(convbufs + 2 * buf_size, omegas[4] * omegas[3], buf_size);
-	complexScaling(convbufs + 3 * buf_size, omegas[4] * omegas[2], buf_size);
+	complexScaling(convbufs + 2UL * buf_size, omegas[4] * omegas[3], buf_size);
+	complexScaling(convbufs + 3UL * buf_size, omegas[4] * omegas[2], buf_size);
 
 	pointwiseAddition(
 		convbufs,
 		convbufs + (buf_size),
 		output,
 		buf_size);
-	for (int i = 2; i < 4; i++) {
+	for (unsigned i = 2; i < 4; i++) {
 		pointwiseAddition(output,
-			convbufs + (buf_size)*i,
+			convbufs + buf_size * i,
 			buf_size);
 	}
 }

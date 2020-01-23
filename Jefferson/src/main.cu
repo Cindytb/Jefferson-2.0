@@ -16,7 +16,7 @@ int main(int argc, char* argv[]) {
 	std::string input = "media/Castanets-441.wav";
 	std::string reverb = "media/s1_r1_b_441_mono.wav";
 	std::string out = "ofile.wav";
-	p->type = GPU_FD_COMPLEX;
+	p->type = processes::GPU_FD_COMPLEX;
 	/*Parse Input*/
 
 	for (int i = 1; i < argc; i++) {
@@ -24,22 +24,22 @@ int main(int argc, char* argv[]) {
 			if (argv[i][1] == 't' || argv[i][1] == 'T') {
 				switch (argv[i + 1][0]) {
 				case '0':
-					p->type = GPU_FD_COMPLEX;
+					p->type = processes::GPU_FD_COMPLEX;
 					break;
 				case '1':
-					p->type = GPU_FD_BASIC;
+					p->type = processes::GPU_FD_BASIC;
 					break;
 				case '2':
-					p->type = GPU_TD;
+					p->type = processes::GPU_TD;
 					break;
 				case '3':
-					p->type = CPU_FD_COMPLEX;
+					p->type = processes::CPU_FD_COMPLEX;
 					break;
 				case '4':
-					p->type = CPU_FD_BASIC;
+					p->type = processes::CPU_FD_BASIC;
 					break;
 				case '5':
-					p->type = CPU_TD;
+					p->type = processes::CPU_TD;
 					break;
 				default:
 					printf("ERROR: Invalid type. Defaulting to GPU_FD_COMPLEX");
@@ -57,7 +57,6 @@ int main(int argc, char* argv[]) {
 		}
 	}
 	std::cout << "Input file: " << input << std::endl << "Reverb file: " << reverb << std::endl << "Output file: " << out << std::endl;
-	std::cout << "Type: " << p->type << std::endl;
 	p->num_sources = 1;
 	p->all_sources = new GPUSoundSource[p->num_sources]; /*Moving all allocation & initialization into the constructor*/
 	printSize();
@@ -86,8 +85,8 @@ int main(int argc, char* argv[]) {
 	//xfadePrecisionTest(p);
 	//xfadePrecisionCallbackTest(p);
 	//cufftSanityCheck(p);
-	//benchmarkTesting(p);
-	waveFileTesting(p);
+	benchmarkTesting(p);
+	//waveFileTesting(p);
 #endif
 #if(DEBUGMODE % 2 == 0)
 	fprintf(stderr, "\n\n\n\nInitializing PortAudio\n\n\n\n");

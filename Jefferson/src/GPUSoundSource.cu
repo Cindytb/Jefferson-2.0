@@ -86,8 +86,8 @@ void GPUSoundSource::gpuCalculateDistanceFactor(cudaStream_t stream) {
 	);
 	r /= 5;
 	float fsvs = 44100.0 / 343.0;
-	float frac = 1 + fsvs * pow(r, 2);
-	float N = PAD_LEN / 2 + 1;
+	float frac = 1 + fsvs * float(pow(r, 2));
+	int N = PAD_LEN / 2 + 1;
 	int numThreads = 64;
 	int numBlocks = (PAD_LEN / 2 + numThreads) / numThreads;
 	generateDistanceFactor << < numThreads, numBlocks, 0, stream >> > (d_distance_factor, frac, fsvs, r, N);
@@ -101,8 +101,8 @@ void GPUSoundSource::gpuCalculateDistanceFactor() {
 	);
 	r /= 5;
 	float fsvs = 44100.0 / 343.0;
-	float frac = 1 + fsvs * pow(r, 2);
-	float N = PAD_LEN / 2 + 1;
+	float frac = 1 + fsvs * float(pow(r, 2));
+	int N = PAD_LEN / 2 + 1;
 	int numThreads = 64;
 	int numBlocks = (PAD_LEN / 2 + numThreads) / numThreads;
 	generateDistanceFactor << < numThreads, numBlocks >> > (d_distance_factor, frac, fsvs, r, N);
@@ -294,10 +294,6 @@ void GPUSoundSource::caseFourConvolve(float* d_input, float* d_output,
 void GPUSoundSource::allKernels(float* d_input, float* d_output,
 	cufftComplex* d_convbufs, cufftComplex* d_distance_factor,
 	cudaStream_t* streams, float* omegas, int* hrtf_indices, cudaEvent_t fft_in) {
-	size_t buf_size = PAD_LEN + 2;
-	size_t complex_buf_size = buf_size / 2;
-	int numThreads = 128;
-	int numBlocks = (buf_size + numThreads - 1) / numThreads;
 	for (int i = 0; i < 4; i++) {
 		checkCudaErrors(cudaStreamWaitEvent(streams[i], fft_in, 0));
 	}
@@ -373,7 +369,6 @@ void GPUSoundSource::interpolateConvolve() {
 		for (int i = 5; i < 8; i++) {
 			checkCudaErrors(cudaStreamWaitEvent(streams[4], kernel_launches[i], 0));
 		}
-		//checkCudaErrors(cudaDeviceSynchronize());
 		CHECK_CUFFT_ERRORS(cufftExecC2R(plans[1], (cufftComplex*)d_output, d_output));
 		CHECK_CUFFT_ERRORS(cufftExecC2R(plans[2], (cufftComplex*)d_output2, d_output2));
 		checkCudaErrors(cudaEventRecord(fft_events, streams[4]));
@@ -405,16 +400,16 @@ void GPUSoundSource::fftConvolve() {
 		(cufftComplex*)d_input,
 		(cufftComplex*)(d_hrtf + hrtf_idx * (PAD_LEN + 2) * HRTF_CHN),
 		(cufftComplex*)d_output,
-		PAD_LEN / 2 + 1,
-		scale
+		scale,
+		PAD_LEN / 2 + 1
 		);
 
 	ComplexPointwiseMulAndScaleOutPlace << < numBlocks, numThreads, 0, streams[0] >> > (
 		(cufftComplex*)d_input,
 		(cufftComplex*)(d_hrtf + hrtf_idx * (PAD_LEN + 2) * HRTF_CHN + PAD_LEN + 2),
 		(cufftComplex*)(d_output + PAD_LEN + 2),
-		PAD_LEN / 2 + 1,
-		scale
+		scale,
+		PAD_LEN / 2 + 1
 		);
 	CHECK_CUFFT_ERRORS(cufftExecC2R(plans[1], (cufftComplex*)d_output, d_output));
 
@@ -474,29 +469,16 @@ void GPUSoundSource::chunkProcess() {
 	/*Receive*/
 	receiveBlock();
 }
-/*Must send un-modded block number*/
 void GPUSoundSource::overlapSave() {
-	/*if (blockNo == 0) {
-		return;
-	}*/
-	/*checkCudaErrors(cudaStreamWaitEvent(streams[0], incomingTransfers[0], 0));
-	checkCudaErrors(cudaStreamWaitEvent(streams[0], incomingTransfers[1], 0));*/
 	/*Overlap-save, put the function in a stream*/
-
 	callback_data_blocks[1].input = x + FRAMES_PER_BUFFER;
 	callback_data_blocks[1].output = x;
 	callback_data_blocks[1].size = PAD_LEN - FRAMES_PER_BUFFER;
 	cudaHostFn_t fn = memcpyCallback;
-	checkCudaErrors(cudaLaunchHostFunc(streams[1], fn, &callback_data_blocks[1]));
-	checkCudaErrors(cudaEventRecord(incomingTransfers[0], streams[0]));
-	//checkCudaErrors(cudaEventRecord(incomingTransfers[1], streams[1]));
-	checkCudaErrors(cudaDeviceSynchronize());
-	//memcpy(x[moddedBlockNo], x[(blockNo - 1) % FLIGHT_NUM] + FRAMES_PER_BUFFER, (PAD_LEN - FRAMES_PER_BUFFER) * sizeof(float));
+	checkCudaErrors(cudaLaunchHostFunc(streams[0], fn, &callback_data_blocks[1]));
 
 }
-/*Must send modulo'd block number*/
 void GPUSoundSource::copyIncomingBlock() {
-	checkCudaErrors(cudaStreamWaitEvent(streams[0], incomingTransfers[0], 0));
 	/*Copy into curr_source->x pinned memory*/
 	if (count + FRAMES_PER_BUFFER < length) {
 		callback_data_blocks[0].input = buf + count;
@@ -504,7 +486,6 @@ void GPUSoundSource::copyIncomingBlock() {
 		callback_data_blocks[0].size = FRAMES_PER_BUFFER;
 		cudaHostFn_t fn = memcpyCallback;
 		checkCudaErrors(cudaLaunchHostFunc(streams[0], fn, &callback_data_blocks[0]));
-		checkCudaErrors(cudaEventRecord(incomingTransfers[1], streams[0]));
 		count += FRAMES_PER_BUFFER;
 	}
 	else {
@@ -527,20 +508,18 @@ void GPUSoundSource::copyIncomingBlock() {
 		callback_data_blocks[2].size = FRAMES_PER_BUFFER - rem;
 		fn = memcpyCallback;
 		checkCudaErrors(cudaLaunchHostFunc(streams[0], fn, &callback_data_blocks[2]));
-		checkCudaErrors(cudaEventRecord(incomingTransfers[0], streams[0]));
 		count = FRAMES_PER_BUFFER - rem;
 	}
-	checkCudaErrors(cudaDeviceSynchronize());
 }
 void GPUSoundSource::process(processes type) {
 	switch (type) {
-	case GPU_FD_COMPLEX:
+	case processes::GPU_FD_COMPLEX:
 		chunkProcess();
 		break;
-	case GPU_FD_BASIC:
+	case processes::GPU_FD_BASIC:
 		fftConvolve();
 		break;
-	case GPU_TD:
+	case processes::GPU_TD:
 		gpuTDConvolve(
 			d_input + PAD_LEN - FRAMES_PER_BUFFER,
 			d_output + 2 * (PAD_LEN - FRAMES_PER_BUFFER),
@@ -566,8 +545,4 @@ GPUSoundSource::~GPUSoundSource() {
 	CHECK_CUFFT_ERRORS(cufftDestroy(plans[0]));
 	CHECK_CUFFT_ERRORS(cufftDestroy(plans[1]));
 	CHECK_CUFFT_ERRORS(cufftDestroy(plans[2]));
-
-	delete[] streams;
-	delete[] fft_events;
-	delete[] kernel_launches;
 }
