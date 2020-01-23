@@ -92,7 +92,7 @@ void closePA() {
 	}
 #endif
 }
-void callback_func(float* output, Data* p) {
+void callback_func(float* output, Data* p, bool write) {
 	for (int i = 0; i < FRAMES_PER_BUFFER * 2; i++) {
 		output[i] = 0.0f;
 	}
@@ -158,7 +158,8 @@ void callback_func(float* output, Data* p) {
 			);
 		}
 	}
-	sf_writef_float(p->sndfile, output, FRAMES_PER_BUFFER);
+	if(write)
+		sf_writef_float(p->sndfile, output, FRAMES_PER_BUFFER);
 	return;
 }
 static int paCallback(const void* inputBuffer, void* outputBuffer,
@@ -170,7 +171,7 @@ static int paCallback(const void* inputBuffer, void* outputBuffer,
 	/* Cast data passed through stream to our structure. */
 	Data* p = (Data*)userData;
 	float* output = (float*)outputBuffer;
-	callback_func(output, p);
+	callback_func(output, p, true);
 	return 0;
 }
 

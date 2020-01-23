@@ -88,15 +88,6 @@ int main(int argc, char* argv[]) {
 	//cufftSanityCheck(p);
 	//benchmarkTesting(p);
 	waveFileTesting(p);
-	if (p->type == GPU_FD_BASIC || p->type == GPU_FD_COMPLEX || p->type == GPU_TD) {
-		float* output = new float[FRAMES_PER_BUFFER * 2];
-		p->blockNo = 0;
-		for (int j = 0; j < p->num_sources; j++) {
-			callback_func(output, p);
-		}
-
-		delete[] output;
-	}
 #endif
 #if(DEBUGMODE % 2 == 0)
 	fprintf(stderr, "\n\n\n\nInitializing PortAudio\n\n\n\n");

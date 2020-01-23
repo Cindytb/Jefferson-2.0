@@ -115,7 +115,7 @@ int read_hrtf_signals(void) {
 		1, n, NUM_HRTF * 2,
 		hrtf, NULL, 1, PAD_LEN,
 		fft_hrtf, NULL, 1, PAD_LEN / 2 + 1,
-		FFTW_ESTIMATE);
+		FFTW_MEASURE);
 	for (int i = 0; i < NUM_ELEV; i++) {
 		int ele = elevation_pos[i];
 		for (azi = 0; azi < 360; azi += azimuth_inc[i]) {
@@ -202,17 +202,17 @@ void transform_hrtfs() {
 	//	1, n, batch,
 	//	blah1, NULL, 1, PAD_LEN,
 	//	blah3, NULL, 1, PAD_LEN / 2 + 1,
-	//	FFTW_ESTIMATE);
+	//	FFTW_MEASURE);
 	//memcpy(blah1, hrtf, batch * PAD_LEN * sizeof(float));
 	//fftwf_execute(fftw_plan);
 	//fftwf_destroy_plan(fftw_plan);
 
 
-	//fftw_plan = fftwf_plan_dft_r2c_1d(PAD_LEN, blah1, blah2, FFTW_ESTIMATE);
+	//fftw_plan = fftwf_plan_dft_r2c_1d(PAD_LEN, blah1, blah2, FFTW_MEASURE);
 	//memcpy(blah1, hrtf, batch * PAD_LEN * sizeof(float));
 	//fftwf_execute(fftw_plan);
 	//for (int i = 1; i < batch; i++) {
-	//	fftw_plan = fftwf_plan_dft_r2c_1d(PAD_LEN, blah1 + i * PAD_LEN, blah2 + i * (PAD_LEN / 2 + 1), FFTW_ESTIMATE);
+	//	fftw_plan = fftwf_plan_dft_r2c_1d(PAD_LEN, blah1 + i * PAD_LEN, blah2 + i * (PAD_LEN / 2 + 1), FFTW_MEASURE);
 	//	fftwf_execute(fftw_plan);
 	//}
 

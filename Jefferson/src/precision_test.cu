@@ -22,7 +22,7 @@ void precisionTest(Data* p) {
 	/////////////////////////////////////////////////////////
 
 	// GPU
-	
+
 	src->count = 0;
 	for (int i = 0; i < PAD_LEN + 2; i++) {
 		gsrc->x[i] = 0.0f;
@@ -50,7 +50,7 @@ void precisionTest(Data* p) {
 	/////////////////////////////////////////////////////////
 	// CALCULATE WEIGHTS
 	/////////////////////////////////////////////////////////
-	
+
 	float ele = src->ele;
 	float azi = src->azi;
 	int hrtf_indices[4];
@@ -440,7 +440,7 @@ void precisionTest(Data* p) {
 	for (int i = 0; i < FRAMES_PER_BUFFER * 2; i++) {
 		gsrc->intermediate[i] = 0.0f;
 	}
-	
+
 	src->count = 0;
 	delete[] gpu_output;
 	delete[] cpu_output;
@@ -474,7 +474,7 @@ void xfadePrecisionTest(Data* p) {
 	/////////////////////////////////////////////////////////
 
 	// GPU
-	
+
 	src->count = 0;
 	for (int i = 0; i < PAD_LEN + 2; i++) {
 		gsrc->x[i] = 0.0f;
@@ -501,7 +501,7 @@ void xfadePrecisionTest(Data* p) {
 	/////////////////////////////////////////////////////////
 	// CALCULATE WEIGHTS
 	/////////////////////////////////////////////////////////
-	
+
 	src->old_azi = 0;
 	src->old_ele = 0;
 	src->ele = 10;
@@ -1232,7 +1232,7 @@ void xfadePrecisionTest(Data* p) {
 	for (int i = 0; i < FRAMES_PER_BUFFER * 2; i++) {
 		gsrc->intermediate[i] = 0.0f;
 	}
-	
+
 	src->count = 0;
 	delete[] gpu_output;
 	delete[] cpu_output;
@@ -1267,7 +1267,7 @@ void xfadePrecisionCallbackTest(Data* p) {
 	/////////////////////////////////////////////////////////
 
 	// GPU
-	
+
 	src->count = 0;
 	for (int i = 0; i < PAD_LEN + 2; i++) {
 		gsrc->x[i] = 0.0f;
@@ -1294,7 +1294,7 @@ void xfadePrecisionCallbackTest(Data* p) {
 	/////////////////////////////////////////////////////////
 	// CALCULATE WEIGHTS
 	/////////////////////////////////////////////////////////
-	
+
 	src->old_azi = 18;
 	src->old_ele = 8;
 	src->ele = 23;
@@ -1529,7 +1529,7 @@ void xfadePrecisionCallbackTest(Data* p) {
 		sizeof(float) * (PAD_LEN - FRAMES_PER_BUFFER)
 	);
 
-	
+
 	src->count = 128;
 	gsrc->overlapSave();
 	gsrc->copyIncomingBlock();
@@ -1763,7 +1763,7 @@ void xfadePrecisionCallbackTest(Data* p) {
 	//ROUND THREE!
 	printf("Round 3\n");
 	/*Overlap-save*/
-	
+
 	memmove(
 		csrc->x,
 		csrc->x + FRAMES_PER_BUFFER,
@@ -1994,7 +1994,7 @@ void xfadePrecisionCallbackTest(Data* p) {
 	}
 	src->old_azi = 0.0f;
 	src->old_ele = 0.0f;
-	
+
 	src->count = 0;
 	delete[] gpu_output;
 	delete[] cpu_output;
@@ -2024,14 +2024,14 @@ void cufftSanityCheck(Data* p) {
 		gpu_fft_in, NULL,
 		1, buf_size,
 		(fftwf_complex*)gpu_ifft, NULL,
-		1, complex_buf_size, FFTW_ESTIMATE);
+		1, complex_buf_size, FFTW_MEASURE);
 
 	fftwf_plan out_plan = fftwf_plan_many_dft_c2r(
 		1, &PAD_LEN, 2,
 		(fftwf_complex*)gpu_ifft, NULL,
 		1, PAD_LEN / 2 + 1,
 		(float*)gpu_ifft, NULL,
-		2, 1, FFTW_ESTIMATE
+		2, 1, FFTW_MEASURE
 	);
 	for (int i = 0; i < PAD_LEN; i++) {
 		gpu_fft_in[i] = sin(2 * M_PI * 20 * i / PAD_LEN);
@@ -2065,7 +2065,7 @@ void cufftSanityCheck(Data* p) {
 		deinterleaved[i] = gpu_ifft[i * 2];
 		deinterleaved[PAD_LEN + i] = gpu_ifft[i * 2 + 1];
 	}
-	
+
 	printf("Max Diff GPU FFT/IFFT %f 1e-8\n", max_diff / 1e-8);
 
 	fftwf_execute(plan);
@@ -2112,9 +2112,9 @@ void test(Data* p, float* gpu_output, float* cpu_output, float* diff, int num_it
 	curr_source->azi = azi;
 	curr_source->ele = ele;
 	curr_source->updateFromSpherical();
-	callback_func(gpu_output, p);
+	callback_func(gpu_output, p, false);
 	for (int i = 0; i < num_iterations - 1; i++) {
-		callback_func(gpu_output + FRAMES_PER_BUFFER * 2 * count++, p);
+		callback_func(gpu_output + FRAMES_PER_BUFFER * 2 * count++, p, true);
 	}
 	for (int i = 0; i < num_rounds; i++) {
 		curr_source->azi += 5;
@@ -2123,10 +2123,10 @@ void test(Data* p, float* gpu_output, float* cpu_output, float* diff, int num_it
 		}
 		curr_source->updateFromSpherical();
 		for (int j = 0; j < num_iterations; j++) {
-			callback_func(gpu_output + FRAMES_PER_BUFFER * 2 * count++, p);
+			callback_func(gpu_output + FRAMES_PER_BUFFER * 2 * count++, p, true);
 		}
 	}
-	callback_func(gpu_output + FRAMES_PER_BUFFER * 2 * count++, p);
+	callback_func(gpu_output + FRAMES_PER_BUFFER * 2 * count++, p, true);
 	p->type = CPU_FD_COMPLEX;
 	for (int i = 0; i < PAD_LEN; i++) {
 		csrc->x[i] = 0.0f;
@@ -2139,7 +2139,7 @@ void test(Data* p, float* gpu_output, float* cpu_output, float* diff, int num_it
 	curr_source->azi = azi;
 	curr_source->ele = ele;
 	for (int i = 0; i < num_iterations; i++) {
-		callback_func(cpu_output + FRAMES_PER_BUFFER * 2 * count++, p);
+		callback_func(cpu_output + FRAMES_PER_BUFFER * 2 * count++, p, true);
 	}
 	for (int i = 0; i < num_rounds; i++) {
 		curr_source->azi += 5;
@@ -2148,7 +2148,7 @@ void test(Data* p, float* gpu_output, float* cpu_output, float* diff, int num_it
 		}
 		curr_source->updateFromSpherical();
 		for (int j = 0; j < num_iterations; j++) {
-			callback_func(cpu_output + FRAMES_PER_BUFFER * 2 * count++, p);
+			callback_func(cpu_output + FRAMES_PER_BUFFER * 2 * count++, p, true);
 		}
 	}
 	for (int i = 0; i < size; i++) {
@@ -2212,8 +2212,14 @@ void waveFileTesting(Data* p) {
 	SoundSource* curr_source = (SoundSource*)&(p->all_sources[0]);
 	GPUSoundSource* gsrc = &(p->all_sources[0]);
 	CPUSoundSource* csrc = (CPUSoundSource*)&(p->all_sources[0]);
-
 	for (int blah = 0; blah < 4; blah++) {
+		for (int i = 0; i < PAD_LEN; i++) {
+			csrc->x[i] = 0.0f;
+			gsrc->x[i] = 0.0f;
+		}
+		curr_source->count = 0;
+		curr_source->old_azi = 0.0f;
+		curr_source->old_ele = 0.0f;
 		switch (blah) {
 		case 1:
 			curr_source->azi = 1;
@@ -2223,13 +2229,18 @@ void waveFileTesting(Data* p) {
 			curr_source->ele = 5;
 			break;
 		case 3:
-			curr_source->azi = 1;
+			curr_source->azi = 3;
 			break;
 		}
-
-		for (int i = 0; i < num_iterations; i++) {
-			callback_func(out, p);
+		
+		curr_source->updateFromSpherical();
+		if (p->type = GPU_FD_COMPLEX) {
+			callback_func(out, p, false);
 		}
+		for (int i = 0; i < num_iterations; i++) {
+			callback_func(out, p, true);
+		}
+
 		for (int i = 0; i < num_rounds; i++) {
 			curr_source->azi += 5;
 			if (curr_source->azi >= 360) {
@@ -2237,7 +2248,7 @@ void waveFileTesting(Data* p) {
 			}
 			curr_source->updateFromSpherical();
 			for (int j = 0; j < num_iterations; j++) {
-				callback_func(out, p);
+				callback_func(out, p, true);
 			}
 		}
 	}

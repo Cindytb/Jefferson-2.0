@@ -10,14 +10,14 @@ CPUSoundSource::CPUSoundSource() {
 	conv_bufs = fftwf_alloc_complex(8 * (PAD_LEN + 2));
 	distance_factor = fftwf_alloc_complex(PAD_LEN / 2 + 1);
 
-
-	in_plan = fftwf_plan_dft_r2c_1d(PAD_LEN, x, intermediate, FFTW_ESTIMATE);
+	
+	in_plan = fftwf_plan_dft_r2c_1d(PAD_LEN, x, intermediate, FFTW_MEASURE);
 	out_plan = fftwf_plan_many_dft_c2r(
 		1, &PAD_LEN, 2,
 		intermediate, NULL,
 		1, PAD_LEN / 2 + 1,
 		(float*)intermediate, NULL,
-		2, 1, FFTW_ESTIMATE
+		2, 1, FFTW_MEASURE
 	);
 
 }
